@@ -21,7 +21,7 @@ services:
         sync: true
 
       - key: CORS_ORIGIN
-        value: "*"
+        value: '*'
 
       # Configuration Redis
       - key: REDIS_URL
@@ -30,11 +30,17 @@ services:
           name: aze-farm-redis
           property: connectionString
       - key: REDIS_PASSWORD
-        value: ""
+        value: ''
       - key: REDIS_DB
         value: 0
       - key: REDIS_PREFIX
-        value: aze-farm:
+        value: aze-farm
+      - key: REDIS_NAME
+        value: BACKEND_CACHE
+      - key: REDISINSIGHT_NAME
+        value: REDISINSIGHT
+      - key: REDISINSIGHT_PORT
+        value: 8002
 
       # JWT
       - key: JWT_SECRET
