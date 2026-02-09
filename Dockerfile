@@ -1,6 +1,10 @@
 # Étape 1: Build
 FROM node:24-bookworm AS builder
 
+# Installation de bun
+RUN curl -fsSL https://bun.sh/install | bash
+ENV PATH="/root/.bun/bin:$PATH"
+
 WORKDIR /usr/src/app
 
 COPY .env.example ./
@@ -27,6 +31,10 @@ RUN bun run build
 
 # Étape 2: Production
 FROM node:24-bookworm AS production
+
+# Installation de bun
+RUN curl -fsSL https://bun.sh/install | bash
+ENV PATH="/root/.bun/bin:$PATH"
 
 WORKDIR /usr/src/app
 
