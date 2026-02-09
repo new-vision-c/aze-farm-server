@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "../.."
+		},
+		{
+			"path": "../../../../Bureau/nvc djulah server"
+		}
+	],
+	"settings": {
+		"prisma.pinToPrisma6": true
+	}
+}

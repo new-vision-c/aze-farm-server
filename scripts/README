@@ -1,0 +1,28 @@
+# Application Management Scripts
+
+This folder contains scripts to **start, stop, and monitor** your application and its monitoring stack in a **reliable and orderly** way.
+
+---
+
+## Script Structure
+
+| Script                                         | Description                                                                                                                        |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| [`start_app.sh`](./start_app.sh)               | Starts **only the main services** (backend, MongoDB, Redis, etc.).                                                                 |
+| [`start_monitoring.sh`](./start_monitoring.sh) | Starts **only the monitoring services** (Prometheus, Grafana, Loki). **Requires the application to already be running**.           |
+| [`stop_app.sh`](./stop_app.sh)                 | **Cleanly stops the main services**.                                                                                               |
+| [`stop_monitoring.sh`](./stop_monitoring.sh)   | **Cleanly stops the monitoring services**.                                                                                         |
+| [`status.sh`](./status.sh)                     | Shows the **status of all services** (application + monitoring).                                                                   |
+| [`full_start.sh`](./full_start.sh)             | **Master script**: Starts everything in the correct order (first the application, then monitoring).                                |
+| [`full_stop.sh`](./full_stop.sh)               | **Cleanly stops everything** (first monitoring, then the application).                                                             |
+
+---
+
+## Usage
+
+### **1. Start everything (recommended)**
+
+```bash
+chmod +x scripts/*.sh  # Make the scripts executable (only once)
+./full_start.sh
+```
