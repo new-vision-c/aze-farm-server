@@ -183,59 +183,15 @@ export const envs = {
     )
     .asString(),
 
-  // GitHub OAuth
-  GITHUB_CLIENT_ID: env.get('GITHUB_CLIENT_ID').default('').asString(),
-  GITHUB_CLIENT_SECRET: env.get('GITHUB_CLIENT_SECRET').default('').asString(),
-  GITHUB_REDIRECT_URI: env
-    .get('GITHUB_REDIRECT_URI')
+  // Apple Sign In
+  APPLE_CLIENT_ID: env.get('APPLE_CLIENT_ID').default('').asString(),
+  APPLE_CLIENT_SECRET: env.get('APPLE_CLIENT_SECRET').default('').asString(),
+  APPLE_REDIRECT_URI: env
+    .get('APPLE_REDIRECT_URI')
     .default(
-      `${env.get('SERVER_URL').default('http://localhost:3000').asString()}/api/v1/auth/oauth/github/callback`,
+      `${env.get('SERVER_URL').default('http://localhost:3000').asString()}/api/v1/auth/oauth/apple/callback`,
     )
     .asString(),
-
-  // Facebook OAuth
-  FACEBOOK_CLIENT_ID: env.get('FACEBOOK_CLIENT_ID').default('').asString(),
-  FACEBOOK_CLIENT_SECRET: env.get('FACEBOOK_CLIENT_SECRET').default('').asString(),
-  FACEBOOK_REDIRECT_URI: env
-    .get('FACEBOOK_REDIRECT_URI')
-    .default(
-      `${env.get('SERVER_URL').default('http://localhost:3000').asString()}/api/v1/auth/oauth/facebook/callback`,
-    )
-    .asString(),
-
-  // Instagram OAuth
-  INSTAGRAM_CLIENT_ID: env.get('INSTAGRAM_CLIENT_ID').default('').asString(),
-  INSTAGRAM_CLIENT_SECRET: env.get('INSTAGRAM_CLIENT_SECRET').default('').asString(),
-  INSTAGRAM_REDIRECT_URI: env
-    .get('INSTAGRAM_REDIRECT_URI')
-    .default(
-      `${env.get('SERVER_URL').default('http://localhost:3000').asString()}/api/v1/auth/oauth/instagram/callback`,
-    )
-    .asString(),
-
-  // Twitter OAuth
-  TWITTER_CLIENT_ID: env.get('TWITTER_CLIENT_ID').default('').asString(),
-  TWITTER_CLIENT_SECRET: env.get('TWITTER_CLIENT_SECRET').default('').asString(),
-  TWITTER_REDIRECT_URI: env
-    .get('TWITTER_REDIRECT_URI')
-    .default(
-      `${env.get('SERVER_URL').default('http://localhost:3000').asString()}/api/v1/auth/oauth/twitter/callback`,
-    )
-    .asString(),
-
-  // LinkedIn OAuth
-  LINKEDIN_CLIENT_ID: env.get('LINKEDIN_CLIENT_ID').default('').asString(),
-  LINKEDIN_CLIENT_SECRET: env.get('LINKEDIN_CLIENT_SECRET').default('').asString(),
-  LINKEDIN_REDIRECT_URI: env
-    .get('LINKEDIN_REDIRECT_URI')
-    .default(
-      `${env.get('SERVER_URL').default('http://localhost:3000').asString()}/api/v1/auth/oauth/linkedin/callback`,
-    )
-    .asString(),
-
-  // Telegram OAuth (Bot-based)
-  TELEGRAM_BOT_TOKEN: env.get('TELEGRAM_BOT_TOKEN').default('').asString(),
-  TELEGRAM_BOT_USERNAME: env.get('TELEGRAM_BOT_USERNAME').default('').asString(),
 
   // ============================================
 };

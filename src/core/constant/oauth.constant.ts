@@ -14,36 +14,11 @@ export const OAUTH_URLS = {
     USER_INFO: 'https://www.googleapis.com/oauth2/v2/userinfo',
     REVOKE: 'https://oauth2.googleapis.com/revoke',
   },
-  [OAuthProvider.GITHUB]: {
-    AUTHORIZATION: 'https://github.com/login/oauth/authorize',
-    TOKEN: 'https://github.com/login/oauth/access_token',
-    USER_INFO: 'https://api.github.com/user',
-    USER_EMAILS: 'https://api.github.com/user/emails',
-  },
-  [OAuthProvider.FACEBOOK]: {
-    AUTHORIZATION: 'https://www.facebook.com/v18.0/dialog/oauth',
-    TOKEN: 'https://graph.facebook.com/v18.0/oauth/access_token',
-    USER_INFO: 'https://graph.facebook.com/v18.0/me',
-  },
-  [OAuthProvider.INSTAGRAM]: {
-    AUTHORIZATION: 'https://api.instagram.com/oauth/authorize',
-    TOKEN: 'https://api.instagram.com/oauth/access_token',
-    USER_INFO: 'https://graph.instagram.com/me',
-  },
-  [OAuthProvider.TWITTER]: {
-    AUTHORIZATION: 'https://twitter.com/i/oauth2/authorize',
-    TOKEN: 'https://api.twitter.com/2/oauth2/token',
-    USER_INFO: 'https://api.twitter.com/2/users/me',
-    REVOKE: 'https://api.twitter.com/2/oauth2/revoke',
-  },
-  [OAuthProvider.LINKEDIN]: {
-    AUTHORIZATION: 'https://www.linkedin.com/oauth/v2/authorization',
-    TOKEN: 'https://www.linkedin.com/oauth/v2/accessToken',
-    USER_INFO: 'https://api.linkedin.com/v2/userinfo',
-  },
-  [OAuthProvider.TELEGRAM]: {
-    AUTHORIZATION: 'https://oauth.telegram.org/auth',
-    USER_INFO: 'https://api.telegram.org/bot',
+  [OAuthProvider.APPLE]: {
+    AUTHORIZATION: 'https://appleid.apple.com/auth/authorize',
+    TOKEN: 'https://appleid.apple.com/auth/token',
+    USER_INFO: 'https://appleid.apple.com/auth/userinfo',
+    REVOKE: 'https://appleid.apple.com/auth/revoke',
   },
 } as const;
 
@@ -58,12 +33,7 @@ export const OAUTH_SCOPES = {
     'https://www.googleapis.com/auth/userinfo.profile',
     'https://www.googleapis.com/auth/userinfo.email',
   ],
-  [OAuthProvider.GITHUB]: ['read:user', 'user:email'],
-  [OAuthProvider.FACEBOOK]: ['email', 'public_profile'],
-  [OAuthProvider.INSTAGRAM]: ['user_profile', 'user_media'],
-  [OAuthProvider.TWITTER]: ['tweet.read', 'users.read', 'offline.access'],
-  [OAuthProvider.LINKEDIN]: ['openid', 'profile', 'email'],
-  [OAuthProvider.TELEGRAM]: ['read'],
+  [OAuthProvider.APPLE]: ['name', 'email'],
 } as const;
 
 /**

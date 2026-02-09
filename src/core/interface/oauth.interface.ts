@@ -5,12 +5,7 @@
 
 export enum OAuthProvider {
   GOOGLE = 'GOOGLE',
-  GITHUB = 'GITHUB',
-  FACEBOOK = 'FACEBOOK',
-  INSTAGRAM = 'INSTAGRAM',
-  TWITTER = 'TWITTER',
-  LINKEDIN = 'LINKEDIN',
-  TELEGRAM = 'TELEGRAM',
+  APPLE = 'APPLE',
 }
 
 /**
