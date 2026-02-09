@@ -6,6 +6,7 @@ services:
     plan: free
     dockerfilePath: ./Dockerfile
     autoDeploy: true
+    repo: https://github.com/new-vision-c/aze-farm-server.git
     envVars:
       # Configuration de l'application
       - key: NODE_ENV
