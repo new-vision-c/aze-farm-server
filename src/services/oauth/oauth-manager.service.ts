@@ -1,6 +1,6 @@
 /**
  * OAuth Manager Service
- * Central service to manage all OAuth providers
+ * Central service to manage Google OAuth provider only
  */
 import crypto from 'crypto';
 
@@ -16,37 +16,24 @@ import type {
 import { OAuthProvider } from '@/core/interface/oauth.interface';
 import log from '@/services/logging/logger';
 
-import { FacebookOAuthService } from './providers/facebook-oauth.service';
-import { GitHubOAuthService } from './providers/github-oauth.service';
 import { GoogleOAuthService } from './providers/google-oauth.service';
-import { InstagramOAuthService } from './providers/instagram-oauth.service';
-import { LinkedInOAuthService } from './providers/linkedin-oauth.service';
-import { TelegramOAuthService } from './providers/telegram-oauth.service';
-import { TwitterOAuthService } from './providers/twitter-oauth.service';
 
 export class OAuthManager {
   private providers: Map<OAuthProvider, IOAuthService>;
-  private telegramService: TelegramOAuthService;
 
   constructor() {
     this.providers = new Map();
     this.initializeProviders();
-    this.telegramService = new TelegramOAuthService();
   }
 
   /**
-   * Initialize all OAuth providers
+   * Initialize Google OAuth provider only
    */
   private initializeProviders(): void {
     try {
       this.providers.set(OAuthProvider.GOOGLE, new GoogleOAuthService());
-      this.providers.set(OAuthProvider.GITHUB, new GitHubOAuthService());
-      this.providers.set(OAuthProvider.FACEBOOK, new FacebookOAuthService());
-      this.providers.set(OAuthProvider.LINKEDIN, new LinkedInOAuthService());
-      this.providers.set(OAuthProvider.TWITTER, new TwitterOAuthService());
-      this.providers.set(OAuthProvider.INSTAGRAM, new InstagramOAuthService());
 
-      log.info('OAuth providers initialized successfully');
+      log.info('Google OAuth provider initialized successfully');
     } catch (error: any) {
       log.error('Failed to initialize OAuth providers', {
         error: error.message,
@@ -118,12 +105,10 @@ export class OAuthManager {
   ): Promise<{ user: any; isNewUser: boolean }> {
     try {
       // Check if OAuth account already exists
-      const existingOAuthAccount = await prisma.oauth_account.findUnique({
+      const existingOAuthAccount = await prisma.oauth_account.findFirst({
         where: {
-          provider_provider_user_id: {
-            provider: profile.provider,
-            provider_user_id: profile.provider_user_id,
-          },
+          provider: profile.provider,
+          provider_user_id: profile.provider_user_id,
         },
         include: {
           user: true,
@@ -159,8 +144,10 @@ export class OAuthManager {
       user = await prisma.users.create({
         data: {
           email: profile.email,
-          first_name: profile.first_name,
-          last_name: profile.last_name,
+          fullname:
+            profile.first_name && profile.last_name
+              ? `${profile.first_name} ${profile.last_name}`
+              : profile.first_name || profile.last_name || '',
           avatar_url: profile.avatar_url,
           is_verified: profile.email_verified || false,
           is_active: true,
@@ -258,14 +245,18 @@ export class OAuthManager {
    */
   async unlinkOAuthAccount(userId: string, provider: OAuthProvider): Promise<void> {
     try {
-      await prisma.oauth_account.delete({
+      const oauthAccount = await prisma.oauth_account.findFirst({
         where: {
-          user_id_provider: {
-            user_id: userId,
-            provider,
-          },
+          user_id: userId,
+          provider: provider,
         },
       });
+
+      if (oauthAccount) {
+        await prisma.oauth_account.delete({
+          where: { id: oauthAccount.id },
+        });
+      }
 
       log.info('OAuth account unlinked', { userId, provider });
     } catch (error: any) {
@@ -302,16 +293,14 @@ export class OAuthManager {
    */
   async refreshAccessToken(userId: string, provider: OAuthProvider): Promise<string> {
     try {
-      const oauthAccount = await prisma.oauth_account.findUnique({
+      const oauthAccount = await prisma.oauth_account.findFirst({
         where: {
-          user_id_provider: {
-            user_id: userId,
-            provider,
-          },
+          user_id: userId,
+          provider: provider,
         },
       });
 
-      if (!oauthAccount || !oauthAccount.refresh_token) {
+      if (!oauthAccount?.refresh_token) {
         throw new Error('No refresh token available');
       }
 
@@ -332,10 +321,14 @@ export class OAuthManager {
   }
 
   /**
-   * Handle Telegram authentication (special case)
+   * Handle authentication
    */
-  getTelegramService(): TelegramOAuthService {
-    return this.telegramService;
+  async authenticate(provider: OAuthProvider): Promise<void> {
+    // Implementation for Google OAuth only
+    const service = this.getProvider(provider);
+    if (!service) {
+      throw new Error(`Provider ${provider} not supported`);
+    }
   }
 }
 

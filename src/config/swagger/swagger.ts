@@ -32,7 +32,7 @@ const setupSwagger = (app: Express) => {
   const optionsUI = {
     explorer: true,
     customCss: '.swagger-ui .topbar { display: none }',
-    customSiteTitle: 'GTA-API Documentation',
+    customSiteTitle: 'AZE FARM api Documentation',
     swaggerOptions: {
       defaultModelsExpandDepth: -1,
       docExpansion: 'none',

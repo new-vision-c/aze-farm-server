@@ -2,6 +2,7 @@ import { exec } from 'child_process';
 import { format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import fs from 'fs-extra';
+import { MongoClient } from 'mongodb';
 import path from 'path';
 import { promisify } from 'util';
 import { v4 as uuidv4 } from 'uuid';
@@ -136,35 +137,51 @@ export class MongodbBackupJob {
 
   private async runMongoDump(outputDir: string): Promise<void> {
     try {
-      const collections =
-        backupConfig.mongo.collections.length > 0
-          ? `--collection ${backupConfig.mongo.collections.join(' --collection ')}`
-          : '';
+      const client = new MongoClient(backupConfig.mongo.uri);
+      await client.connect();
+      const db = client.db(backupConfig.mongo.dbName);
 
-      const command = `mongodump \
-      --uri="${backupConfig.mongo.uri}" \
-      --db=${backupConfig.mongo.dbName} \
-      ${collections} \
-      --out=${outputDir} \
-      --gzip`;
+      log.debug('Connexion à MongoDB établie');
 
-      log.debug(`Exécution de la commande: ${command}`);
+      // Si des collections spécifiques sont configurées, les sauvegarder individuellement
+      if (backupConfig.mongo.collections.length > 0) {
+        for (const collectionName of backupConfig.mongo.collections) {
+          const collection = db.collection(collectionName);
+          const documents = await collection.find({}).toArray();
 
-      const { stdout, stderr } = await execAsync(command, {
-        maxBuffer: 1024 * 1024 * 50,
-        env: {
-          ...process.env,
-          PATH: `${process.env.PATH}:/usr/bin/mongodump`,
-        },
-      });
+          const collectionPath = path.join(outputDir, backupConfig.mongo.dbName, collectionName);
+          await fs.ensureDir(collectionPath);
 
-      if (stderr) {
-        log.warn('Avertissements mongodump:', stderr);
+          // Sauvegarder les documents dans un fichier JSON
+          const filePath = path.join(collectionPath, 'documents.json');
+          await fs.writeJson(filePath, documents, { spaces: 2 });
+
+          log.debug(`Collection ${collectionName} sauvegardée: ${documents.length} documents`);
+        }
+      } else {
+        // Sauvegarder toutes les collections
+        const collections = await db.listCollections().toArray();
+
+        for (const collectionInfo of collections) {
+          const collectionName = collectionInfo.name;
+          const collection = db.collection(collectionName);
+          const documents = await collection.find({}).toArray();
+
+          const collectionPath = path.join(outputDir, backupConfig.mongo.dbName, collectionName);
+          await fs.ensureDir(collectionPath);
+
+          // Sauvegarder les documents dans un fichier JSON
+          const filePath = path.join(collectionPath, 'documents.json');
+          await fs.writeJson(filePath, documents, { spaces: 2 });
+
+          log.debug(`Collection ${collectionName} sauvegardée: ${documents.length} documents`);
+        }
       }
 
-      log.debug('Sortie mongodump:', stdout);
+      await client.close();
+      log.debug('Sauvegarde MongoDB terminée avec succès');
     } catch (error) {
-      throw new Error(`Échec de mongodump: ${error}`);
+      throw new Error(`Échec de la sauvegarde MongoDB: ${error}`);
     }
   }
 

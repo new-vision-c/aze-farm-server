@@ -1,125 +1,252 @@
-import { body, param, query } from 'express-validator';
+import { body, header, param, query } from 'express-validator';
 
-import { emailValidation, nameValidation, passwordValidation } from '../utils/utils';
+import { validate } from '../../../core/constant/validator.constant';
+import { I18nService } from '../../I18nService';
+
+// Instance du service d'internationalisation
+const i18n = new I18nService();
 
 export const validate_user = {
   signup: [
-    emailValidation('email'),
-    passwordValidation(),
-    nameValidation('first_name'),
-    nameValidation('last_name'),
-    body('phone')
+    // Email validation
+    body('email')
       .trim()
       .notEmpty()
-      .withMessage('phone number is required !')
+      .withMessage(i18n.translate('validation.required', undefined, { field: 'email' }))
+      .isEmail()
+      .withMessage(i18n.translate('validation.invalid_email'))
+      .escape(),
+
+    // Password validation - niveau moyen
+    body('password')
+      .trim()
+      .notEmpty()
+      .withMessage(i18n.translate('validation.password_required'))
+      .isStrongPassword({
+        minLength: 8,
+        minLowercase: 1,
+        minUppercase: 1,
+        minNumbers: 1,
+        minSymbols: 0, // Pas de symbole requis pour niveau moyen
+      })
+      .withMessage(i18n.translate('validation.password_too_weak')),
+
+    // Fullname validation (selon schema.prisma)
+    body('fullname')
+      .trim()
+      .notEmpty()
+      .withMessage(i18n.translate('validation.fullname_required'))
       .isString()
-      .withMessage('phone number have to be a string !')
-      .isLength({ min: 5 })
-      .withMessage('phone number is too short; min: 5 !')
-      .isLength({ max: 20 })
-      .withMessage('phone number is too long: max: 20')
+      .withMessage(i18n.translate('validation.invalid_format', undefined, { field: 'fullname' }))
+      .isLength({
+        min: validate.MIN_NAME,
+        max: validate.MAX_NAME,
+      })
+      .withMessage(
+        i18n.translate('validation.fullname_too_short', undefined, { min: validate.MIN_NAME }),
+      )
       .escape(),
   ],
 
-  login: [emailValidation('email'), passwordValidation()],
+  login: [
+    // Email validation
+    body('email')
+      .trim()
+      .notEmpty()
+      .withMessage(i18n.translate('validation.required', undefined, { field: 'email' }))
+      .isEmail()
+      .withMessage(i18n.translate('validation.invalid_email'))
+      .escape(),
+
+    // Password validation
+    body('password').trim().notEmpty().withMessage(i18n.translate('validation.password_required')),
+  ],
 
   verifyAccount: [
-    emailValidation('email'),
+    // Session token validation (header Authorization)
+    header('authorization')
+      .trim()
+      .notEmpty()
+      .withMessage(i18n.translate('validation.required', undefined, { field: 'authorization' }))
+      .matches(/^Bearer .+$/)
+      .withMessage(
+        i18n.translate('validation.invalid_format', undefined, { field: 'authorization' }),
+      ),
+
+    // Email validation
+    body('email')
+      .trim()
+      .notEmpty()
+      .withMessage(i18n.translate('validation.required', undefined, { field: 'email' }))
+      .isEmail()
+      .withMessage(i18n.translate('validation.invalid_email'))
+      .escape(),
+
+    // OTP validation - exactement 6 chiffres
     body('otp')
       .trim()
       .notEmpty()
-      .withMessage('OTP code is required')
+      .withMessage(i18n.translate('validation.otp_required'))
       .isString()
-      .withMessage('OTP must be a string')
-      .isLength({ min: 4, max: 8 })
-      .withMessage('OTP must be between 4 and 8 characters'),
+      .withMessage(i18n.translate('validation.invalid_format', undefined, { field: 'otp' }))
+      .isLength({ min: 6, max: 6 })
+      .withMessage(i18n.translate('validation.otp_invalid_length'))
+      .isNumeric()
+      .withMessage(i18n.translate('validation.otp_invalid_format')),
   ],
 
-  resendOtp: [emailValidation('email')],
+  forgotPassword: [
+    // Email validation
+    body('email')
+      .trim()
+      .notEmpty()
+      .withMessage(i18n.translate('validation.required', undefined, { field: 'email' }))
+      .isEmail()
+      .withMessage(i18n.translate('validation.invalid_email'))
+      .escape(),
+  ],
 
-  forgotPassword: [emailValidation('email')],
+  resendOtp: [
+    // Session token validation (header Authorization)
+    header('authorization')
+      .trim()
+      .notEmpty()
+      .withMessage(i18n.translate('validation.required', undefined, { field: 'authorization' }))
+      .matches(/^Bearer .+$/)
+      .withMessage(
+        i18n.translate('validation.invalid_format', undefined, { field: 'authorization' }),
+      ),
+  ],
 
   resetPassword: [
-    param('resetToken').notEmpty().withMessage('Reset token is required'),
+    // Reset token validation
+    param('resetToken').notEmpty().withMessage(i18n.translate('validation.reset_token_required')),
+
+    // New password validation - niveau moyen
     body('new_password')
       .trim()
       .notEmpty()
-      .withMessage('New password is required')
+      .withMessage(i18n.translate('validation.new_password_required'))
       .isStrongPassword({
         minLength: 8,
         minLowercase: 1,
         minUppercase: 1,
         minNumbers: 1,
-        minSymbols: 1,
+        minSymbols: 0, // Pas de symbole requis pour niveau moyen
       })
-      .withMessage(
-        'Password must be at least 8 characters long and include uppercase, lowercase, number, and symbol',
-      ),
+      .withMessage(i18n.translate('validation.password_too_weak')),
   ],
 
   changePassword: [
-    body('current_password').trim().notEmpty().withMessage('Current password is required'),
+    // Current password validation
+    body('current_password')
+      .trim()
+      .notEmpty()
+      .withMessage(i18n.translate('validation.current_password_required')),
+
+    // New password validation - niveau moyen
     body('new_password')
       .trim()
       .notEmpty()
-      .withMessage('New password is required')
+      .withMessage(i18n.translate('validation.new_password_required'))
       .isStrongPassword({
         minLength: 8,
         minLowercase: 1,
         minUppercase: 1,
         minNumbers: 1,
-        minSymbols: 1,
       })
-      .withMessage(
-        'Password must be at least 8 characters long and include uppercase, lowercase, number, and symbol',
-      ),
+      .withMessage(i18n.translate('validation.password_too_weak')),
   ],
 
   updateUserInfo: [
-    nameValidation('first_name').optional(),
-    nameValidation('last_name').optional(),
-    body('phone')
+    // Fullname validation (selon schema.prisma)
+    body('fullname')
       .optional()
       .trim()
       .isString()
-      .withMessage('phone number must be a string')
-      .isLength({ min: 5, max: 20 })
-      .withMessage('phone number must be between 5 and 20 characters')
+      .withMessage(i18n.translate('validation.invalid_format', undefined, { field: 'fullname' }))
+      .isLength({
+        min: validate.MIN_NAME,
+        max: validate.MAX_NAME,
+      })
+      .withMessage(
+        i18n.translate('validation.fullname_too_short', undefined, { min: validate.MIN_NAME }),
+      )
       .escape(),
   ],
 
   updateUserRole: [
-    param('user_id').notEmpty().withMessage('User ID is required'),
+    // User ID validation
+    param('user_id')
+      .notEmpty()
+      .withMessage(i18n.translate('validation.required', undefined, { field: 'user_id' })),
+
+    // Role validation
     body('role')
       .trim()
       .notEmpty()
-      .withMessage('Role is required')
+      .withMessage(i18n.translate('validation.role_required'))
       .isIn(['USER', 'ADMIN', 'MODERATOR'])
-      .withMessage('Invalid role. Must be USER, ADMIN, or MODERATOR'),
+      .withMessage(i18n.translate('validation.role_invalid')),
   ],
 
-  deleteUser: [param('user_id').notEmpty().withMessage('User ID is required')],
+  deleteUser: [
+    // User ID validation
+    param('user_id')
+      .notEmpty()
+      .withMessage(i18n.translate('validation.required', undefined, { field: 'user_id' })),
+  ],
 
   searchUser: [
+    // Search query validation
     query('search')
       .optional()
       .trim()
       .isString()
-      .withMessage('Search query must be a string')
+      .withMessage(i18n.translate('validation.invalid_format', undefined, { field: 'search' }))
       .isLength({ min: 1, max: 100 })
-      .withMessage('Search query must be between 1 and 100 characters'),
+      .withMessage(
+        i18n.translate('validation.max_length', undefined, { field: 'search', max: 100 }),
+      ),
   ],
 
   listUsers: [
-    query('is_active').optional().isBoolean().withMessage('is_active must be a boolean'),
-    query('is_verified').optional().isBoolean().withMessage('is_verified must be a boolean'),
-    query('is_deleted').optional().isBoolean().withMessage('is_deleted must be a boolean'),
-    query('page').optional().isInt({ min: 1 }).withMessage('page must be a positive integer'),
+    // Boolean filters validation
+    query('is_active')
+      .optional()
+      .isBoolean()
+      .withMessage(i18n.translate('validation.invalid_format', undefined, { field: 'is_active' })),
+
+    query('is_verified')
+      .optional()
+      .isBoolean()
+      .withMessage(
+        i18n.translate('validation.invalid_format', undefined, { field: 'is_verified' }),
+      ),
+
+    query('is_deleted')
+      .optional()
+      .isBoolean()
+      .withMessage(i18n.translate('validation.invalid_format', undefined, { field: 'is_deleted' })),
+
+    // Pagination validation
+    query('page')
+      .optional()
+      .isInt({ min: 1 })
+      .withMessage(i18n.translate('validation.invalid_format', undefined, { field: 'page' })),
+
     query('limit')
       .optional()
       .isInt({ min: 1, max: 100 })
-      .withMessage('limit must be between 1 and 100'),
+      .withMessage(
+        i18n.translate('validation.max_length', undefined, { field: 'limit', max: 100 }),
+      ),
   ],
 
-  get_user_by_id: [param('user_id').notEmpty().withMessage('User ID is required')],
+  get_user_by_id: [
+    // User ID validation
+    param('user_id')
+      .notEmpty()
+      .withMessage(i18n.translate('validation.required', undefined, { field: 'user_id' })),
+  ],
 };

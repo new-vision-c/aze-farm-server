@@ -11,12 +11,12 @@ const userToken = {
       expiresIn: envs.JWT_ACCESS_EXPIRES_IN as any,
     };
 
-    return jwt.sign(payload, readFileSync(envs.JWT_PRIVATE_KEY_PATH) || '', signOption) as string;
+    return jwt.sign(payload, envs.JWT_SECRET, signOption) as string;
   },
 
   verifyAccessToken: (token: string) => {
     try {
-      return jwt.verify(token, readFileSync(envs.JWT_PUBLIC_KEY_PATH) || '') as IusersJwt;
+      return jwt.verify(token, envs.JWT_SECRET) as IusersJwt;
     } catch (error) {
       throw new Error(`Failed to verify access token: ${error}`);
     }
@@ -28,12 +28,12 @@ const userToken = {
       expiresIn: envs.JWT_REFRESH_EXPIRES_IN as any,
     };
 
-    return jwt.sign(payload, readFileSync(envs.JWT_REFRESH_PRIVATE_KEY_PATH), signOption);
+    return jwt.sign(payload, envs.JWT_SECRET, signOption);
   },
 
   verifyRefreshToken: (refreshToken: string) => {
     try {
-      return jwt.verify(refreshToken, readFileSync(envs.JWT_REFRESH_PUBLIC_KEY_PATH)) as IusersJwt;
+      return jwt.verify(refreshToken, envs.JWT_SECRET) as IusersJwt;
     } catch (error) {
       throw new Error(`Failed to verify refresh token: ${error}`);
     }

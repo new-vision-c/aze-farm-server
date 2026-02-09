@@ -50,6 +50,40 @@ export const en = {
     invalid_date: 'The date is not valid',
     future_date: 'The date must be in the future',
     past_date: 'The date must be in the past',
+
+    // Password validation
+    password_required: 'Password is required',
+    password_too_weak:
+      'Password must be at least 8 characters long with uppercase, lowercase and number',
+    password_min_length: 'Password must be at least {min} characters',
+    password_uppercase: 'Password must contain at least one uppercase letter',
+    password_lowercase: 'Password must contain at least one lowercase letter',
+    password_number: 'Password must contain at least one number',
+
+    // OTP validation
+    otp_required: 'OTP code is required',
+    otp_invalid_length: 'OTP code must contain exactly 6 digits',
+    otp_invalid_format: 'OTP code must be composed of digits only',
+
+    // Fullname validation
+    fullname_required: 'Full name is required',
+    fullname_too_short: 'Full name must contain at least {min} characters',
+    fullname_too_long: 'Full name must not exceed {max} characters',
+
+    // Phone validation
+    phone_required: 'Phone number is required',
+    phone_invalid_format: 'Phone number must be a string',
+    phone_too_short: 'Phone number is too short (minimum {min} characters)',
+    phone_too_long: 'Phone number is too long (maximum {max} characters)',
+
+    // Role validation
+    role_required: 'Role is required',
+    role_invalid: 'Role must be USER, ADMIN or MODERATOR',
+
+    // Token validation
+    reset_token_required: 'Reset token is required',
+    current_password_required: 'Current password is required',
+    new_password_required: 'New password is required',
   },
 
   // File messages

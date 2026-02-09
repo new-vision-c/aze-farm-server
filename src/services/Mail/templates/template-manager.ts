@@ -15,7 +15,7 @@ const templateManager = {
   resetPassword: (data: ITemplateResetPassword) =>
     renderTemplate('reset-password.ejs', data, 'Reset Password'),
 
-  welcome: (data: ITemplateResetPassword) => renderTemplate('welcome.ejs', data, 'Welcome'),
+  welcome: (data: any) => renderTemplate('welcome.ejs', data, 'Welcome'),
 
   alert_login: (data: ITemplateResetPassword) =>
     renderTemplate('alert-login.ejs', data, 'Alert Login'),

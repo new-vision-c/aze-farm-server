@@ -1,83 +1,36 @@
 import type { Request, Response } from 'express';
 
-/**
- * Exemple de contrôleur utilisant l'internationalisation
- * Montre comment utiliser req.apiResponse pour envoyer des réponses traduites
- */
+import { asyncHandler, response } from '@/utils/responses/helpers';
+
 export class ExampleController {
-  /**
-   * Endpoint de test pour l'internationalisation
-   * GET /api/example/test
-   */
-  public testI18n = (req: Request, res: Response): void => {
-    // Utiliser l'utilitaire de réponse avec traduction automatique
-    (req as any).apiResponse.success({
-      messageKey: 'server.started',
-      data: {
-        language: (req as any).language,
-        timestamp: new Date().toISOString(),
-      },
-    });
-  };
+  //& Test i18n endpoint
+  testI18n = asyncHandler(async (req: Request, res: Response): Promise<void | Response<any>> => {
+    return response.success(req, res, { message: 'Example endpoint working' }, 'Success');
+  });
 
-  /**
-   * Endpoint de test pour les messages d'erreur
-   * GET /api/example/error
-   */
-  public testError = (req: Request, res: Response): void => {
-    (req as any).apiResponse.notFound({
-      messageKey: 'users.not_found',
-      params: { userId: '123' },
-    });
-  };
+  //& Test error endpoint
+  testError = asyncHandler(async (req: Request, res: Response): Promise<void | Response<any>> => {
+    return response.success(req, res, { message: 'Error test endpoint' }, 'Success');
+  });
 
-  /**
-   * Endpoint de test pour les messages avec paramètres
-   * GET /api/example/params
-   */
-  public testParams = (req: Request, res: Response): void => {
-    (req as any).apiResponse.success({
-      messageKey: 'crud.created',
-      params: { resource: 'Utilisateur' },
-      data: {
-        created: true,
-      },
-    });
-  };
+  //& Test params endpoint
+  testParams = asyncHandler(async (req: Request, res: Response): Promise<void | Response<any>> => {
+    return response.success(req, res, { params: req.params }, 'Success');
+  });
 
-  /**
-   * Endpoint de test pour la validation
-   * GET /api/example/validation
-   */
-  public testValidation = (req: Request, res: Response): void => {
-    (req as any).apiResponse.validationError({
-      messageKey: 'validation.required',
-      params: { field: 'email' },
-      errors: [
-        {
-          field: 'email',
-          message: (req as any).i18n.translate('validation.invalid_email'),
-        },
-      ],
-    });
-  };
+  //& Test validation endpoint
+  testValidation = asyncHandler(
+    async (req: Request, res: Response): Promise<void | Response<any>> => {
+      return response.success(req, res, { message: 'Validation test endpoint' }, 'Success');
+    },
+  );
 
-  /**
-   * Endpoint de test pour la pagination
-   * GET /api/example/pagination
-   */
-  public testPagination = (req: Request, res: Response): void => {
-    const page = 1;
-    const limit = 10;
-    const total = 25;
-    const data = Array.from({ length: limit }, (_, i) => ({
-      id: i + 1,
-      name: `Item ${i + 1}`,
-    }));
-
-    (req as any).apiResponse.paginated(data, page, limit, total, {
-      messageKey: 'crud.list_loaded',
-      params: { count: limit, resource: 'Item' },
-    });
-  };
+  //& Test pagination endpoint
+  testPagination = asyncHandler(
+    async (req: Request, res: Response): Promise<void | Response<any>> => {
+      return response.success(req, res, { message: 'Pagination test endpoint' }, 'Success');
+    },
+  );
 }
+
+export default ExampleController;

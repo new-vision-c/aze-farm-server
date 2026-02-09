@@ -1,0 +1,111 @@
+services:
+  # Service Web principal
+  - type: web
+    name: aze-farm-api
+    env: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    autoDeploy: true
+    envVars:
+      # Configuration de l'application
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: APP_NAME
+        value: Aze Farm API
+
+      # Base de données mongodb (à créer manuellement)
+      - key: DATABASE_URL
+        value: mongodb+srv://cesaristos5:50VPTVyd82Y2wmPF@environementtestnvc.a21hzv7.mongodb.net/aze-farm-test?appName=environementTestNVC
+        sync: true
+
+      - key: CORS_ORIGIN
+        value: "*"
+
+      # Configuration Redis
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: aze-farm-redis
+          property: connectionString
+      - key: REDIS_PASSWORD
+        value: ""
+      - key: REDIS_DB
+        value: 0
+      - key: REDIS_PREFIX
+        value: aze-farm:
+
+      # JWT
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+
+      # Cache
+      - key: CACHE_DEFAULT_TTL
+        value: 3600
+      - key: CACHE_DISABLED
+        value: false
+      - key: REDIS_HOST
+        fromService:
+          type: redis
+          name: aze-farm-redis
+          property: host
+      - key: REDIS_PORT
+        fromService:
+          type: redis
+          name: aze-farm-redis
+          property: port
+
+      # Logs
+      - key: LOG_LEVEL
+        value: info
+      - key: LOG_FILE_ENABLED
+        value: false
+      - key: LOG_FILE_PATH
+        value: logs/app.log
+      - key: LOG_FILE_MAX_SIZE
+        value: 100m
+      - key: LOG_FILE_MAX_FILES
+        value: 14d
+
+      # Configuration supplémentaire pour le farming
+      - key: FARM_API_KEY
+        generateValue: true
+      - key: FARM_WEBHOOK_SECRET
+        generateValue: true
+      - key: MAX_CONCURRENT_TASKS
+        value: 10
+      - key: TASK_TIMEOUT
+        value: 300
+
+      # Monitoring
+      - key: METRICS_ENABLED
+        value: true
+      - key: HEALTH_CHECK_INTERVAL
+        value: 30
+
+      # Service Mail (à configurer manuellement)
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: 587
+      - key: SMTP_SECURE
+        value: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+      - key: MAIL_FROM_NAME
+        value: Aze Farm
+      - key: MAIL_ENABLED
+        value: true
+
+  # Service Redis
+  - type: redis
+    name: aze-farm-redis
+    plan: free
+    ipAllowList: [] # Autoriser uniquement les services Render

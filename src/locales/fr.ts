@@ -48,6 +48,41 @@ export const fr = {
     min_length: 'Le champ {field} doit contenir au moins {min} caractères',
     max_length: 'Le champ {field} ne doit pas dépasser {max} caractères',
     invalid_date: "La date n'est pas valide",
+
+    // Validation des mots de passe
+    password_required: 'Le mot de passe est requis',
+    password_too_weak:
+      'Le mot de passe doit contenir au moins 6 caractères avec une majuscule, une minuscule et un chiffre',
+    password_min_length: 'Le mot de passe doit contenir au moins {min} caractères',
+    password_uppercase: 'Le mot de passe doit contenir au moins une majuscule',
+    password_lowercase: 'Le mot de passe doit contenir au moins une minuscule',
+    password_number: 'Le mot de passe doit contenir au moins un chiffre',
+
+    // Validation OTP
+    otp_required: 'Le code OTP est requis',
+    otp_invalid_length: 'Le code OTP doit contenir exactement 6 chiffres',
+    otp_invalid_format: 'Le code OTP doit être composé de chiffres uniquement',
+
+    // Validation noms
+    fullname_required: 'Le nom complet est requis',
+    fullname_too_short: 'Le nom complet doit contenir au moins {min} caractères',
+    fullname_too_long: 'Le nom complet ne doit pas dépasser {max} caractères',
+
+    // Validation téléphone
+    phone_required: 'Le numéro de téléphone est requis',
+    phone_invalid_format: 'Le numéro de téléphone doit être une chaîne de caractères',
+    phone_too_short: 'Le numéro de téléphone est trop court (minimum {min} caractères)',
+    phone_too_long: 'Le numéro de téléphone est trop long (maximum {max} caractères)',
+
+    // Validation rôles
+    role_required: 'Le rôle est requis',
+    role_invalid: 'Le rôle doit être USER, ADMIN ou MODERATOR',
+
+    // Validation tokens
+    reset_token_required: 'Le token de réinitialisation est requis',
+    current_password_required: 'Le mot de passe actuel est requis',
+    new_password_required: 'Le nouveau mot de passe est requis',
+
     future_date: 'La date doit être dans le futur',
     past_date: 'La date doit être dans le passé',
   },

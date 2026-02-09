@@ -1,7 +1,7 @@
 import { Router } from 'express';
 
 import users_controller from '@/controllers/users/users.controller';
-// import { isActive, isAdmin, isAuthenticated, isVerified } from '@/middlewares/auth';
+import { isAuthenticated } from '@/middlewares/auth';
 import { upload } from '@/middlewares/upload';
 import { validationErrorHandler } from '@/middlewares/validationErrorHandler';
 import { validate_user } from '@/services/validator/validate/users';
@@ -24,6 +24,7 @@ auth.post(
 // Verify account with OTP
 auth.post(
   '/verify',
+  isAuthenticated,
   validate_user.verifyAccount,
   validationErrorHandler,
   users_controller.verify_otp,
