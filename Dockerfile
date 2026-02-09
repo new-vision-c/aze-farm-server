@@ -4,7 +4,6 @@ FROM node:24-bookworm AS builder
 WORKDIR /usr/src/app
 
 COPY .env.example ./
-COPY .env ./
 
 # Install dependencies avec bun
 COPY package.json bun.lock ./
@@ -35,7 +34,6 @@ ENV NODE_ENV=production
 
 # Copy environment files
 COPY --from=builder /usr/src/app/.env.example ./
-COPY --from=builder /usr/src/app/.env ./
 
 # Copy docs directory
 COPY --from=builder /usr/src/app/docs ./docs
