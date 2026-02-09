@@ -6,9 +6,9 @@ WORKDIR /usr/src/app
 COPY .env.example ./
 COPY .env ./
 
-# Install dependencies
-COPY package.json package-lock.json ./
-RUN npm ci --ignore-scripts
+# Install dependencies avec bun
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile --ignore-scripts
 
 # Copy source code
 COPY tsconfig.json ./
@@ -21,10 +21,10 @@ RUN mkdir -p node_modules
 RUN echo "{\"dependencies\":{\"@config\":\"file:./src/config\",\"@services\":\"file:./src/services\",\"@middlewares\":\"file:./src/middlewares\",\"@router\":\"file:./src/router\",\"@utils\":\"file:./src/utils\"}}" > node_modules/package.json
 
 # Generate OpenAPI and Prisma client
-RUN npm run generate:openapi && npm run prisma:generate
+RUN bun run generate:openapi && bun run prisma:generate
 
 # Build TypeScript
-RUN npm run build
+RUN bun run build
 
 # Étape 2: Production
 FROM node:24-bookworm AS production
@@ -50,9 +50,9 @@ COPY module-alias.config.js ./
 # Set up open ai doc
 COPY docs/openapi.yaml /usr/src/app/docs/
 
-# Install production dependencies only
-COPY package.json package-lock.json ./
-RUN npm ci --omit=dev --ignore-scripts
+# Install production dependencies only avec bun
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile --ignore-scripts --production
 
 
 # Copy build output and prisma schema
@@ -63,8 +63,12 @@ COPY --from=builder /usr/src/app/node_modules/.prisma ./node_modules/.prisma
 # Copy JWT keys from source
 COPY --from=builder /usr/src/app/src/config/keys ./src/config/keys
 
-# Expose port
+# Expose port (Render utilise le port 3000 par défaut)
 EXPOSE 3000
 
+# Health check pour Render
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:3000/api/health || exit 1
+
 # Start the application
-CMD ["node", "-r", "module-alias/register", "-r", "./module-alias.config.js", "dist/index.js"]
+CMD ["bun", "run", "start"]
