@@ -1,7 +1,5 @@
 import { Router } from 'express';
 
-import { validate_blog } from '@/services/validator/validate/blogs';
-
 const blog = Router();
 
 // ============================================

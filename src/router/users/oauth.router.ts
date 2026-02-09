@@ -15,9 +15,6 @@ oauth.get('/:provider', users_controller.oauth_authorize);
 // OAuth callback (provider redirects here after authorization)
 oauth.get('/:provider/callback', users_controller.oauth_callback);
 
-// Telegram authentication (widget-based)
-oauth.post('/telegram', users_controller.telegram_auth);
-
 // ============================================
 // OAUTH2.0 PROTECTED ROUTES
 // ============================================

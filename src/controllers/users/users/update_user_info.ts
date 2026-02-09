@@ -34,9 +34,7 @@ const update_user_info = asyncHandler(
       select: {
         user_id: true,
         email: true,
-        first_name: true,
-        last_name: true,
-        phone: true,
+        fullname: true,
         avatar_url: true,
       },
     });

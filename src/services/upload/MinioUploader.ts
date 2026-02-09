@@ -2,8 +2,8 @@ import EventEmitter from 'events';
 
 import log from '../logging/logger';
 import { UploadError, ValidationError } from './core/Errors';
-import { defaultLogger } from './core/Logger';
 import type { Logger } from './core/Logger';
+import { defaultLogger } from './core/Logger';
 import type { UploadResult } from './core/UploadResult';
 import { generateFilePath, sleep } from './core/Utils';
 import type { FileMeta, ValidationPolicy } from './core/ValidationPolicy';
@@ -41,7 +41,7 @@ export class MinioUploader extends EventEmitter {
       config.bucket,
       config.logger ?? defaultLogger(),
     );
-    this.multipart = new MultipartService(config.client, config.bucket);
+    this.multipart = new MultipartService(config.client);
     this.presigned = new PresignedUrlService(this.provider);
     this.scanner = config.scanner;
     this.maxRetries = config.maxRetries ?? 3;

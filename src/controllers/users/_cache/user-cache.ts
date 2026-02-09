@@ -26,9 +26,7 @@ export const getCachedUser = async (userId: string) => {
         select: {
           user_id: true,
           email: true,
-          first_name: true,
-          last_name: true,
-          phone: true,
+          fullname: true,
           avatar_url: true,
           is_active: true,
           is_verified: true,
@@ -94,9 +92,7 @@ export const getCachedUsersList = async (filters: {
           select: {
             user_id: true,
             email: true,
-            first_name: true,
-            last_name: true,
-            phone: true,
+            fullname: true,
             avatar_url: true,
             is_active: true,
             is_verified: true,
@@ -131,17 +127,13 @@ export const getCachedUsersSearch = async (searchTerm: string) => {
             is_deleted: false,
             OR: [
               { email: { contains: searchTerm, mode: 'insensitive' } },
-              { first_name: { contains: searchTerm, mode: 'insensitive' } },
-              { last_name: { contains: searchTerm, mode: 'insensitive' } },
-              { phone: { contains: searchTerm } },
+              { fullname: { contains: searchTerm, mode: 'insensitive' } },
             ],
           },
           select: {
             user_id: true,
             email: true,
-            first_name: true,
-            last_name: true,
-            phone: true,
+            fullname: true,
             avatar_url: true,
             is_active: true,
             is_verified: true,
@@ -159,8 +151,7 @@ export const getCachedUsersSearch = async (searchTerm: string) => {
           select: {
             user_id: true,
             email: true,
-            first_name: true,
-            last_name: true,
+            fullname: true,
             avatar_url: true,
             is_active: true,
             is_verified: true,
@@ -174,16 +165,12 @@ export const getCachedUsersSearch = async (searchTerm: string) => {
       return prisma.users.findMany({
         where: {
           is_deleted: false,
-          OR: [
-            { first_name: { contains: searchTerm as string, mode: 'insensitive' } },
-            { last_name: { contains: searchTerm as string, mode: 'insensitive' } },
-          ],
+          OR: [{ fullname: { contains: searchTerm as string, mode: 'insensitive' } }],
         },
         select: {
           user_id: true,
           email: true,
-          first_name: true,
-          last_name: true,
+          fullname: true,
           avatar_url: true,
           is_active: true,
           is_verified: true,

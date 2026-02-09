@@ -18,9 +18,7 @@ const get_user_by_id = asyncHandler(
       select: {
         user_id: true,
         email: true,
-        first_name: true,
-        last_name: true,
-        phone: true,
+        fullname: true,
         avatar_url: true,
         is_active: true,
         is_verified: true,

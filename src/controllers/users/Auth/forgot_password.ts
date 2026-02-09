@@ -35,7 +35,7 @@ const forgot_password = asyncHandler(
     const resetLink = `${envs.CLIENT_URL}/reset-password?token=${resetToken}`;
 
     // Send password reset email
-    const user_full_name = `${user.last_name} ${user.first_name}`;
+    const user_full_name = user.fullname;
     let emailSent = false;
 
     try {

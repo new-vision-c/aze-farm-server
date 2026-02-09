@@ -13,9 +13,7 @@ const export_users = asyncHandler(
       select: {
         user_id: true,
         email: true,
-        first_name: true,
-        last_name: true,
-        phone: true,
+        fullname: true,
         is_active: true,
         is_verified: true,
         created_at: true,
@@ -24,11 +22,11 @@ const export_users = asyncHandler(
     });
 
     // Generate CSV
-    const csvHeader = 'ID,Email,First Name,Last Name,Phone,Active,Verified,Created At\n';
+    const csvHeader = 'ID,Email,Full Name,Active,Verified,Created At\n';
     const csvRows = users
       .map(
         (user) =>
-          `${user.user_id},${user.email},${user.first_name},${user.last_name},${user.phone},${user.is_active},${user.is_verified},${user.created_at}`,
+          `${user.user_id},${user.email},${user.fullname},${user.is_active},${user.is_verified},${user.created_at}`,
       )
       .join('\n');
     const csv = csvHeader + csvRows;

@@ -10,7 +10,6 @@ import oauth_accounts from './OAuth/oauth-accounts';
 import oauth_authorize from './OAuth/oauth-authorize';
 import oauth_callback from './OAuth/oauth-callback';
 import oauth_unlink from './OAuth/oauth-unlink';
-import telegram_auth from './OAuth/telegram-auth';
 import clear_all_users from './users/clear_all_users';
 import delete_user from './users/delete_user';
 import delete_user_permently from './users/delete_user_permently';
@@ -42,7 +41,6 @@ const users_controller = {
   oauth_callback,
   oauth_accounts,
   oauth_unlink,
-  telegram_auth,
 
   // ***************************************************************************************************************************************************************************************************************************************
   //* MANAGE USER ******************************************************************************************
