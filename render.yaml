@@ -119,27 +119,30 @@ services:
       - key: HEALTH_CHECK_INTERVAL
         value: 30
 
-      # Service Mail (à configurer manuellement)
+      # Service Mail (Gmail SMTP)
       - key: SMTP_HOST
-        sync: false
+        value: smtp.gmail.com
       - key: SMTP_PORT
         value: 587
       - key: SMTP_SECURE
         value: false
       - key: SMTP_USER
-        sync: false
+        value: cesaristos85@gmail.com
       - key: SMTP_PASS
-        sync: false
+        value: ybfm tkhc pyaa bmuy
       - key: USER_EMAIL
-        sync: false
+        value: cesaristos85@gmail.com
       - key: MAIL_FROM
-        sync: false
+        value: cesaristos85@gmail.com
       - key: MAIL_FROM_NAME
         value: Aze Farm
       - key: MAIL_ENABLED
         value: true
 
-      # Configuration MinIO
+      # Configuration MinIO (à configurer avec un service cloud si nécessaire)
+      # Désactivé pour Render - utiliser Cloudinary ou S3 en production
+      - key: MINIO_ENABLED
+        value: false
       - key: MINIO_ACCESS_KEY
         value: minioadmin
       - key: MINIO_SECRET_KEY
@@ -155,7 +158,10 @@ services:
       - key: MINIO_USE_SSL
         value: false
 
-      # Configuration ClamAV
+      # Configuration ClamAV (à configurer avec un service cloud si nécessaire)
+      # Désactivé pour Render
+      - key: CLAMAV_ENABLED
+        value: false
       - key: CLAMAV_HOST
         value: clamav
       - key: CLAMAV_PORT
