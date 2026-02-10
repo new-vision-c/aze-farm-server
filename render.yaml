@@ -34,12 +34,12 @@ services:
       - key: DISABLE_CONSOLE_LOGS
         value: true
 
-      # Base de données MongoDB Atlas (URI cloud, IP Render whitelisted)
+      # Base de données MongoDB Atlas (URI cloud avec paramètres SSL/TLS)
       - key: DATABASE_URL
-        value: mongodb+srv://cesaristos5:50VPTVyd82Y2wmPF@environementtestnvc.a21hzv7.mongodb.net/aze-farm-test?appName=environementTestNVC
+        value: mongodb+srv://cesaristos5:50VPTVyd82Y2wmPF@environementtestnvc.a21hzv7.mongodb.net/aze-farm-test?retryWrites=true&w=majority&authSource=admin&tls=true&tlsAllowInvalidCertificates=true&serverSelectionTimeoutMS=5000&connectTimeoutMS=10000
         sync: true
       - key: MONGO_URL
-        value: mongodb+srv://cesaristos5:50VPTVyd82Y2wmPF@environementtestnvc.a21hzv7.mongodb.net/
+        value: mongodb+srv://cesaristos5:50VPTVyd82Y2wmPF@environementtestnvc.a21hzv7.mongodb.net/?retryWrites=true&w=majority&authSource=admin&tls=true&tlsAllowInvalidCertificates=true&serverSelectionTimeoutMS=5000&connectTimeoutMS=10000
         sync: true
       - key: MONGO_USER
         value: cesaristos5
