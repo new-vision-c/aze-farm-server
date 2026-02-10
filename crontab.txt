@@ -1,0 +1,16 @@
+# Crontab pour les tests de santé de l'API Aze Farm
+# Exécute le test de santé toutes les 10 minutes
+
+# Éditer le crontab avec: crontab -e
+# Ajouter la ligne suivante:
+
+*/10 * * * * /home/xenos-mh/backdev/nvc-projet/aze-farm-server-1/scripts/health-check.sh
+
+# Pour vérifier les logs:
+# tail -f /var/log/aze-farm-health-check.log
+
+# Pour lister les cronjobs actifs:
+# crontab -l
+
+# Pour supprimer tous les cronjobs:
+# crontab -r
