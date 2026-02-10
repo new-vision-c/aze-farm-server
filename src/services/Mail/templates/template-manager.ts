@@ -25,6 +25,12 @@ const templateManager = {
 
   backup_error_notification: (data: ITemplateNotificationError) =>
     renderTemplate('db-notification-error.ejs', data, 'DB Notification Error'),
+
+  health_check_alert: (data: any) =>
+    renderTemplate('health-check-alert.ejs', data, 'Health Check Alert'),
+
+  health_check_error: (data: any) =>
+    renderTemplate('health-check-error.ejs', data, 'Health Check Error'),
 };
 
 export default templateManager;

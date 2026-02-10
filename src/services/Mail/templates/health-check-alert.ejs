@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alerte de Santé</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f5f5f5; }
+        .container { max-width: 600px; margin: 20px auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .header { background: #ff6b6b; color: white; padding: 20px; border-radius: 4px; margin-bottom: 20px; }
+        .header h2 { margin: 0; font-size: 24px; }
+        .content { line-height: 1.6; }
+        .service { padding: 10px; margin: 10px 0; border-left: 4px solid #ddd; }
+        .service.unhealthy { border-left-color: #ff6b6b; background-color: #ffe0e0; }
+        .service.healthy { border-left-color: #51cf66; background-color: #e7f5f0; }
+        .summary { background: #f9f9f9; padding: 15px; border-radius: 4px; margin: 20px 0; }
+        .timestamp { color: #666; font-size: 12px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>🚨 Alerte de Santé des Services</h2>
+        </div>
+        
+        <div class="content">
+            <p>Bonjour,</p>
+            
+            <p>Le système de monitoring a détecté que <strong><%- failureCount %> service(s)</strong> sur <strong><%- totalServices %></strong> présentent des problèmes.</p>
+            
+            <div class="summary">
+                <h3>📋 Résumé du contrôle de santé</h3>
+                <pre style="white-space: pre-wrap; font-family: monospace; margin: 0;"><%- healthySummary %></pre>
+            </div>
+
+            <h3>❌ Services défaillants</h3>
+            <% failedServices.forEach(function(service) { %>
+                <div class="service unhealthy">
+                    <strong><%= service.service %></strong><br>
+                    État: <span style="color: #ff6b6b;">Défaillant</span><br>
+                    Erreur: <%= service.error %><br>
+                    Temps réponse: <%= service.responseTime %>ms
+                </div>
+            <% }); %>
+
+            <p style="margin-top: 20px;">
+                <strong>Action recommandée:</strong> Veuillez vérifier les services défaillants et prendre les mesures nécessaires.
+            </p>
+
+            <div class="timestamp">
+                Date: <%= date %><br>
+                Alerte automatique du système de monitoring
+            </div>
+        </div>
+    </div>
+</body>
+</html>

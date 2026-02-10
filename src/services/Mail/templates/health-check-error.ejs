@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Erreur Job Health Check</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f5f5f5; }
+        .container { max-width: 600px; margin: 20px auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .header { background: #cc5500; color: white; padding: 20px; border-radius: 4px; margin-bottom: 20px; }
+        .header h2 { margin: 0; font-size: 24px; }
+        .content { line-height: 1.6; }
+        .error-box { background: #ffe0e0; border: 2px solid #ff6b6b; padding: 15px; border-radius: 4px; margin: 20px 0; }
+        .error-box pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+        .timestamp { color: #666; font-size: 12px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>🔴 Erreur du Job Health Check</h2>
+        </div>
+        
+        <div class="content">
+            <p>Bonjour,</p>
+            
+            <p>Le job de vérification de santé des services a rencontré une erreur critique.</p>
+            
+            <div class="error-box">
+                <h3>Détails de l'erreur</h3>
+                <p><strong>Message:</strong> <%= errorMessage %></p>
+                <p><strong>Timestamp:</strong> <%= timestamp %></p>
+                <h4>Stack Trace:</h4>
+                <pre><%= errorStack %></pre>
+            </div>
+
+            <p style="margin-top: 20px;">
+                <strong>Action recommandée:</strong> Veuillez vérifier les logs du serveur et diagnostiquer le problème.
+            </p>
+
+            <div class="timestamp">
+                Date: <%= date %><br>
+                Alerte critique du système
+            </div>
+        </div>
+    </div>
+</body>
+</html>
