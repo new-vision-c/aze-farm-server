@@ -15,11 +15,37 @@ services:
         value: 3000
       - key: APP_NAME
         value: Aze Farm API
+      - key: DB_TYPE
+        value: mongodb
+      - key: APP_DESCRIPTION
+        value: 'Full backend architecture'
+      - key: APP_AUTHOR
+        value: 'Xenos MH'
+      - key: APP_VERSION
+        value: 1.0.0
+      - key: APP_LICENSE
+        value: MIT
+      - key: DEFAULT_API_PREFIX
+        value: /api/v1
+      - key: RATE_LIMIT_WINDOW_MS
+        value: 900000
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: 100
+      - key: DISABLE_CONSOLE_LOGS
+        value: true
 
       # Base de données mongodb (à créer manuellement)
       - key: DATABASE_URL
         value: mongodb+srv://cesaristos5:50VPTVyd82Y2wmPF@environementtestnvc.a21hzv7.mongodb.net/aze-farm-test?appName=environementTestNVC
         sync: true
+      - key: MONGO_USER
+        value: cesaristos5
+      - key: MONGO_PASSWORD
+        value: 50VPTVyd82Y2wmPF
+      - key: MONGO_DB
+        value: aze-farm-test
+      - key: MONGO_PORT
+        value: 27017
 
       - key: CORS_ORIGIN
         value: '*'
@@ -104,12 +130,38 @@ services:
         sync: false
       - key: SMTP_PASS
         sync: false
+      - key: USER_EMAIL
+        sync: false
       - key: MAIL_FROM
         sync: false
       - key: MAIL_FROM_NAME
         value: Aze Farm
       - key: MAIL_ENABLED
         value: true
+
+      # Configuration MinIO
+      - key: MINIO_ACCESS_KEY
+        value: minioadmin
+      - key: MINIO_SECRET_KEY
+        value: minio123
+      - key: MINIO_PORT
+        value: 9000
+      - key: MINIO_ENDPOINT
+        value: localhost
+      - key: MINIO_APP_BUCKET
+        value: gta
+      - key: MINIO_BASE_PATH
+        value: uploads/
+      - key: MINIO_USE_SSL
+        value: false
+
+      # Configuration ClamAV
+      - key: CLAMAV_HOST
+        value: clamav
+      - key: CLAMAV_PORT
+        value: 3310
+      - key: CLAMAV_TIMEOUT
+        value: 20000
 
   # Service Redis
   - type: redis
