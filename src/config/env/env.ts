@@ -1,9 +1,8 @@
-import dotenvSafe from 'dotenv-safe';
+import dotenv from 'dotenv';
 import env from 'env-var';
 
-dotenvSafe.config({
-  allowEmptyValues: true,
-});
+// Charger les variables d'environnement
+dotenv.config();
 
 export const envs = {
   PORT: env.get('PORT').required().asPortNumber(),
