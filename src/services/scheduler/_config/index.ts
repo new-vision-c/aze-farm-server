@@ -23,11 +23,10 @@ export const schedulerConfig: SchedulerConfig = {
   },
 
   healthCheck: {
-    schedule: '0 * * * *', // Every hour
+    schedule: '*/10 * * * *', // Chaque 10 minutes
     options: {
       timezone: envs.TIMEZONE || 'Africa/Douala',
     },
-    // schedule: '*/5 * * * *', // Every 5 minutes (for testing)
   },
   // Add more scheduled tasks configurations here as needed
 };
