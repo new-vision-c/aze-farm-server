@@ -1,41 +1,60 @@
-# Cronjob de Test de Santé - Aze Farm API
+# Cronjob de Test de Santé Complet - Aze Farm API
 
 ## Description
 
-Ce cronjob effectue des tests de santé automatiques sur l'API Aze Farm toutes
-les 10 minutes pour vérifier que le service est opérationnel.
+Ce cronjob effectue des tests de santé complets sur l'API Aze Farm toutes les 10
+minutes en vérifiant tous les services critiques :
+
+- **API** - Disponibilité et temps de réponse
+- **Base de données (MongoDB)** - Connectivité et temps de réponse
+- **Cloudinary** - Service de stockage d'images
+- **Service Mail** - Configuration SMTP et envoi
+- **Redis** - Service de cache
+
+En cas d'échec de l'un des services, une alerte email est automatiquement
+envoyée à `herman.moukam5@gmail.com`.
 
 ## Fichiers
 
-- `scripts/health-check.sh` - Script principal de test de santé
-- `scripts/setup-health-cron.sh` - Script d'installation automatique
+- `scripts/health-check.sh` - Script principal de test de santé complet
+- `scripts/setup-health-cron.sh` - Script d'installation automatique avec
+  dépendances
 - `crontab.txt` - Documentation de configuration du cronjob
+- `src/controllers/_config/healthcheck/health.controllers.ts` - Controller de
+  santé amélioré
 
 ## Installation Rapide
 
 ### Option 1: Installation Automatique (Recommandée)
 
 ```bash
-# Exécuter le script d'installation
+# Exécuter le script d'installation (installe automatiquement les dépendances)
 ./scripts/setup-health-cron.sh
 ```
 
 ### Option 2: Installation Manuelle
 
-1. **Rendre le script exécutable**:
+1. **Installer les dépendances**:
+
+   ```bash
+   sudo apt-get update
+   sudo apt-get install -y curl jq mailutils
+   ```
+
+2. **Rendre le script exécutable**:
 
    ```bash
    chmod +x scripts/health-check.sh
    ```
 
-2. **Créer le fichier de log**:
+3. **Créer le fichier de log**:
 
    ```bash
    sudo touch /var/log/aze-farm-health-check.log
    sudo chmod 666 /var/log/aze-farm-health-check.log
    ```
 
-3. **Installer le cronjob**:
+4. **Installer le cronjob**:
    ```bash
    crontab -e
    # Ajouter la ligne suivante:
@@ -47,6 +66,8 @@ les 10 minutes pour vérifier que le service est opérationnel.
 - **URL testée**: `https://aze-farm-api.onrender.com/health`
 - **Fréquence**: Toutes les 10 minutes
 - **Logs**: `/var/log/aze-farm-health-check.log`
+- **Email d'alerte**: `herman.moukam5@gmail.com`
+- **Services testés**: API, Database, Cloudinary, Mail, Redis
 
 ## Commandes Utiles
 
@@ -65,7 +86,7 @@ tail -f /var/log/aze-farm-health-check.log
 ### Voir les derniers logs
 
 ```bash
-tail -n 20 /var/log/aze-farm-health-check.log
+tail -n 50 /var/log/aze-farm-health-check.log
 ```
 
 ### Supprimer le cronjob
@@ -80,14 +101,85 @@ crontab -r
 ./scripts/health-check.sh
 ```
 
+### Tester l'envoi d'email
+
+```bash
+echo "Test de notification" | mail -s "Test API Aze Farm" herman.moukam5@gmail.com
+```
+
 ## Format des Logs
 
 ```
-[2025-02-10 14:30:00] Début du test de santé pour https://aze-farm-api.onrender.com
-[2025-02-10 14:30:01] ✅ API est en bonne santé (HTTP 200)
-[2025-02-10 14:30:01] Réponse: {"status":"ok","timestamp":"2025-02-10T14:30:01.000Z"}
-[2025-02-10 14:30:01] Fin du test de santé
-----------------------------------------
+[2025-02-10 14:30:00] ========================================
+[2025-02-10 14:30:00] Début du test de santé complet pour https://aze-farm-api.onrender.com
+[2025-02-10 14:30:01] 📊 Statut global: ok
+[2025-02-10 14:30:01] ✅ database: OK (45ms)
+[2025-02-10 14:30:01] ✅ cloudinary: OK (123ms)
+[2025-02-10 14:30:01] ✅ mail: OK (89ms)
+[2025-02-10 14:30:01] ✅ redis: OK (12ms)
+[2025-02-10 14:30:01] ⏱️ Uptime: 86400s
+[2025-02-10 14:30:01] ✅ Tous les services sont opérationnels
+[2025-02-10 14:30:01] Fin du test de santé complet
+[2025-02-10 14:30:01] ========================================
+```
+
+## Réponse de l'API
+
+L'endpoint `/health` retourne une réponse JSON détaillée :
+
+```json
+{
+  "status": "ok",
+  "timestamp": "2025-02-10T14:30:01.000Z",
+  "services": {
+    "api": { "status": "healthy", "responseTime": "0ms" },
+    "database": { "status": "healthy", "responseTime": "45ms", "type": "mongodb" },
+    "cloudinary": { "status": "healthy", "responseTime": "123ms" },
+    "mail": { "status": "healthy", "responseTime": "89ms", "provider": "smtp.gmail.com" },
+    "redis": { "status": "healthy", "responseTime": "12ms" }
+  },
+  "uptime": 86400,
+  "memory": {
+    "rss": 134217728,
+    "heapTotal": 67108864,
+    "heapUsed": 45088768,
+    "external": 2097152
+  },
+  "version": "1.0.0"
+}
+```
+
+## Alertes Email
+
+### Déclenchement des alertes
+
+Les alertes sont envoyées dans les cas suivants :
+
+1. **API inaccessible** - Code HTTP différent de 200/503
+2. **Statut "unhealthy"** - Tous les services sont en échec
+3. **Statut "degraded"** - Au moins un service est en échec
+4. **Erreur de parsing** - Réponse JSON invalide
+
+### Format des emails
+
+**Sujet**: `🚨 Alerte API Aze Farm - Statut: degraded`
+
+**Corps**:
+
+```
+L'API Aze Farm rencontre des problèmes!
+
+🔗 URL: https://aze-farm-api.onrender.com/health
+📅 Date: 2025-02-10 14:30:01
+📊 Statut global: degraded
+🌐 Code HTTP: 200
+
+❌ Services en échec: database mail
+
+📋 Réponse complète:
+{... réponse JSON complète ...}
+
+📝 Logs: /var/log/aze-farm-health-check.log
 ```
 
 ## Personnalisation
@@ -100,16 +192,27 @@ crontab -r
 - Toutes les 30 minutes: `*/30 * * * *`
 - Toutes les heures: `0 * * * *`
 
+### Modifier l'email d'alerte
+
+Éditez `scripts/health-check.sh` et changez la variable `ALERT_EMAIL`:
+
+```bash
+ALERT_EMAIL="votre-email@example.com"
+```
+
 ### Modifier l'URL
 
 Éditez `scripts/health-check.sh` et changez la variable `API_URL`.
 
-### Ajouter une notification email
+### Désactiver les emails
 
-Décommentez et modifiez la ligne dans `scripts/health-check.sh`:
+Commentez la section d'envoi d'email dans le script:
 
 ```bash
-echo "L'API Aze Farm n'est pas disponible! Code: $HTTP_CODE" | mail -s "Alerte API Aze Farm" votre-email@example.com
+# if [ -n "$ALERT_SUBJECT" ] && command -v mail >/dev/null 2>&1; then
+#     echo "$ALERT_BODY" | mail -s "$ALERT_SUBJECT" "$ALERT_EMAIL"
+#     echo "[$TIMESTAMP] 📧 Email d'alerte envoyé à $ALERT_EMAIL" >> $LOG_FILE
+# fi
 ```
 
 ## Dépannage
@@ -125,14 +228,41 @@ echo "L'API Aze Farm n'est pas disponible! Code: $HTTP_CODE" | mail -s "Alerte A
 1. Vérifiez les permissions du fichier de log:
    `ls -la /var/log/aze-farm-health-check.log`
 2. Vérifiez que curl est installé: `which curl`
+3. Vérifiez que jq est installé: `which jq`
 
-### Erreur de connexion
+### Emails non envoyés
 
-1. Testez l'URL manuellement: `curl https://aze-farm-api.onrender.com/health`
-2. Vérifiez la connectivité réseau: `ping aze-farm-api.onrender.com`
+1. Vérifiez que mailutils est installé: `which mail`
+2. Testez l'envoi manuel:
+   `echo "Test" | mail -s "Test" herman.moukam5@gmail.com`
+3. Vérifiez la configuration du MTA: `sudo systemctl status postfix`
+
+### Erreur de connexion Cloudinary
+
+1. Vérifiez les variables d'environnement Cloudinary
+2. Testez manuellement: `curl "https://api.cloudinary.com/v1_1/demo/ping"`
+
+### Erreur de connexion Redis
+
+1. Vérifiez que Redis est accessible: `redis-cli -h host -p port ping`
+2. Vérifiez les variables REDIS_HOST et REDIS_PORT
 
 ## Sécurité
 
 - Le script s'exécute avec les permissions de l'utilisateur
 - Les logs sont stockés dans `/var/log/` avec permissions appropriées
-- Aucune information sensible n'est stockée dans les logs
+- Les emails contiennent des informations de diagnostic mais pas de données
+  sensibles
+- Aucun mot de passe ou clé API n'est stocké dans les logs
+
+## Dépendances
+
+Le script nécessite les outils suivants :
+
+- `curl` - Pour les requêtes HTTP
+- `jq` - Pour le parsing JSON
+- `mailutils` - Pour l'envoi d'emails
+- `cron` - Pour la planification automatique
+
+L'installation automatique (`setup-health-cron.sh`) installe toutes ces
+dépendances.
