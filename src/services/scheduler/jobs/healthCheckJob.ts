@@ -98,19 +98,33 @@ export class HealthCheckJob {
   private async checkRedis(): Promise<HealthCheckResult> {
     const startTime = Date.now();
     try {
-      const { createClient } = await import('redis');
-      const redisUrl = envs.REDIS_URL || 'redis://localhost:6379';
+      // Use direct TCP check instead of redis client
+      const net = await import('net');
+      const redisHost = envs.REDIS_HOST || 'localhost';
+      const redisPort = envs.REDIS_PORT || 6379;
 
-      const redisClient = createClient({ url: redisUrl });
-      await redisClient.connect();
-      await redisClient.ping();
-      await redisClient.disconnect();
+      return new Promise((resolve) => {
+        const socket = net.createConnection(redisPort, redisHost);
+        socket.setTimeout(5000);
 
-      return {
-        service: 'Redis',
-        status: 'healthy',
-        responseTime: Date.now() - startTime,
-      };
+        socket.on('connect', () => {
+          socket.destroy();
+          resolve({
+            service: 'Redis',
+            status: 'healthy',
+            responseTime: Date.now() - startTime,
+          });
+        });
+
+        socket.on('error', (error: any) => {
+          resolve({
+            service: 'Redis',
+            status: 'unhealthy',
+            error: error.message,
+            responseTime: Date.now() - startTime,
+          });
+        });
+      });
     } catch (error: any) {
       return {
         service: 'Redis',
@@ -149,7 +163,21 @@ export class HealthCheckJob {
   private async checkCloudinary(): Promise<HealthCheckResult> {
     const startTime = Date.now();
     try {
-      // Try a simple Cloudinary API call
+      // Simple check: verify credentials are configured
+      if (
+        !process.env.CLOUDINARY_CLOUD_NAME ||
+        !process.env.CLOUDINARY_API_KEY ||
+        !process.env.CLOUDINARY_API_SECRET
+      ) {
+        return {
+          service: 'Cloudinary',
+          status: 'unhealthy',
+          error: 'Cloudinary credentials not configured',
+          responseTime: Date.now() - startTime,
+        };
+      }
+
+      // Check resource types (basic API check)
       const { v2: cloudinary } = await import('cloudinary');
       cloudinary.config({
         cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -157,10 +185,8 @@ export class HealthCheckJob {
         api_secret: process.env.CLOUDINARY_API_SECRET,
       });
 
-      // Check account info
-      const result = await cloudinary.api.resource_by_type('upload', {
-        max_results: 1,
-      });
+      // Try to call a simple API endpoint
+      const result = await cloudinary.api.resource_types();
 
       return {
         service: 'Cloudinary',

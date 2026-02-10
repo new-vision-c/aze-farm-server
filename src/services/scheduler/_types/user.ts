@@ -15,5 +15,10 @@ export interface SchedulerConfig {
     schedule: string;
     options?: NodeCronOptions | undefined;
   };
+
+  healthCheck: {
+    schedule: string;
+    options?: NodeCronOptions | undefined;
+  };
   // Add more scheduled tasks here as needed
 }

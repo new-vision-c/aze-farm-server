@@ -49,6 +49,7 @@ export const envs = {
   // ============================================
 
   // Redis
+  REDIS_URL: env.get('REDIS_URL').default('redis://localhost:6379').asString(),
   REDIS_HOST: env.get('REDIS_HOST').required().asString(),
   REDIS_PORT: env.get('REDIS_PORT').required().asPortNumber(),
   REDIS_USERNAME: env.get('REDIS_USERNAME').default('redis_username').asString(),
