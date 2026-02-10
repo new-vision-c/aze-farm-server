@@ -5,7 +5,7 @@ import type { BackupConfig } from '../_types/backup';
 // Configuration for database backups using MongoDB and MinIO
 const backupConfig: BackupConfig = {
   mongo: {
-    uri: envs.MONGO_URL,
+    uri: envs.DATABASE_URL, // Utiliser DATABASE_URL (MongoDB Atlas ou locale)
     dbName: envs.MONGO_DB,
     collections: ['users', 'posts'],
     dumpPath: '/tmp/mongodump',

@@ -34,9 +34,12 @@ services:
       - key: DISABLE_CONSOLE_LOGS
         value: true
 
-      # Base de données mongodb (à créer manuellement)
+      # Base de données MongoDB Atlas (URI cloud, IP Render whitelisted)
       - key: DATABASE_URL
         value: mongodb+srv://cesaristos5:50VPTVyd82Y2wmPF@environementtestnvc.a21hzv7.mongodb.net/aze-farm-test?appName=environementTestNVC
+        sync: true
+      - key: MONGO_URL
+        value: mongodb+srv://cesaristos5:50VPTVyd82Y2wmPF@environementtestnvc.a21hzv7.mongodb.net/
         sync: true
       - key: MONGO_USER
         value: cesaristos5

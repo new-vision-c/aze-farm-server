@@ -56,12 +56,12 @@ export const envs = {
 
   // ============================================
 
-  // MailHog SMTP
-  SMTP_HOST: env.get('SMTP_HOST').required().asString(),
-  SMTP_PORT: env.get('SMTP_PORT').required().asPortNumber(),
-  SMTP_USER: env.get('SMTP_USER').required().asString(),
-  SMTP_PASS: env.get('SMTP_PASS').required().asString(),
-  USER_EMAIL: env.get('USER_EMAIL').required().asEmailString(),
+  // MailHog SMTP (Gmail ou service mail)
+  SMTP_HOST: env.get('SMTP_HOST').default('smtp.gmail.com').asString(),
+  SMTP_PORT: env.get('SMTP_PORT').default(587).asPortNumber(),
+  SMTP_USER: env.get('SMTP_USER').default('noreply@example.com').asString(),
+  SMTP_PASS: env.get('SMTP_PASS').default('your_smtp_password').asString(),
+  USER_EMAIL: env.get('USER_EMAIL').default('noreply@example.com').asEmailString(),
 
   // ============================================
 
