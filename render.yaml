@@ -73,7 +73,7 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_EXPIRES_IN
-        value: 7d
+        value: 14d
 
       # Cache
       - key: CACHE_DEFAULT_TTL
