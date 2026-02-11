@@ -30,7 +30,7 @@
             "url": {
               "raw": "{{base_url}}/auth/register/step1",
               "host": ["{{base_url}}"],
-              "path": ["auth", "register", "step1"]
+              "path": ["auth", "register"]
             },
             "description": "Registration step 1 - French messages. Should receive:\n- auth.registration_step1_success (French)\n- sessionToken for next step\n- email and fullname confirmation"
           },
@@ -57,7 +57,7 @@
             "url": {
               "raw": "{{base_url}}/auth/register/step1",
               "host": ["{{base_url}}"],
-              "path": ["auth", "register", "step1"]
+              "path": ["auth", "register"]
             },
             "description": "Registration step 1 - English messages"
           },
@@ -84,7 +84,7 @@
             "url": {
               "raw": "{{base_url}}/auth/register/step1",
               "host": ["{{base_url}}"],
-              "path": ["auth", "register", "step1"]
+              "path": ["auth", "register"]
             },
             "description": "Should return: validation.invalid_email (FR)"
           },
@@ -111,7 +111,7 @@
             "url": {
               "raw": "{{base_url}}/auth/register/step1",
               "host": ["{{base_url}}"],
-              "path": ["auth", "register", "step1"]
+              "path": ["auth", "register"]
             },
             "description": "Should return: validation.password_too_short (FR)"
           },
@@ -138,7 +138,7 @@
             "url": {
               "raw": "{{base_url}}/auth/register/step1",
               "host": ["{{base_url}}"],
-              "path": ["auth", "register", "step1"]
+              "path": ["auth", "register"]
             },
             "description": "Should return: users.already_exists (FR)"
           },
