@@ -14,7 +14,7 @@ const auth = Router();
 
 // Sign up
 auth.post(
-  '/signup',
+  '/register',
   upload.single('profile'),
   validate_user.signup,
   validationErrorHandler,
@@ -23,7 +23,7 @@ auth.post(
 
 // Verify account with OTP
 auth.post(
-  '/verify',
+  '/verify-otp',
   isAuthenticated,
   validate_user.verifyAccount,
   validationErrorHandler,

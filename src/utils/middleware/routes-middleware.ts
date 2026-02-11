@@ -4,7 +4,6 @@ import { envs } from '@/config/env/env';
 import CSP from '@/router/_config/CSP/csp.router';
 import CSRF from '@/router/_config/CSRF-token/csrf.router';
 import health from '@/router/_config/healtcheck/health.router';
-import items from '@/router/items/items.router';
 import auth from '@/router/users/auth.router';
 import oauth from '@/router/users/oauth.router';
 import users from '@/router/users/users.router';
@@ -28,7 +27,6 @@ const setupRoutes = (app: Express): void => {
   app.use('/health', rateLimitingSubRoute, health);
 
   // Application routes with rate limiting
-  api.use('/items', rateLimitingSubRoute, items);
   api.use('/auth', rateLimitingSubRoute, auth);
   api.use('/auth/oauth', rateLimitingSubRoute, oauth);
   api.use('/users', rateLimitingSubRoute, users);
