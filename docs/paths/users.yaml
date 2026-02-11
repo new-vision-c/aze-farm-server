@@ -525,28 +525,6 @@
         $ref: '../components/responses/common.yaml#/ValidationError'
       '500':
         $ref: '../components/responses/common.yaml#/ServerError'
-      '200':
-        description: A list of users
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                success:
-                  type: boolean
-                  example: true
-                data:
-                  type: array
-                  items:
-                    $ref: '../components/schemas/User.yaml'
-                pagination:
-                  $ref: '../components/schemas/Pagination.yaml'
-      '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '403':
-        $ref: '../components/responses/Forbidden.yaml'
-      '500':
-        $ref: '../components/responses/ServerError.yaml'
 
   post:
     tags:
