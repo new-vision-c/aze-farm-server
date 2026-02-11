@@ -41,38 +41,39 @@ export class AuthService {
     data: RegisterStep1Data,
     language: 'fr' | 'en' = 'fr',
   ): Promise<AuthResponse> {
-    const { fullname, email, password } = data;
+    try {
+      const { fullname, email, password } = data;
 
-    // Vérifier si l'email existe déjà
-    const existingUser = await this.prisma.users.findFirst({
-      where: { email, is_deleted: false },
-    });
-
-    if (existingUser?.is_verified) {
-      return {
-        success: false,
-        step: 1,
-        message: this.i18nService.translate('users.already_exists', language),
-      };
-    }
-
-    // Si l'utilisateur existe mais n'est pas vérifié, le supprimer pour permettre une nouvelle inscription
-    if (existingUser && !existingUser.is_verified) {
-      await this.prisma.users.delete({
-        where: { user_id: existingUser.user_id },
+      // Vérifier si l'email existe déjà
+      const existingUser = await this.prisma.users.findFirst({
+        where: { email, is_deleted: false },
       });
-    }
 
-    // Hasher le mot de passe
-    const passwordHash = await bcrypt.hash(password, 10);
+      if (existingUser?.is_verified) {
+        return {
+          success: false,
+          step: 1,
+          message: this.i18nService.translate('users.already_exists', language),
+        };
+      }
 
-    // Générer l'OTP
-    const otpCode = generate_otp() || '000000';
-    const otpExpireDate = get_expire_date(new Date());
+      // Si l'utilisateur existe mais n'est pas vérifié, le supprimer pour permettre une nouvelle inscription
+      if (existingUser && !existingUser.is_verified) {
+        await this.prisma.users.delete({
+          where: { user_id: existingUser.user_id },
+        });
+      }
 
-    // Créer l'utilisateur avec le rôle USER par défaut
-    const user = await this.prisma.users.create({
-      data: {
+      // Hasher le mot de passe
+      const passwordHash = await bcrypt.hash(password, 10);
+
+      // Générer l'OTP
+      const otpCode = generate_otp() || '000000';
+      const otpExpireDate = get_expire_date(new Date());
+
+      // Créer l'utilisateur avec le rôle USER par défaut
+      const user = await this.prisma.users.create({
+        data: {
         email,
         password: passwordHash,
         fullname,
@@ -136,6 +137,25 @@ export class AuthService {
       requiresOtp: true,
       otpCode, // En développement uniquement
     };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error('Signup error:', error);
+      
+      // Vérifier si c'est une erreur de connexion MongoDB
+      if (errorMessage.includes('Server selection timeout') || errorMessage.includes('I/O error')) {
+        return {
+          success: false,
+          step: 1,
+          message: 'Erreur de connexion à la base de données. Veuillez vérifier votre connexion Internet.',
+        };
+      }
+      
+      return {
+        success: false,
+        step: 1,
+        message: this.i18nService.translate('server.error', language),
+      };
+    }
   }
 
   /**
