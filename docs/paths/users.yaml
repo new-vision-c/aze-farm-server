@@ -1,23 +1,530 @@
-# Users Endpoints
+# ============================================
+# ROUTES UTILISATEURS
+# ============================================
+# Endpoints de gestion des profils utilisateurs, recherche et administration
+
 /users:
   get:
     tags:
       - Users
-    summary: List all users
-    description: Retrieve a paginated list of users with optional filtering and sorting
+    summary: Lister tous les utilisateurs
+    description: |
+      Récupère une liste paginée de tous les utilisateurs enregistrés.
+      Permet le filtrage, la recherche et le tri.
+      Résultats limités à 100 utilisateurs par page maximum.
+      
+      **Cas d'usage :**
+      - Afficher la liste des utilisateurs disponibles
+      - Rechercher un utilisateur spécifique
+      - Exporter ou analyser les données utilisateurs
+    operationId: listUsers
     security:
       - bearerAuth: []
     parameters:
-      - $ref: '../components/parameters/page.yaml'
-      - $ref: '../components/parameters/limit.yaml'
-      - $ref: '../components/parameters/sortBy.yaml'
-      - $ref: '../components/parameters/order.yaml'
-      - in: query
-        name: search
+      - $ref: '../components/parameters/common.yaml#/page'
+      - $ref: '../components/parameters/common.yaml#/limit'
+      - name: search
+        in: query
+        required: false
+        description: Terme de recherche pour filtrer par email, nom ou prénom (insensible à la casse)
         schema:
           type: string
-        description: Search term to filter users by name or email
+          minLength: 2
+          maxLength: 100
+        example: 'john'
+      - name: role
+        in: query
+        required: false
+        description: Filtrer par rôle utilisateur
+        schema:
+          type: string
+          enum: [user, admin, moderator]
+        example: 'admin'
+      - name: isActive
+        in: query
+        required: false
+        description: Filtrer par statut actif/inactif
+        schema:
+          type: boolean
+        example: 'true'
+      - name: isVerified
+        in: query
+        required: false
+        description: Filtrer par statut vérifié/non vérifié
+        schema:
+          type: boolean
+        example: 'true'
+      - name: sortBy
+        in: query
+        required: false
+        description: Champ pour le tri
+        schema:
+          type: string
+          enum: [createdAt, email, firstName, lastLogin]
+        example: 'createdAt'
+      - name: order
+        in: query
+        required: false
+        description: Ordre de tri (ascendant ou descendant)
+        schema:
+          type: string
+          enum: [asc, desc]
+        example: 'desc'
     responses:
+      '200':
+        description: Liste des utilisateurs récupérée avec succès
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  type: array
+                  items:
+                    $ref: '../components/schemas/User.yaml'
+                pagination:
+                  type: object
+                  properties:
+                    page:
+                      type: integer
+                      example: 1
+                    limit:
+                      type: integer
+                      example: 10
+                    total:
+                      type: integer
+                      example: 150
+                    pages:
+                      type: integer
+                      example: 15
+      '400':
+        $ref: '../components/responses/common.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/common.yaml#/Unauthorized'
+      '500':
+        $ref: '../components/responses/common.yaml#/ServerError'
+
+/users/search:
+  get:
+    tags:
+      - Users
+    summary: Rechercher des utilisateurs
+    description: |
+      Recherche avancée d'utilisateurs avec plusieurs critères de filtrage.
+      Recherche par email, nom, prénom, rôle, statut.
+      Retourne une liste paginée des résultats correspondants.
+    operationId: searchUsers
+    security: []
+    parameters:
+      - name: q
+        in: query
+        required: true
+        description: Terme de recherche principal (email, nom ou prénom)
+        schema:
+          type: string
+          minLength: 2
+        example: 'john@example.com'
+      - $ref: '../components/parameters/common.yaml#/page'
+      - $ref: '../components/parameters/common.yaml#/limit'
+    responses:
+      '200':
+        description: Résultats de la recherche
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  type: array
+                  items:
+                    $ref: '../components/schemas/User.yaml'
+                pagination:
+                  type: object
+                  properties:
+                    page:
+                      type: integer
+                    limit:
+                      type: integer
+                    total:
+                      type: integer
+                    pages:
+                      type: integer
+      '400':
+        $ref: '../components/responses/common.yaml#/BadRequest'
+      '500':
+        $ref: '../components/responses/common.yaml#/ServerError'
+
+/users/{userId}:
+  get:
+    tags:
+      - Users
+    summary: Récupérer les détails d'un utilisateur
+    description: |
+      Récupère les informations complètes d'un utilisateur spécifique par son ID.
+      Inclut le profil complet, rôle, statut et dates importantes.
+    operationId: getUserById
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        description: ID unique de l'utilisateur (UUID)
+        schema:
+          type: string
+          format: uuid
+        example: '550e8400-e29b-41d4-a716-446655440000'
+    responses:
+      '200':
+        description: Détails de l'utilisateur
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  $ref: '../components/schemas/User.yaml'
+      '401':
+        $ref: '../components/responses/common.yaml#/Unauthorized'
+      '404':
+        description: Utilisateur non trouvé
+      '500':
+        $ref: '../components/responses/common.yaml#/ServerError'
+
+  put:
+    tags:
+      - Users
+    summary: Mettre à jour un utilisateur
+    description: |
+      Met à jour les informations d'un utilisateur.
+      Peut être appelé par l'utilisateur lui-même ou par un administrateur.
+      Les champs sensibles (email, mot de passe) ne peuvent être modifiés que par l'utilisateur lui-même.
+    operationId: updateUser
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        example: '550e8400-e29b-41d4-a716-446655440000'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              firstName:
+                type: string
+              lastName:
+                type: string
+              phone:
+                type: string
+              address:
+                type: string
+              city:
+                type: string
+              country:
+                type: string
+    responses:
+      '200':
+        description: Utilisateur mis à jour avec succès
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: 'Profil mis à jour avec succès'
+                data:
+                  $ref: '../components/schemas/User.yaml'
+      '400':
+        $ref: '../components/responses/common.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/common.yaml#/Unauthorized'
+      '403':
+        description: Accès refusé - vous ne pouvez modifier que votre propre profil
+      '404':
+        description: Utilisateur non trouvé
+      '500':
+        $ref: '../components/responses/common.yaml#/ServerError'
+
+  delete:
+    tags:
+      - Users
+    summary: Supprimer un utilisateur (suppression logique)
+    description: |
+      Supprime logiquement un utilisateur (soft delete).
+      L'utilisateur et ses données restent en base de données mais sont marqués comme supprimés.
+      L'utilisateur ne peut plus se connecter mais ses données restent pour l'audit.
+      Seuls les administrateurs peuvent effectuer cette action.
+    operationId: deleteUser
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        example: '550e8400-e29b-41d4-a716-446655440000'
+    responses:
+      '200':
+        description: Utilisateur supprimé avec succès
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: 'Utilisateur supprimé avec succès'
+      '401':
+        $ref: '../components/responses/common.yaml#/Unauthorized'
+      '403':
+        description: Seuls les administrateurs peuvent supprimer des utilisateurs
+      '404':
+        description: Utilisateur non trouvé
+      '500':
+        $ref: '../components/responses/common.yaml#/ServerError'
+
+/users/{userId}/role:
+  put:
+    tags:
+      - Users
+    summary: Modifier le rôle d'un utilisateur
+    description: |
+      Change le rôle d'un utilisateur (user, admin, moderator).
+      Seuls les administrateurs peuvent effectuer cette action.
+      Attention : cette action ne peut pas être annulée sans une autre modification.
+    operationId: updateUserRole
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        example: '550e8400-e29b-41d4-a716-446655440000'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - role
+            properties:
+              role:
+                type: string
+                enum: [user, admin, moderator]
+                description: Nouveau rôle de l'utilisateur
+                example: 'admin'
+    responses:
+      '200':
+        description: Rôle utilisateur mis à jour avec succès
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: 'Rôle utilisateur mis à jour avec succès'
+                data:
+                  $ref: '../components/schemas/User.yaml'
+      '400':
+        $ref: '../components/responses/common.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/common.yaml#/Unauthorized'
+      '403':
+        description: Seuls les administrateurs peuvent modifier les rôles
+      '404':
+        description: Utilisateur non trouvé
+      '500':
+        $ref: '../components/responses/common.yaml#/ServerError'
+
+/users/{userId}/restore:
+  post:
+    tags:
+      - Users
+    summary: Restaurer un utilisateur supprimé
+    description: |
+      Restaure un utilisateur qui a été supprimé logiquement.
+      Seuls les administrateurs peuvent restaurer des utilisateurs.
+      L'utilisateur redevient actif et peut se connecter à nouveau.
+    operationId: restoreUser
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        example: '550e8400-e29b-41d4-a716-446655440000'
+    responses:
+      '200':
+        description: Utilisateur restauré avec succès
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: 'Utilisateur restauré avec succès'
+                data:
+                  $ref: '../components/schemas/User.yaml'
+      '401':
+        $ref: '../components/responses/common.yaml#/Unauthorized'
+      '403':
+        description: Seuls les administrateurs peuvent restaurer des utilisateurs
+      '404':
+        description: Utilisateur non trouvé
+      '500':
+        $ref: '../components/responses/common.yaml#/ServerError'
+
+/users/export:
+  get:
+    tags:
+      - Users
+    summary: Exporter les utilisateurs en CSV
+    description: |
+      Exporte la liste complète des utilisateurs au format CSV.
+      Utile pour les rapports, analyses et sauvegardes.
+      Seuls les administrateurs peuvent exporter les données.
+      Le fichier inclut tous les champs utilisateurs sauf les mots de passe.
+    operationId: exportUsers
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: role
+        in: query
+        required: false
+        description: Filtrer l'export par rôle
+        schema:
+          type: string
+        example: 'admin'
+    responses:
+      '200':
+        description: Fichier CSV généré avec succès
+        content:
+          text/csv:
+            schema:
+              type: string
+      '401':
+        $ref: '../components/responses/common.yaml#/Unauthorized'
+      '403':
+        description: Seuls les administrateurs peuvent exporter
+      '500':
+        $ref: '../components/responses/common.yaml#/ServerError'
+
+/users/profile:
+  put:
+    tags:
+      - Users
+    summary: Mettre à jour le profil utilisateur
+    description: |
+      Met à jour le profil de l'utilisateur authentifié.
+      Permet de modifier les informations personnelles et la photo de profil.
+      La photo de profil doit être en format JPEG ou PNG (max 5MB).
+      Seuls les utilisateurs vérifiés peuvent mettre à jour leur profil.
+    operationId: updateUserProfile
+    security:
+      - bearerAuth: []
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            properties:
+              firstName:
+                type: string
+                minLength: 2
+                maxLength: 50
+                description: Prénom de l'utilisateur
+              lastName:
+                type: string
+                minLength: 2
+                maxLength: 50
+                description: Nom de famille
+              phone:
+                type: string
+                pattern: '^[0-9+\-\s()]+$'
+                description: Numéro de téléphone
+              address:
+                type: string
+                maxLength: 255
+                description: Adresse complète
+              city:
+                type: string
+                maxLength: 100
+                description: Ville
+              country:
+                type: string
+                maxLength: 100
+                description: Pays
+              profile:
+                type: string
+                format: binary
+                description: Image de profil (JPEG, PNG, max 5MB)
+    responses:
+      '200':
+        description: Profil mis à jour avec succès
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: 'Profil mis à jour avec succès'
+                data:
+                  $ref: '../components/schemas/User.yaml'
+      '400':
+        $ref: '../components/responses/common.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses/common.yaml#/Unauthorized'
+      '403':
+        description: Accès refusé ou utilisateur non vérifié
+      '422':
+        $ref: '../components/responses/common.yaml#/ValidationError'
+      '500':
+        $ref: '../components/responses/common.yaml#/ServerError'
       '200':
         description: A list of users
         content:

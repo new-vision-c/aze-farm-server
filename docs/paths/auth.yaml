@@ -1,22 +1,66 @@
 # ============================================
-# AUTHENTICATION ROUTES
+# ROUTES D'AUTHENTIFICATION
 # ============================================
+# Endpoints de gestion d'authentification, d'enregistrement et de gestion des mots de passe
 
-/auth/signup:
+/auth/register:
   post:
     tags:
       - Authentication
-    summary: Register a new user
-    description: Create a new user account with email and password
+    summary: Créer un nouveau compte utilisateur
+    description: |
+      Crée un nouveau compte utilisateur avec email et profil optionnel.
+      Envoie un OTP (One-Time Password) à l'adresse email fournie pour la vérification du compte.
+      La photo de profil est optionnelle et doit être une image au format JPEG ou PNG (max 5MB).
+      
+      **Étapes suivantes :**
+      1. L'utilisateur reçoit un code OTP par email
+      2. Appeler `/auth/verify-otp` pour vérifier le compte
+      3. Une fois vérifié, l'utilisateur peut se connecter normalement
+    operationId: signupUser
+    security: []
     requestBody:
       required: true
       content:
         multipart/form-data:
           schema:
-            $ref: '../components/schemas/UserAuth.yaml#/UserSignup'
+            type: object
+            required:
+              - email
+              - password
+              - firstName
+              - lastName
+            properties:
+              email:
+                type: string
+                format: email
+                description: Adresse email unique de l'utilisateur (sera l'identifiant de connexion)
+                example: john.doe@example.com
+              password:
+                type: string
+                format: password
+                minLength: 8
+                description: Mot de passe sécurisé (minimum 8 caractères, doit contenir majuscules, minuscules et chiffres)
+                example: 'SecurePass123!'
+              firstName:
+                type: string
+                minLength: 2
+                maxLength: 50
+                description: Prénom de l'utilisateur
+                example: John
+              lastName:
+                type: string
+                minLength: 2
+                maxLength: 50
+                description: Nom de famille de l'utilisateur
+                example: Doe
+              profile:
+                type: string
+                format: binary
+                description: Image de profil de l'utilisateur (optionnel - JPEG, PNG, max 5MB)
     responses:
       '201':
-        description: User registered successfully
+        description: Compte créé avec succès. Un code OTP a été envoyé à l'email de l'utilisateur.
         content:
           application/json:
             schema:
@@ -27,31 +71,57 @@
                   example: true
                 message:
                   type: string
-                  example: 'User registered successfully. Please check your email for verification.'
+                  example: 'Compte créé avec succès. Veuillez vérifier votre email pour le code de vérification.'
                 data:
-                  $ref: '../components/schemas/User.yaml'
+                  $ref: '../components/schemas/AuthResponse.yaml'
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
-      '409':
-        description: Email already exists
+        description: Données invalides ou email déjà existant
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                error:
+                  type: object
+                  properties:
+                    code:
+                      type: string
+                      example: 'DUPLICATE_EMAIL'
+                    message:
+                      type: string
+                      example: 'Un compte avec cet email existe déjà'
+      '422':
+        $ref: '../components/responses/common.yaml#/ValidationError'
       '500':
-        $ref: '../components/responses/ServerError.yaml'
+        $ref: '../components/responses/common.yaml#/ServerError'
 
-/auth/verify:
+/auth/login:
   post:
     tags:
       - Authentication
-    summary: Verify account with OTP
-    description: Verify user's email address using the OTP sent to their email
+    summary: Connexion utilisateur
+    description: |
+      Authentifie un utilisateur avec son email et mot de passe.
+      Retourne un JWT access token et un refresh token pour les requêtes authentifiées.
+      L'utilisateur doit avoir un compte actif, vérifié et non supprimé.
+      
+      **Tokens retournés :**
+      - `accessToken` : JWT valide pendant 15 minutes pour les requêtes authentifiées
+      - `refreshToken` : Token valide pendant 7 jours pour obtenir un nouveau access token
+    operationId: loginUser
+    security: []
     requestBody:
       required: true
       content:
         application/json:
           schema:
-            $ref: '../components/schemas/UserAuth.yaml#/VerifyOTP'
+            $ref: '../components/schemas/LoginRequest.yaml'
     responses:
       '200':
-        description: Account verified successfully
+        description: Connexion réussie. Les tokens d'authentification sont retournés dans la réponse et en cookies.
         content:
           application/json:
             schema:
@@ -62,132 +132,471 @@
                   example: true
                 message:
                   type: string
-                  example: 'Account verified successfully'
+                  example: 'Connexion réussie'
                 data:
                   $ref: '../components/schemas/AuthResponse.yaml'
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
+        description: Identifiants invalides, compte non vérifié ou inactif
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                error:
+                  type: object
+                  properties:
+                    code:
+                      type: string
+                      example: 'INVALID_CREDENTIALS'
+                    message:
+                      type: string
+                      example: 'Email ou mot de passe incorrect'
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
+        $ref: '../components/responses/common.yaml#/Unauthorized'
       '500':
-        $ref: '../components/responses/ServerError.yaml'
+        $ref: '../components/responses/common.yaml#/ServerError'
 
-# ... (autres routes d'authentification)
+/auth/verify-otp:
+  post:
+    tags:
+      - Authentication
+    summary: Vérifier le compte avec OTP
+    description: |
+      Valide le compte utilisateur en utilisant le code OTP à 6 chiffres reçu par email.
+      Cette étape est obligatoire après l'enregistrement.
+      Après vérification réussie, l'utilisateur a accès à toutes les fonctionnalités.
+      
+      **Délai d'expiration :** Le code OTP expire après 15 minutes.
+    operationId: verifyAccount
+    security:
+      - bearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - otp
+            properties:
+              otp:
+                type: string
+                pattern: '^\d{6}$'
+                description: Code OTP à 6 chiffres reçu dans l'email de vérification
+                example: '123456'
+    responses:
+      '200':
+        description: Compte vérifié avec succès. L'utilisateur peut maintenant accéder à tous les services.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: 'Compte vérifié avec succès'
+                data:
+                  $ref: '../components/schemas/User.yaml'
+      '400':
+        description: Code OTP invalide, expiré ou utilisateur déjà vérifié
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                error:
+                  type: object
+                  properties:
+                    code:
+                      type: string
+                      example: 'INVALID_OTP'
+                    message:
+                      type: string
+                      example: 'Code OTP invalide ou expiré'
+      '401':
+        $ref: '../components/responses/common.yaml#/Unauthorized'
+      '500':
+        $ref: '../components/responses/common.yaml#/ServerError'
+
+/auth/resend-otp:
+  post:
+    tags:
+      - Authentication
+    summary: Renvoyer le code OTP
+    description: |
+      Renvoie un nouveau code OTP à l'adresse email de l'utilisateur.
+      Utilisé si l'utilisateur n'a pas reçu le premier code ou s'il a expiré.
+      
+      **Limite de taux :** Délai minimum de 5 minutes entre les renvois.
+    operationId: resendOtp
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - email
+            properties:
+              email:
+                type: string
+                format: email
+                description: Adresse email du compte utilisateur
+                example: john.doe@example.com
+    responses:
+      '200':
+        description: Nouveau code OTP envoyé avec succès à l'email
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: 'Code OTP renvoyé avec succès. Veuillez vérifier votre email.'
+      '400':
+        description: Trop de tentatives ou email introuvable
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                error:
+                  type: object
+                  properties:
+                    code:
+                      type: string
+                      example: 'RATE_LIMIT_EXCEEDED'
+                    message:
+                      type: string
+                      example: 'Veuillez attendre 5 minutes avant de renvoyer un autre code'
+      '500':
+        $ref: '../components/responses/common.yaml#/ServerError'
+
+/auth/forgot-password:
+  post:
+    tags:
+      - Authentication
+    summary: Demander la réinitialisation du mot de passe
+    description: |
+      Envoie un email contenant un lien de réinitialisation du mot de passe à l'utilisateur.
+      Le lien expires après 1 heure pour des raisons de sécurité.
+      Utilisé quand l'utilisateur oublie son mot de passe.
+      
+      **Sécurité :** Ne révèle pas si l'email existe ou non dans la base de données.
+    operationId: forgotPassword
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - email
+            properties:
+              email:
+                type: string
+                format: email
+                description: Adresse email associée au compte
+                example: john.doe@example.com
+    responses:
+      '200':
+        description: Email de réinitialisation envoyé avec succès (même si l'email n'existe pas)
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: 'Email de réinitialisation envoyé avec succès. Veuillez vérifier votre email.'
+      '500':
+        $ref: '../components/responses/common.yaml#/ServerError'
+
+/auth/reset-password/{resetToken}:
+  post:
+    tags:
+      - Authentication
+    summary: Réinitialiser le mot de passe
+    description: |
+      Réinitialise le mot de passe à l'aide du token reçu par email.
+      Le token doit être valide et ne pas être expiré (validité 1 heure).
+      Le nouveau mot de passe doit respecter les critères de sécurité et être différent de l'ancien.
+      
+      **Validations :**
+      - Token valide et non expiré
+      - Mot de passe minimum 8 caractères
+      - Confirmation du mot de passe identique
+    operationId: resetPassword
+    security: []
+    parameters:
+      - name: resetToken
+        in: path
+        required: true
+        description: Token de réinitialisation reçu dans l'email (expire après 1 heure)
+        schema:
+          type: string
+        example: 'a1b2c3d4e5f67890abcdef1234567890'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - password
+              - passwordConfirm
+            properties:
+              password:
+                type: string
+                format: password
+                minLength: 8
+                description: Nouveau mot de passe sécurisé
+                example: 'NewSecurePass456!'
+              passwordConfirm:
+                type: string
+                format: password
+                description: Confirmation du nouveau mot de passe (doit être identique)
+                example: 'NewSecurePass456!'
+    responses:
+      '200':
+        description: Mot de passe réinitialisé avec succès. L'utilisateur peut se connecter avec le nouveau mot de passe.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: 'Mot de passe réinitialisé avec succès'
+      '400':
+        description: Token invalide, expiré ou mots de passe invalides
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                error:
+                  type: object
+                  properties:
+                    code:
+                      type: string
+                      example: 'INVALID_RESET_TOKEN'
+                    message:
+                      type: string
+                      example: 'Lien de réinitialisation invalide ou expiré'
+      '422':
+        $ref: '../components/responses/common.yaml#/ValidationError'
+      '500':
+        $ref: '../components/responses/common.yaml#/ServerError'
+
+/auth/logout:
+  post:
+    tags:
+      - Authentication
+    summary: Déconnexion utilisateur
+    description: |
+      Déconnecte l'utilisateur en invalidant son token actuel.
+      Efface les sessions, cookies et tokens d'authentification.
+      L'utilisateur ne peut plus accéder aux ressources protégées sans se reconnecter.
+    operationId: logoutUser
+    security:
+      - bearerAuth: []
+    responses:
+      '200':
+        description: Déconnexion réussie
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: 'Déconnexion réussie'
+      '401':
+        $ref: '../components/responses/common.yaml#/Unauthorized'
+      '500':
+        $ref: '../components/responses/common.yaml#/ServerError'
+
+/auth/change-password:
+  post:
+    tags:
+      - Authentication
+    summary: Changer le mot de passe
+    description: |
+      Change le mot de passe d'un utilisateur authentifié sans oublier son mot de passe.
+      Nécessite le mot de passe actuel pour sécurité (anti-CSRF).
+      Le nouveau mot de passe doit être différent de l'ancien et respecter les critères de sécurité.
+      
+      **Prérequis :** Utilisateur doit être authentifié (token valide)
+    operationId: changePassword
+    security:
+      - bearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - currentPassword
+              - password
+              - passwordConfirm
+            properties:
+              currentPassword:
+                type: string
+                format: password
+                description: Mot de passe actuel pour vérification d'identité
+                example: 'CurrentPass123!'
+              password:
+                type: string
+                format: password
+                minLength: 8
+                description: Nouveau mot de passe (minimum 8 caractères)
+                example: 'NewSecurePass456!'
+              passwordConfirm:
+                type: string
+                format: password
+                description: Confirmation du nouveau mot de passe (doit être identique)
+                example: 'NewSecurePass456!'
+    responses:
+      '200':
+        description: Mot de passe changé avec succès. L'utilisateur devra se reconnecter avec le nouveau mot de passe.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: 'Mot de passe changé avec succès'
+      '400':
+        description: Mot de passe actuel incorrect ou nouveau mot de passe invalide
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                error:
+                  type: object
+                  properties:
+                    code:
+                      type: string
+                      example: 'INVALID_CURRENT_PASSWORD'
+                    message:
+                      type: string
+                      example: 'Le mot de passe actuel est incorrect'
+      '401':
+        $ref: '../components/responses/common.yaml#/Unauthorized'
+      '422':
+        $ref: '../components/responses/common.yaml#/ValidationError'
+      '500':
+        $ref: '../components/responses/common.yaml#/ServerError'
 
 # ============================================
-# OAUTH ROUTES
+# ROUTES OAUTH
 # ============================================
 
 /oauth/{provider}:
   get:
     tags:
       - OAuth
-    summary: Initiate OAuth authentication
-    description: Redirects to the OAuth provider's login page
+    summary: Initier l'authentification OAuth
+    description: |
+      Redirige vers la page de connexion du fournisseur OAuth (Google, Apple, etc.).
+      Paramètre `redirectUri` pour retourner après authentification.
+      
+      **Fournisseurs supportés :** google, apple
+    operationId: initiateOAuth
+    security: []
     parameters:
       - $ref: '../components/parameters/oauthProvider.yaml'
-      - $ref: '../components/parameters/redirectUri.yaml'
+      - name: redirectUri
+        in: query
+        required: false
+        description: URL de retour après authentification réussie (doit correspondre à la configuration du serveur)
+        schema:
+          type: string
+          format: uri
+        example: 'https://app.example.com/auth/callback'
     responses:
       '302':
-        description: Redirect to OAuth provider
+        description: Redirection vers la page de connexion du fournisseur OAuth
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
+        $ref: '../components/responses/common.yaml#/BadRequest'
       '500':
-        $ref: '../components/responses/ServerError.yaml'
+        $ref: '../components/responses/common.yaml#/ServerError'
 
 /oauth/{provider}/callback:
   get:
     tags:
       - OAuth
-    summary: OAuth callback
-    description: Callback URL that handles the OAuth response
+    summary: Callback OAuth
+    description: |
+      URL de callback qui gère la réponse du fournisseur OAuth.
+      Appelée automatiquement par le fournisseur OAuth après authentification.
+      Crée ou met à jour le profil utilisateur et retourne les tokens.
+      
+      **Ne pas appeler manuellement** - c'est un callback système.
+    operationId: handleOAuthCallback
+    security: []
     parameters:
       - $ref: '../components/parameters/oauthProvider.yaml'
-      - $ref: '../components/parameters/oauthCode.yaml'
-      - $ref: '../components/parameters/oauthState.yaml'
-    responses:
-      '302':
-        description: Redirect to success or error URL
-      '400':
-        $ref: '../components/responses/BadRequest.yaml'
-      '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '500':
-        $ref: '../components/responses/ServerError.yaml'
-
-# ============================================
-# PASSWORD MANAGEMENT ROUTES
-# ============================================
-
-/auth/forgot-password:
-  post:
-    tags:
-      - Authentication
-    summary: Request password reset
-    description: Send a password reset link to the user's email
-    requestBody:
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: '../components/schemas/UserAuth.yaml#/ForgotPassword'
-    responses:
-      '200':
-        description: Password reset email sent
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                success:
-                  type: boolean
-                  example: true
-                message:
-                  type: string
-                  example: 'Password reset link sent to your email'
-      '400':
-        $ref: '../components/responses/BadRequest.yaml'
-      '404':
-        description: User not found
-      '500':
-        $ref: '../components/responses/ServerError.yaml'
-
-/auth/reset-password/{resetToken}:
-  post:
-    tags:
-      - Authentication
-    summary: Reset password
-    description: Reset user's password using the token sent to their email
-    parameters:
-      - name: resetToken
-        in: path
+      - name: code
+        in: query
         required: true
+        description: Code d'autorisation reçu du fournisseur OAuth
         schema:
           type: string
-        description: The reset token sent to the user's email
-    requestBody:
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: '../components/schemas/UserAuth.yaml#/ResetPassword'
+        example: '4/0AY0e-g7xAb...'
+      - name: state
+        in: query
+        required: true
+        description: État CSRF pour validation de sécurité
+        schema:
+          type: string
+        example: 'a1b2c3d4e5f6g7h8'
     responses:
-      '200':
-        description: Password reset successful
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                success:
-                  type: boolean
-                  example: true
-                message:
-                  type: string
-                  example: 'Password has been reset successfully'
+      '302':
+        description: Redirection vers l'URL de succès avec tokens en paramètres
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
+        $ref: '../components/responses/common.yaml#/BadRequest'
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
+        $ref: '../components/responses/common.yaml#/Unauthorized'
       '500':
-        $ref: '../components/responses/ServerError.yaml'
+        $ref: '../components/responses/common.yaml#/ServerError'
