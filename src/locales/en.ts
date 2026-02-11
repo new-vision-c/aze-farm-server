@@ -18,6 +18,10 @@ export const en = {
     token_invalid: 'Invalid token',
     token_expired: 'Token expired',
     access_denied: 'Access denied',
+    verification_success: 'Account verified successfully',
+    user_already_verified: 'User already verified',
+    otp_invalid: 'Invalid OTP code',
+    otp_expired: 'OTP has expired',
   },
 
   // User messages

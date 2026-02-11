@@ -4,9 +4,13 @@ import prisma from '@/config/prisma/prisma';
 import { MAIL } from '@/core/constant/global';
 import send_mail from '@/services/Mail/send-mail';
 import log from '@/services/logging/logger';
+import { I18nService } from '@/services/I18nService';
 import { asyncHandler, response, validateRequiredFields } from '@/utils/responses/helpers';
 
 import { invalidateUserCache } from '../_cache/user-cache';
+
+// Instance du service d'internationalisation
+const i18n = new I18nService();
 
 // Interface pour étendre Request avec user
 interface AuthenticatedRequest extends Request {
@@ -25,6 +29,7 @@ const verify_otp = asyncHandler(
   async (req: AuthenticatedRequest, res: Response): Promise<void | Response<any>> => {
     try {
       const { otp } = req.body;
+      const language = (req as any).language || 'fr';
 
       // Récupérer l'email depuis le token JWT décodé (ajouté par le middleware d'authentification)
       const email = req.user?.email;
@@ -32,7 +37,7 @@ const verify_otp = asyncHandler(
       log.info(`OTP verification attempt`, { email, otp });
 
       if (!email) {
-        return response.unauthorized(req, res, 'Invalid or missing token');
+        return response.unauthorized(req, res, i18n.translate('auth.token_invalid', language));
       }
 
       const validation = validateRequiredFields({ otp }, ['otp']);
@@ -40,7 +45,7 @@ const verify_otp = asyncHandler(
         return response.badRequest(
           req,
           res,
-          `Missing required field(s): ${validation.missing.join(', ')}`,
+          i18n.translate('validation.otp_required', language),
         );
       }
 
@@ -50,7 +55,7 @@ const verify_otp = asyncHandler(
       });
 
       if (!user) {
-        return response.notFound(req, res, 'User not found');
+        return response.notFound(req, res, i18n.translate('users.not_found', language));
       }
 
       log.info(`User found`, {
@@ -60,18 +65,18 @@ const verify_otp = asyncHandler(
       });
 
       if (user.is_verified) {
-        return response.conflict(req, res, 'User already verified');
+        return response.conflict(req, res, i18n.translate('auth.user_already_verified', language));
       }
 
       // Check OTP validity
       if (user.otp?.code !== otp) {
-        return response.forbidden(req, res, 'Invalid OTP code');
+        return response.forbidden(req, res, i18n.translate('auth.otp_invalid', language));
       }
 
       // Check OTP expiration
       const now = new Date();
       if (user.otp?.expire_at && user.otp.expire_at < now) {
-        return response.forbidden(req, res, 'OTP has expired');
+        return response.forbidden(req, res, i18n.translate('auth.otp_expired', language));
       }
 
       // Verify user
@@ -98,10 +103,10 @@ const verify_otp = asyncHandler(
 
       log.info('User verified successfully', { userId: user.user_id, email });
 
-      return response.ok(req, res, { email }, 'Account verified successfully');
+      return response.ok(req, res, { email }, i18n.translate('auth.verification_success', language));
     } catch (error: any) {
       log.error('OTP verification error', { error: error.message, stack: error.stack });
-      return response.serverError(req, res, 'Verification failed');
+      return response.serverError(req, res, i18n.translate('server.error', language));
     }
   },
 );

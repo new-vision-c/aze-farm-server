@@ -18,6 +18,10 @@ export const fr = {
     token_invalid: 'Token invalide',
     token_expired: 'Token expiré',
     access_denied: 'Accès refusé',
+    verification_success: 'Compte vérifié avec succès',
+    user_already_verified: 'Utilisateur déjà vérifié',
+    otp_invalid: 'Code OTP invalide',
+    otp_expired: 'Le code OTP a expiré',
   },
 
   // Messages pour les utilisateurs

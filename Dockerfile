@@ -46,10 +46,6 @@ COPY --from=builder /usr/src/app/.env.example ./
 # Copy docs directory
 COPY --from=builder /usr/src/app/docs ./docs
 
-# Copy and set permissions for MongoDB startup script
-COPY scripts/start-mongo.sh /usr/local/bin/start-mongo.sh
-RUN chmod +x /usr/local/bin/start-mongo.sh
-
 # Set up module aliases in node_modules
 COPY module-alias.config.js ./
 

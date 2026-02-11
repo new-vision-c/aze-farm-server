@@ -6,6 +6,13 @@ import { I18nService } from '../../I18nService';
 // Instance du service d'internationalisation
 const i18n = new I18nService();
 
+// Regex pour validation du mot de passe:
+// - Min 6 caractères
+// - Au moins 1 minuscule
+// - Au moins 1 majuscule
+// - Au moins 1 chiffre OU 1 caractère spécial
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*(?:\d|[!@#$%^&*(),.?":{}|<>]))(?!.*\s).{6,}$/;
+
 export const validate_user = {
   signup: [
     // Email validation
@@ -17,18 +24,14 @@ export const validate_user = {
       .withMessage(i18n.translate('validation.invalid_email'))
       .escape(),
 
-    // Password validation - niveau moyen
+    // Password validation - Custom regex
     body('password')
       .trim()
       .notEmpty()
       .withMessage(i18n.translate('validation.password_required'))
-      .isStrongPassword({
-        minLength: 8,
-        minLowercase: 1,
-        minUppercase: 1,
-        minNumbers: 1,
-        minSymbols: 0, // Pas de symbole requis pour niveau moyen
-      })
+      .isLength({ min: 6 })
+      .withMessage(i18n.translate('validation.password_min_length', undefined, { min: 6 }))
+      .matches(PASSWORD_REGEX)
       .withMessage(i18n.translate('validation.password_too_weak')),
 
     // Fullname validation (selon schema.prisma)
@@ -63,7 +66,7 @@ export const validate_user = {
   ],
 
   verifyAccount: [
-    // Session token validation (header Authorization)
+    // Session token validation (header Authorization) - Bearer token from signup
     header('authorization')
       .trim()
       .notEmpty()
@@ -72,15 +75,6 @@ export const validate_user = {
       .withMessage(
         i18n.translate('validation.invalid_format', undefined, { field: 'authorization' }),
       ),
-
-    // Email validation
-    body('email')
-      .trim()
-      .notEmpty()
-      .withMessage(i18n.translate('validation.required', undefined, { field: 'email' }))
-      .isEmail()
-      .withMessage(i18n.translate('validation.invalid_email'))
-      .escape(),
 
     // OTP validation - exactement 6 chiffres
     body('otp')
@@ -122,18 +116,14 @@ export const validate_user = {
     // Reset token validation
     param('resetToken').notEmpty().withMessage(i18n.translate('validation.reset_token_required')),
 
-    // New password validation - niveau moyen
+    // New password validation - Custom regex
     body('new_password')
       .trim()
       .notEmpty()
       .withMessage(i18n.translate('validation.new_password_required'))
-      .isStrongPassword({
-        minLength: 8,
-        minLowercase: 1,
-        minUppercase: 1,
-        minNumbers: 1,
-        minSymbols: 0, // Pas de symbole requis pour niveau moyen
-      })
+      .isLength({ min: 6 })
+      .withMessage(i18n.translate('validation.password_min_length', undefined, { min: 6 }))
+      .matches(PASSWORD_REGEX)
       .withMessage(i18n.translate('validation.password_too_weak')),
   ],
 
@@ -144,17 +134,14 @@ export const validate_user = {
       .notEmpty()
       .withMessage(i18n.translate('validation.current_password_required')),
 
-    // New password validation - niveau moyen
+    // New password validation - Custom regex
     body('new_password')
       .trim()
       .notEmpty()
       .withMessage(i18n.translate('validation.new_password_required'))
-      .isStrongPassword({
-        minLength: 8,
-        minLowercase: 1,
-        minUppercase: 1,
-        minNumbers: 1,
-      })
+      .isLength({ min: 6 })
+      .withMessage(i18n.translate('validation.password_min_length', undefined, { min: 6 }))
+      .matches(PASSWORD_REGEX)
       .withMessage(i18n.translate('validation.password_too_weak')),
   ],
 
