@@ -15,10 +15,10 @@ export const schedulerConfig: SchedulerConfig = {
   },
 
   backupJob: {
-    schedule: '* * * * *', // Every minute (for testing)
-    // schedule: '0 2 * * *', // Every day at 2 AM
+    schedule: '0 2 * * *', // Every day at 2 AM (disabled in development)
     options: {
       timezone: envs.TIMEZONE || 'Africa/Douala',
+      scheduled: process.env.NODE_ENV === 'production', // Only run in production
     },
   },
 
