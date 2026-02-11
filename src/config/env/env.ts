@@ -73,6 +73,12 @@ export const envs = {
 
   // ============================================
 
+  // Health Check
+  HEALTH_CHECK_EMAIL: env.get('HEALTH_CHECK_EMAIL').default('admin@aze-farm.com').asString(),
+  HEALTH_CHECK_API_URL: env.get('HEALTH_CHECK_API_URL').default('https://aze-farm-api.onrender.com').asString(),
+
+  // ============================================
+
   // Logging
   LOG_LEVEL: env.get('LOG_LEVEL').default('info').asString(),
   LOG_TO_FILE: env.get('LOG_TO_FILE').default('false').asBool(),

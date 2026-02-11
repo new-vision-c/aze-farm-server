@@ -1,6 +1,13 @@
+/**
+ * Version optimisée de HealthCheckJob avec intégration Prometheus
+ * Ce fichier montre comment intégrer les métriques Prometheus
+ * pour un monitoring plus avancé des vérifications de santé
+ */
+
 import type { ScheduledTask } from 'node-cron';
 import axios from 'axios';
 import { MongoClient } from 'mongodb';
+import { Histogram, Counter, Gauge } from 'prom-client';
 
 import log from '@/services/logging/logger';
 import send_mail from '@/services/Mail/send-mail';
@@ -19,9 +26,30 @@ interface HealthCheckResult {
 type ServiceCheckFunction = () => Promise<HealthCheckResult>;
 
 /**
- * Job to perform health checks on critical services
+ * Métriques Prometheus pour le health check
  */
-export class HealthCheckJob {
+const healthCheckDuration = new Histogram({
+  name: 'health_check_duration_ms',
+  help: 'Duration of health checks in milliseconds',
+  labelNames: ['service'],
+});
+
+const healthCheckStatus = new Gauge({
+  name: 'health_check_status',
+  help: 'Health check status (1 = healthy, 0 = unhealthy)',
+  labelNames: ['service'],
+});
+
+const healthCheckErrors = new Counter({
+  name: 'health_check_errors_total',
+  help: 'Total number of health check errors',
+  labelNames: ['service'],
+});
+
+/**
+ * Job optimisé pour vérifier la santé des services critiques avec métriques
+ */
+export class HealthCheckJobWithMetrics {
   private task: ScheduledTask | null = null;
   private readonly healthCheckEmail = envs.HEALTH_CHECK_EMAIL || 'admin@aze-farm.com';
 
@@ -32,8 +60,19 @@ export class HealthCheckJob {
       const results = await this.performHealthChecks();
       const failedChecks = results.filter((r) => r.status === 'unhealthy');
 
+      // Update metrics
+      results.forEach((result) => {
+        healthCheckStatus.set({ service: result.service }, result.status === 'healthy' ? 1 : 0);
+        if (result.responseTime) {
+          healthCheckDuration.observe({ service: result.service }, result.responseTime);
+        }
+      });
+
       if (failedChecks.length > 0) {
         log.warn('Health check found issues', { failedChecks });
+        failedChecks.forEach((check) => {
+          healthCheckErrors.inc({ service: check.service });
+        });
         await this.sendHealthCheckEmail(results);
       } else {
         log.info('All health checks passed', { results });
@@ -298,7 +337,7 @@ export class HealthCheckJob {
 
     const { schedule, options } = schedulerConfig.healthCheck;
     this.task = scheduler.schedule(schedule, this.execute.bind(this), options);
-    log.info('********************HealthCheckJob started********************');
+    log.info('********************HealthCheckJobWithMetrics started********************');
   }
 
   // Stop the health check job
@@ -307,6 +346,6 @@ export class HealthCheckJob {
       this.task.stop();
       this.task = null;
     }
-    log.info('********************HealthCheckJob stopped********************');
+    log.info('********************HealthCheckJobWithMetrics stopped********************');
   }
 }
