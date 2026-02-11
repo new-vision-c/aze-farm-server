@@ -1,0 +1,799 @@
+{
+  "info": {
+    "_postman_id": "auth-i18n-test-collection",
+    "name": "Authentication API - Internationalization Tests",
+    "description": "Complete authentication endpoint tests with French (fr) and English (en) message translations",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Registration",
+      "item": [
+        {
+          "name": "Register - Step 1 (FR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullname\": \"Jean Dupont\",\n  \"email\": \"jean.dupont@example.com\",\n  \"password\": \"SecurePassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register/step1",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register", "step1"]
+            },
+            "description": "Registration step 1 - French messages. Should receive:\n- auth.registration_step1_success (French)\n- sessionToken for next step\n- email and fullname confirmation"
+          },
+          "response": []
+        },
+        {
+          "name": "Register - Step 1 (EN)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en-US,en;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullname\": \"John Smith\",\n  \"email\": \"john.smith@example.com\",\n  \"password\": \"SecurePassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register/step1",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register", "step1"]
+            },
+            "description": "Registration step 1 - English messages"
+          },
+          "response": []
+        },
+        {
+          "name": "Register - Invalid Email Format (FR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullname\": \"Jean Dupont\",\n  \"email\": \"not-an-email\",\n  \"password\": \"SecurePassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register/step1",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register", "step1"]
+            },
+            "description": "Should return: validation.invalid_email (FR)"
+          },
+          "response": []
+        },
+        {
+          "name": "Register - Weak Password (FR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullname\": \"Jean Dupont\",\n  \"email\": \"jean.dupont2@example.com\",\n  \"password\": \"weak\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register/step1",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register", "step1"]
+            },
+            "description": "Should return: validation.password_too_short (FR)"
+          },
+          "response": []
+        },
+        {
+          "name": "Register - Email Already Exists (FR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullname\": \"Jean Dupont\",\n  \"email\": \"jean.dupont@example.com\",\n  \"password\": \"SecurePassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register/step1",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register", "step1"]
+            },
+            "description": "Should return: users.already_exists (FR)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. OTP Verification",
+      "item": [
+        {
+          "name": "Verify OTP - Success (FR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionToken\": \"{{session_token}}\",\n  \"otp_code\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/verify-otp",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "verify-otp"]
+            },
+            "description": "Should return: auth.email_verified_success (FR)"
+          },
+          "response": []
+        },
+        {
+          "name": "Verify OTP - Invalid Code (FR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionToken\": \"{{session_token}}\",\n  \"otp_code\": \"000000\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/verify-otp",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "verify-otp"]
+            },
+            "description": "Should return: validation.otp_invalid (FR)"
+          },
+          "response": []
+        },
+        {
+          "name": "Verify OTP - Session Expired (FR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionToken\": \"invalid_or_expired_token\",\n  \"otp_code\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/verify-otp",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "verify-otp"]
+            },
+            "description": "Should return: validation.session_expired (FR)"
+          },
+          "response": []
+        },
+        {
+          "name": "Resend OTP - Success (FR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionToken\": \"{{session_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/resend-otp",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "resend-otp"]
+            },
+            "description": "Should return: auth.otp_resent_success (FR)"
+          },
+          "response": []
+        },
+        {
+          "name": "Resend OTP - Rate Limit (FR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionToken\": \"{{session_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/resend-otp",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "resend-otp"]
+            },
+            "description": "Should return: validation.wait_before_new_otp (FR) with minutes parameter"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Login",
+      "item": [
+        {
+          "name": "Login - Success (FR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jean.dupont@example.com\",\n  \"password\": \"SecurePassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Should return:\n- auth.login_success (FR)\n- accessToken\n- refreshToken (in cookie)\n- user data"
+          },
+          "response": []
+        },
+        {
+          "name": "Login - Success (EN)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en-US,en;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.smith@example.com\",\n  \"password\": \"SecurePassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Should return: auth.login_success (EN)"
+          },
+          "response": []
+        },
+        {
+          "name": "Login - Invalid Email (FR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"nonexistent@example.com\",\n  \"password\": \"SecurePassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Should return: auth.login_failed (FR)"
+          },
+          "response": []
+        },
+        {
+          "name": "Login - Invalid Password (FR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jean.dupont@example.com\",\n  \"password\": \"WrongPassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Should return: auth.login_failed (FR)"
+          },
+          "response": []
+        },
+        {
+          "name": "Login - Unverified Account (FR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"unverified@example.com\",\n  \"password\": \"SecurePassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Should return: auth.access_denied (FR) - account not verified"
+          },
+          "response": []
+        },
+        {
+          "name": "Login - Inactive Account (FR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"inactive@example.com\",\n  \"password\": \"SecurePassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Should return: auth.access_denied (FR) - account inactive"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Password Management",
+      "item": [
+        {
+          "name": "Forgot Password - Success (FR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jean.dupont@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/forgot-password",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "forgot-password"]
+            },
+            "description": "Should return: auth.password_reset_email_sent (FR)"
+          },
+          "response": []
+        },
+        {
+          "name": "Forgot Password - User Not Found (FR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"nonexistent@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/forgot-password",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "forgot-password"]
+            },
+            "description": "Should return: users.not_found (FR)"
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password - Success (FR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resetToken\": \"{{reset_token}}\",\n  \"newPassword\": \"NewSecurePassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/reset-password",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "reset-password"]
+            },
+            "description": "Should return: auth.password_changed_success (FR)"
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password - Invalid Token (FR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resetToken\": \"invalid_token\",\n  \"newPassword\": \"NewSecurePassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/reset-password",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "reset-password"]
+            },
+            "description": "Should return: validation.token_invalid (FR)"
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password - Token Expired (FR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resetToken\": \"{{expired_token}}\",\n  \"newPassword\": \"NewSecurePassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/reset-password",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "reset-password"]
+            },
+            "description": "Should return: validation.token_expired (FR)"
+          },
+          "response": []
+        },
+        {
+          "name": "Change Password - Success (FR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"SecurePassword123!\",\n  \"newPassword\": \"AnotherSecurePassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/change-password",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "change-password"]
+            },
+            "description": "Should return: auth.password_changed_success (FR)"
+          },
+          "response": []
+        },
+        {
+          "name": "Change Password - Wrong Current Password (FR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"WrongPassword123!\",\n  \"newPassword\": \"AnotherSecurePassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/change-password",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "change-password"]
+            },
+            "description": "Should return: auth.login_failed or current_password_invalid (FR)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. Logout & Token",
+      "item": [
+        {
+          "name": "Logout - Success (FR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "logout"]
+            },
+            "description": "Should return: auth.logout_success (FR)"
+          },
+          "response": []
+        },
+        {
+          "name": "Logout - Without Token (FR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "logout"]
+            },
+            "description": "Should return: auth.token_required (FR)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "6. OAuth (Optional)",
+      "item": [
+        {
+          "name": "OAuth Google - Initiate (FR)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/oauth/google",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "oauth", "google"]
+            },
+            "description": "Initiates Google OAuth flow"
+          },
+          "response": []
+        },
+        {
+          "name": "OAuth Google - Callback (FR)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/oauth/google/callback?code=AUTH_CODE&state=STATE",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "oauth", "google", "callback"],
+              "query": [
+                {
+                  "key": "code",
+                  "value": "AUTH_CODE"
+                },
+                {
+                  "key": "state",
+                  "value": "STATE"
+                }
+              ]
+            },
+            "description": "Google OAuth callback - should return tokens and user data"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000/api",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "session_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "reset_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "expired_token",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+      "type": "string"
+    }
+  ]
+}
