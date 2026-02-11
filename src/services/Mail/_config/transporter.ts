@@ -1,9 +1,10 @@
-import nodemailer from 'nodemailer';
+import nodemailer, { type Transporter } from 'nodemailer';
+import type SMTPTransport from 'nodemailer/lib/smtp-transport';
 
 import { envs } from '@/config/env/env';
 
-// Configuration SMTP optimisée pour la production
-const transporter = nodemailer.createTransport({
+// Configuration SMTP optimisée pour la production avec timeouts et pool
+const transporter: Transporter<SMTPTransport.SentMessageInfo> = nodemailer.createTransport({
   host: envs.SMTP_HOST,
   port: envs.SMTP_PORT,
   secure: envs.SMTP_PORT === 465, // true pour SSL (port 465), false pour TLS (port 587)
@@ -12,23 +13,21 @@ const transporter = nodemailer.createTransport({
     pass: envs.SMTP_PASS,
   },
   // Timeouts optimisés pour éviter les "Connection timeout"
-  connectionTimeout: parseInt(process.env.SMTP_CONNECTION_TIMEOUT || '10000'), // 10 secondes
-  socketTimeout: parseInt(process.env.SMTP_SOCKET_TIMEOUT || '60000'), // 60 secondes
-  greetingTimeout: parseInt(process.env.SMTP_GREET_TIMEOUT || '10000'), // 10 secondes
+  connectionTimeout: envs.SMTP_CONNECTION_TIMEOUT || 10000, // 10 secondes
+  socketTimeout: envs.SMTP_SOCKET_TIMEOUT || 60000, // 60 secondes
+  greetingTimeout: envs.SMTP_GREET_TIMEOUT || 10000, // 10 secondes
   
   // Pool de connexions pour meilleure performance
-  pool: true,
-  maxConnections: parseInt(process.env.SMTP_POOL_SIZE || '5'),
-  maxMessages: 100,
-  rateDelta: 1000, // Réinitialiser la limite de débit après 1 seconde
-  rateLimit: parseInt(process.env.SMTP_RATE_LIMIT || '5'), // Nombre de messages par rateDelta
+  pool: {
+    maxConnections: envs.SMTP_POOL_SIZE || 5,
+    maxMessages: 100,
+    rateDelta: 1000, // Réinitialiser la limite de débit après 1 seconde
+    rateLimit: envs.SMTP_RATE_LIMIT || 5, // Nombre de messages par rateDelta
+  },
   
   // Logging optionnel pour debug
   logger: process.env.NODE_ENV === 'development',
   debug: process.env.NODE_ENV === 'development',
-  
-  // Retry logic pour les erreurs temporaires
-  connectionUrl: undefined, // Utiliser les paramètres individuels au lieu de connectionUrl
-});
+} as SMTPTransport.Options);
 
 export default transporter;
