@@ -2,9 +2,8 @@ services:
   # Service Web principal
   - type: web
     name: aze-farm-api
-    env: docker
+    env: node
     plan: free
-    dockerfilePath: ./Dockerfile
     autoDeploy: true
     repo: https://github.com/new-vision-c/aze-farm-server.git
     envVars:
@@ -123,24 +122,10 @@ services:
         value: 30
 
       # Service Mail (Gmail SMTP)
-      - key: SMTP_HOST
-        value: smtp.gmail.com
-      - key: SMTP_PORT
-        value: 587
-      - key: SMTP_SECURE
-        value: false
       - key: SMTP_USER
-        value: cesaristos85@gmail.com
+        value: "cesaristos85@gmail.com"
       - key: SMTP_PASS
-        value: ybfm tkhc pyaa bmuy
-      - key: USER_EMAIL
-        value: cesaristos85@gmail.com
-      - key: MAIL_FROM
-        value: cesaristos85@gmail.com
-      - key: MAIL_FROM_NAME
-        value: Aze Farm
-      - key: MAIL_ENABLED
-        value: true
+        value: "ybfm tkhc pyaa bmuy"
 
       # Configuration MinIO (à configurer avec un service cloud si nécessaire)
       # Désactivé pour Render - utiliser Cloudinary ou S3 en production
