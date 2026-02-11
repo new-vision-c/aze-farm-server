@@ -62,7 +62,18 @@ export const envs = {
   SMTP_PORT: env.get('SMTP_PORT').default(587).asPortNumber(),
   SMTP_USER: env.get('SMTP_USER').default('noreply@example.com').asString(),
   SMTP_PASS: env.get('SMTP_PASS').default('your_smtp_password').asString(),
+  SMTP_CONNECTION_TIMEOUT: env.get('SMTP_CONNECTION_TIMEOUT').default('10000').asInt(),
+  SMTP_SOCKET_TIMEOUT: env.get('SMTP_SOCKET_TIMEOUT').default('60000').asInt(),
+  SMTP_GREET_TIMEOUT: env.get('SMTP_GREET_TIMEOUT').default('10000').asInt(),
+  SMTP_POOL_SIZE: env.get('SMTP_POOL_SIZE').default('5').asInt(),
+  SMTP_RATE_LIMIT: env.get('SMTP_RATE_LIMIT').default('5').asInt(),
   USER_EMAIL: env.get('USER_EMAIL').default('noreply@example.com').asEmailString(),
+
+  // ============================================
+
+  // MongoDB Configuration
+  MONGODB_TIMEOUT: env.get('MONGODB_TIMEOUT').default('45000').asInt(),
+  MONGODB_TLS_VERSION: env.get('MONGODB_TLS_VERSION').default('1.2').asString(),
 
   // ============================================
 

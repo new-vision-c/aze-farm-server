@@ -115,14 +115,31 @@ export class MongodbBackupJob {
 
       log.info(`Sauvegarde terminée avec succès en ${duration} secondes`);
     } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : 'No stack trace';
+      
+      log.error('Erreur lors de la sauvegarde MongoDB:', {
+        message: errorMsg,
+        stack: errorStack,
+        timestamp: new Date().toISOString(),
+        backupId,
+      });
+
+      // Envoyer une notification d'erreur
       if (this.notificationService) {
         try {
-          await this.notificationService.sendBackupError(error as Error);
+          await this.notificationService.sendBackupError(
+            new Error(`MongoDB Backup Failed: ${errorMsg}`)
+          );
         } catch (notifError) {
-          log.error('Failed to send backup error notification:', notifError);
+          const notifMsg = notifError instanceof Error ? notifError.message : String(notifError);
+          log.error('Failed to send backup error notification:', {
+            message: notifMsg,
+            originalError: errorMsg,
+            timestamp: new Date().toISOString(),
+          });
         }
       }
-      log.error('Erreur lors de la sauvegarde MongoDB:', error);
     } finally {
       // Nettoyage
       await fs
@@ -137,11 +154,23 @@ export class MongodbBackupJob {
 
   private async runMongoDump(outputDir: string): Promise<void> {
     try {
-      const client = new MongoClient(backupConfig.mongo.uri);
-      await client.connect();
-      const db = client.db(backupConfig.mongo.dbName);
+      // Options optimisées pour la connexion MongoDB
+      const mongoOptions = {
+        tls: true,
+        retryWrites: true,
+        serverSelectionTimeoutMS: 5000,
+        socketTimeoutMS: 45000, // Augmenté pour les longues opérations
+        connectTimeoutMS: 10000,
+        maxPoolSize: 10,
+      };
 
-      log.debug('Connexion à MongoDB établie');
+      const client = new MongoClient(backupConfig.mongo.uri, mongoOptions);
+      
+      try {
+        await client.connect();
+        const db = client.db(backupConfig.mongo.dbName);
+
+        log.debug('Connexion à MongoDB établie');
 
       // Si des collections spécifiques sont configurées, les sauvegarder individuellement
       if (backupConfig.mongo.collections.length > 0) {
@@ -180,8 +209,18 @@ export class MongodbBackupJob {
 
       await client.close();
       log.debug('Sauvegarde MongoDB terminée avec succès');
+      } catch (connectionError) {
+        throw new Error(`Erreur de connexion MongoDB: ${connectionError instanceof Error ? connectionError.message : String(connectionError)}`);
+      } finally {
+        try {
+          await client.close();
+        } catch (closeError) {
+          log.warn('Erreur lors de la fermeture de la connexion MongoDB:', closeError);
+        }
+      }
     } catch (error) {
-      throw new Error(`Échec de la sauvegarde MongoDB: ${error}`);
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      throw new Error(`Échec de la sauvegarde MongoDB: ${errorMsg}`);
     }
   }
 
