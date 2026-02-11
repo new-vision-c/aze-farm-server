@@ -5,7 +5,7 @@ import logout from './Auth/logout';
 import resend_otp from './Auth/resend_otp';
 import reset_password from './Auth/reset_password';
 import signup from './Auth/signup';
-import verify_otp from './Auth/verify_otp';
+import verify_otp from './Auth/verify_otp_new';
 import oauth_accounts from './OAuth/oauth-accounts';
 import oauth_authorize from './OAuth/oauth-authorize';
 import oauth_callback from './OAuth/oauth-callback';
