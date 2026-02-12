@@ -71,85 +71,86 @@ export class AuthService {
       const otpCode = generate_otp() || '000000';
       const otpExpireDate = get_expire_date(new Date());
 
-      // Créer l'utilisateur avec le rôle USER par défaut
+      // Créer l'utilisateur avec le rôle CONSUMER par défaut
       const user = await this.prisma.users.create({
         data: {
-        email,
-        password: passwordHash,
-        fullname,
-        role: 'USER',
-        is_active: false, // Non activé jusqu'à vérification OTP
-        is_verified: false,
-        otp: {
-          code: otpCode,
-          expire_at: otpExpireDate,
+          email,
+          password: passwordHash,
+          fullname,
+          role: 'CONSUMER',
+          is_active: false, // Non activé jusqu'à vérification OTP
+          is_verified: false,
+          otp: {
+            code: otpCode,
+            expire_at: otpExpireDate,
+          },
         },
-      },
-      select: {
-        user_id: true,
-        email: true,
-        fullname: true,
-        role: true,
-        is_active: true,
-        is_verified: true,
-        created_at: true,
-      },
-    });
-
-    // Mettre à jour la date de dernière connexion
-    await this.prisma.users.update({
-      where: { user_id: user.user_id },
-      data: { last_login_at: new Date() },
-    });
-
-    // Générer le JWT de session temporaire (24 heures)
-    const sessionToken = jwt.sign(
-      {
-        userId: user.user_id,
-        email: user.email,
-        step: 'registration',
-        type: 'session',
-      },
-      process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '24h' },
-    );
-
-    // TODO: Envoyer l'email OTP (mode développement: afficher dans la console)
-    console.log(`🔑 OTP généré pour ${email}: ${otpCode} (expire à ${otpExpireDate})`);
-
-    // Envoyer l'email OTP
-    try {
-      await send_mail(email, 'Code de vérification', 'otp', {
-        date: new Date().toLocaleDateString('fr-FR'),
-        name: fullname,
-        content: otpCode,
+        select: {
+          user_id: true,
+          email: true,
+          fullname: true,
+          role: true,
+          is_active: true,
+          is_verified: true,
+          created_at: true,
+        },
       });
-    } catch (emailError) {
-      console.error('Erreur envoi email OTP:', emailError);
-    }
 
-    return {
-      success: true,
-      step: 1,
-      user,
-      token: sessionToken,
-      message: this.i18nService.translate('emails.verification_sent', language),
-      requiresOtp: true,
-      otpCode, // En développement uniquement
-    };
+      // Mettre à jour la date de dernière connexion
+      await this.prisma.users.update({
+        where: { user_id: user.user_id },
+        data: { last_login_at: new Date() },
+      });
+
+      // Générer le JWT de session temporaire (24 heures)
+      const sessionToken = jwt.sign(
+        {
+          userId: user.user_id,
+          email: user.email,
+          step: 'registration',
+          type: 'session',
+        },
+        process.env.JWT_SECRET || 'your-secret-key',
+        { expiresIn: '24h' },
+      );
+
+      // TODO: Envoyer l'email OTP (mode développement: afficher dans la console)
+      console.log(`🔑 OTP généré pour ${email}: ${otpCode} (expire à ${otpExpireDate})`);
+
+      // Envoyer l'email OTP
+      try {
+        await send_mail(email, 'Code de vérification', 'otp', {
+          date: new Date().toLocaleDateString('fr-FR'),
+          name: fullname,
+          content: otpCode,
+        });
+      } catch (emailError) {
+        console.error('Erreur envoi email OTP:', emailError);
+      }
+
+      return {
+        success: true,
+        step: 1,
+        user,
+        token: sessionToken,
+        message: this.i18nService.translate('emails.verification_sent', language),
+        requiresOtp: true,
+        otpCode, // En développement uniquement
+      };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.error('Signup error:', error);
-      
+
       // Vérifier si c'est une erreur de connexion MongoDB
       if (errorMessage.includes('Server selection timeout') || errorMessage.includes('I/O error')) {
         return {
           success: false,
           step: 1,
-          message: 'Erreur de connexion à la base de données. Veuillez vérifier votre connexion Internet.',
+          message:
+            'Erreur de connexion à la base de données. Veuillez vérifier votre connexion Internet.',
         };
       }
-      
+
       return {
         success: false,
         step: 1,

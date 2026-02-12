@@ -1,0 +1,111 @@
+# Chemins pour les endpoints produits
+
+/products/search:
+  get:
+    tags:
+      - Products
+    summary: Rechercher des produits avec filtres et localisation
+    description: |
+      Recherche des produits disponibles avec filtres avancés et tri par proximité géographique.
+      Les produits sont classés par distance de l'utilisateur si les coordonnées sont fournies,
+      sinon par note de la ferme.
+    parameters:
+      - $ref: '../components/parameters/query_limit.yaml'
+      - $ref: '../components/parameters/query_page.yaml'
+      - $ref: '../components/parameters/query_category.yaml'
+      - $ref: '../components/parameters/query_product.yaml'
+      - $ref: '../components/parameters/query_lat.yaml'
+      - $ref: '../components/parameters/query_lng.yaml'
+    responses:
+      200:
+        description: Produits récupérés avec succès
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: 'Produits récupérés avec succès'
+                data:
+                  type: object
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '../components/schemas/product.yaml#/ProductWithDistance'
+                    totalItems:
+                      type: integer
+                      example: 25
+                    totalPages:
+                      type: integer
+                      example: 3
+                    currentPage:
+                      type: integer
+                      example: 1
+      400:
+        $ref: '../components/responses/bad_request.yaml'
+      500:
+        $ref: '../components/responses/internal_server_error.yaml'
+
+/products/{id}:
+  get:
+    tags:
+      - Products
+    summary: Obtenir les détails d'un produit
+    description: Récupère les informations complètes d'un produit spécifique incluant les détails de la ferme
+    parameters:
+      - $ref: '../components/parameters/path_product_id.yaml'
+    responses:
+      200:
+        description: Produit récupéré avec succès
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: 'Produit récupéré avec succès'
+                data:
+                  $ref: '../components/schemas/product.yaml#/ProductWithDistance'
+      404:
+        $ref: '../components/responses/not_found.yaml'
+      400:
+        $ref: '../components/responses/bad_request.yaml'
+      500:
+        $ref: '../components/responses/internal_server_error.yaml'
+
+/products/categories:
+  get:
+    tags:
+      - Products
+    summary: Lister les catégories de produits
+    description: Récupère la liste de toutes les catégories de produits disponibles
+    responses:
+      200:
+        description: Catégories récupérées avec succès
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: 'Catégories récupérées avec succès'
+                data:
+                  type: array
+                  items:
+                    type: string
+                  example: ['légumes', 'fruits', 'céréales', 'produits laitiers']
+      500:
+        $ref: '../components/responses/internal_server_error.yaml'

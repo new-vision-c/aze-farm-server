@@ -1,0 +1,132 @@
+# Schémas pour les produits
+
+ProductWithDistance:
+  type: object
+  properties:
+    id:
+      type: string
+      format: mongoId
+      description: ID unique du produit
+      example: '507f1f77bcf86cd799439011'
+    name:
+      type: string
+      description: Nom du produit
+      example: 'Tomates cerises'
+    description:
+      type: string
+      description: Description détaillée du produit
+      example: 'Tomates cerises bio, cultivées avec amour'
+    price:
+      type: number
+      format: float
+      description: Prix du produit
+      example: 4.50
+    unit:
+      type: string
+      description: Unité de vente
+      example: 'kg'
+    stock:
+      type: integer
+      description: Quantité disponible en stock
+      example: 25
+    category:
+      type: string
+      description: Catégorie du produit
+      example: 'légumes'
+    isAvailable:
+      type: boolean
+      description: Indique si le produit est disponible
+      example: true
+    seasonality:
+      type: array
+      items:
+        type: integer
+      description: Mois de saisonnalité (1-12)
+      example: [6, 7, 8, 9]
+    images:
+      type: array
+      items:
+        type: string
+        format: uri
+      description: URLs des images du produit
+      example: ['https://example.com/tomates1.jpg', 'https://example.com/tomates2.jpg']
+    farm:
+      type: object
+      properties:
+        id:
+          type: string
+          format: mongoId
+          description: ID de la ferme
+          example: '507f1f77bcf86cd799439012'
+        name:
+          type: string
+          description: Nom de la ferme
+          example: 'Ferme du Soleil'
+        address:
+          type: string
+          description: Adresse de la ferme
+          example: '123 Route de la Ferme, 75000 Paris'
+        geoLocation:
+          type: object
+          properties:
+            latitude:
+              type: number
+              format: float
+              description: Latitude de la ferme
+              example: 48.8566
+            longitude:
+              type: number
+              format: float
+              description: Longitude de la ferme
+              example: 2.3522
+        ratingAvg:
+          type: number
+          format: float
+          description: Note moyenne de la ferme
+          example: 4.5
+        ratingCount:
+          type: integer
+          description: Nombre d'avis sur la ferme
+          example: 128
+    distance:
+      type: number
+      format: float
+      description: Distance en km depuis la position de l'utilisateur (présent uniquement si localisation fournie)
+      example: 2.3
+
+ProductSearchQuery:
+  type: object
+  properties:
+    limit:
+      type: integer
+      minimum: 1
+      maximum: 100
+      default: 10
+      description: Nombre maximum de résultats
+      example: 10
+    page:
+      type: integer
+      minimum: 1
+      default: 1
+      description: Numéro de page pour la pagination
+      example: 1
+    category:
+      type: string
+      description: Filtrer par catégorie
+      example: 'légumes'
+    product:
+      type: string
+      description: Filtrer par nom de produit
+      example: 'tomate'
+    lat:
+      type: number
+      minimum: -90
+      maximum: 90
+      description: Latitude de l'utilisateur
+      example: 48.8566
+    lng:
+      type: number
+      minimum: -180
+      maximum: 180
+      description: Longitude de l'utilisateur
+      example: 2.3522

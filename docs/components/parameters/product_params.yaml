@@ -1,0 +1,68 @@
+# Paramètres pour les endpoints produits
+
+query_limit:
+  in: query
+  name: limit
+  schema:
+    type: integer
+    minimum: 1
+    maximum: 100
+    default: 10
+  description: Nombre maximum de résultats à retourner
+  example: 10
+
+query_page:
+  in: query
+  name: page
+  schema:
+    type: integer
+    minimum: 1
+    default: 1
+  description: Numéro de page pour la pagination
+  example: 1
+
+query_category:
+  in: query
+  name: category
+  schema:
+    type: string
+  description: Filtrer par catégorie de produit
+  example: 'légumes'
+
+query_product:
+  in: query
+  name: product
+  schema:
+    type: string
+  description: Filtrer par nom de produit (recherche partielle)
+  example: 'tomate'
+
+query_lat:
+  in: query
+  name: lat
+  schema:
+    type: number
+    minimum: -90
+    maximum: 90
+  description: Latitude de l'utilisateur pour le calcul de distance
+  example: 48.8566
+
+query_lng:
+  in: query
+  name: lng
+  schema:
+    type: number
+    minimum: -180
+    maximum: 180
+  description: Longitude de l'utilisateur pour le calcul de distance
+  example: 2.3522
+
+path_product_id:
+  in: path
+  name: id
+  required: true
+  schema:
+    type: string
+    format: mongoId
+  description: ID du produit
+  example: '507f1f77bcf86cd799439011'
