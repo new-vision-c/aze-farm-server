@@ -112,14 +112,15 @@ export const validate_user = {
   ],
 
   forgotPasswordStep2: [
-    // Email validation
-    body('email')
+    // Session token validation (header Authorization)
+    header('authorization')
       .trim()
       .notEmpty()
-      .withMessage(i18n.translate('validation.required', undefined, { field: 'email' }))
-      .isEmail()
-      .withMessage(i18n.translate('validation.invalid_email'))
-      .escape(),
+      .withMessage(i18n.translate('validation.required', undefined, { field: 'authorization' }))
+      .matches(/^Bearer .+$/)
+      .withMessage(
+        i18n.translate('validation.invalid_format', undefined, { field: 'authorization' }),
+      ),
 
     // OTP validation
     body('otp')
@@ -135,14 +136,14 @@ export const validate_user = {
   ],
 
   forgotPasswordStep3: [
-    // Session token validation
-    body('session_token')
+    // Session token validation (header Authorization)
+    header('authorization')
       .trim()
       .notEmpty()
-      .withMessage(i18n.translate('validation.required', undefined, { field: 'session_token' }))
-      .isString()
+      .withMessage(i18n.translate('validation.required', undefined, { field: 'authorization' }))
+      .matches(/^Bearer .+$/)
       .withMessage(
-        i18n.translate('validation.invalid_format', undefined, { field: 'session_token' }),
+        i18n.translate('validation.invalid_format', undefined, { field: 'authorization' }),
       ),
 
     // Password validation

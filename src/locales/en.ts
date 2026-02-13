@@ -34,6 +34,9 @@ export const en = {
     session_token_generated: 'Session token generated successfully',
     invalid_session_token: 'Invalid session token',
     password_reset_success: 'Password reset successfully',
+    bearer_token_required: 'Bearer token required',
+    otp_required: 'OTP code required',
+    otp_verified_success: 'OTP code verified successfully',
     otp_welcome_message:
       'We are delighted to welcome you to the great AzeFarm family! To finalize your account verification, please use the code below.',
     otp_validity_message:

@@ -63,13 +63,19 @@ const login = asyncHandler(async (req: Request, res: Response): Promise<void | R
       req,
       res,
       {
-        id: result.user.user_id,
-        email: result.user.email,
-        fullname: result.user.fullname,
-        profile_url: result.user.avatar_url,
-        role: result.user.role,
-        is_verified: result.user.is_verified,
-        is_active: result.user.is_active,
+        user: {
+          id: result.user.user_id,
+          email: result.user.email,
+          fullname: result.user.fullname,
+          profile_url: result.user.avatar_url,
+          role: result.user.role,
+          is_verified: result.user.is_verified,
+          is_active: result.user.is_active,
+        },
+        tokens: {
+          accessToken,
+          refreshToken,
+        },
       },
       result.message,
     );

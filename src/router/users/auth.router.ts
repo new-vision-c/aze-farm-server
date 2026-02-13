@@ -97,15 +97,11 @@ auth.post(
 auth.put(
   '/me/profile',
   upload.single('avatar'), // Gérer l'upload d'un fichier nommé 'avatar'
-  // isAuthenticated,
+  isAuthenticated,
   users_controller.updateProfile,
 );
 
 // Get profile
-auth.get(
-  '/me/profile',
-  // isAuthenticated,
-  users_controller.getProfile,
-);
+auth.get('/me/profile', isAuthenticated, users_controller.getProfile);
 
 export default auth;

@@ -13,21 +13,39 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
   try {
     let accessToken: string | undefined;
 
+    console.log(
+      '🔍 Auth middleware - Headers:',
+      req.headers.authorization ? 'Bearer token present' : 'No Bearer token',
+    );
+    console.log(
+      '🔍 Auth middleware - Cookies access_token:',
+      req.cookies?.access_token ? 'present' : 'not present',
+    );
+    console.log(
+      '🔍 Auth middleware - Cookies refresh_token:',
+      req.cookies?.refresh_token ? 'present' : 'not present',
+    );
+
     // 1. Essayer l'access token depuis les headers Authorization
     const authHeader = req.headers.authorization;
     if (authHeader?.startsWith('Bearer ')) {
       accessToken = authHeader.replace('Bearer ', '');
+      console.log('🔍 Auth middleware - Using token from header');
     }
 
     // 2. Si pas dans les headers, essayer depuis les cookies
     if (!accessToken) {
       accessToken = req.cookies?.access_token;
+      if (accessToken) {
+        console.log('🔍 Auth middleware - Using token from cookie');
+      }
     }
 
     // 3. Si toujours pas de token, essayer le refresh automatique
     if (!accessToken) {
       const refreshToken = req.cookies?.refresh_token;
       if (refreshToken) {
+        console.log('🔍 Auth middleware - Attempting refresh with cookie token');
         try {
           log.debug('Attempting automatic token refresh');
           const newTokens = await userToken.refreshAccessToken(refreshToken);
@@ -56,9 +74,12 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
 
     // 4. Vérification finale de l'access token
     if (!accessToken) {
+      console.log('🔍 Auth middleware - No token found anywhere');
       log.warn('No access token available after refresh attempt');
       return response.unauthorized(req, res, 'Authentication required');
     }
+
+    console.log('🔍 Auth middleware - Token found, verifying...');
 
     // Check if token is blacklisted
     const isBlacklisted = await blackListToken.isBlackListToken(accessToken);
@@ -68,11 +89,19 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
     }
 
     // Verify token validity
+    console.log(
+      '🔍 Auth middleware - Calling verifyAccessToken with token length:',
+      accessToken.length,
+    );
     const decoded = userToken.verifyAccessToken(accessToken);
     if (!decoded) {
+      console.log('🔍 Auth middleware - Token verification failed');
       log.warn('Invalid access token');
       return response.unauthorized(req, res, 'Invalid access token');
     }
+
+    console.log('🔍 Auth middleware - Token verified successfully, user:', decoded.user_id);
+    console.log('🔍 Auth middleware - Full decoded object:', JSON.stringify(decoded, null, 2));
 
     // Attach user data to request object
     (req as any).user = decoded;
@@ -80,6 +109,7 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
 
     next();
   } catch (error: any) {
+    console.log('🔍 Auth middleware - Error:', error.message);
     log.error('Authentication error', { error: error.message, stack: error.stack });
     return response.unauthorized(req, res, 'Authentication failed');
   }

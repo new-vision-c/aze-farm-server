@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express';
+import jwt from 'jsonwebtoken';
 
 import prisma from '@/config/prisma/prisma';
 import { MAIL } from '@/core/constant/global';
@@ -8,7 +9,7 @@ import userToken from '@/services/jwt/functions-jwt';
 import log from '@/services/logging/logger';
 import { asyncHandler, response } from '@/utils/responses/helpers';
 
-//& Étape 1: Récupérer l'email et le vérifier
+//& Étape 1: Récupérer l'email et le vérifier, générer un session token
 const forgotPasswordStep1 = asyncHandler(
   async (req: Request, res: Response): Promise<void | Response<any>> => {
     const { email } = req.body;
@@ -36,7 +37,7 @@ const forgotPasswordStep1 = asyncHandler(
       return response.ok(
         req,
         res,
-        { email_sent: true },
+        { session_token: 'mock-token-for-security' },
         i18nService.translate('auth.password_reset_sent_if_exists', language),
       );
     }
@@ -49,10 +50,16 @@ const forgotPasswordStep1 = asyncHandler(
       await prisma.users.update({
         where: { user_id: user.user_id },
         data: {
-          otp: otp,
+          otp: {
+            code: otp,
+            expire_at: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
+          },
           updated_at: new Date(),
-        } as any, // Cast pour éviter l'erreur TypeScript
+        },
       });
+
+      // Générer un session token pour la réinitialisation
+      const sessionToken = userToken.generatePasswordResetToken(user.user_id);
 
       // Envoyer l'email avec l'OTP
       await send_mail(email, MAIL.RESET_PWD_SUBJECT, 'otp', {
@@ -71,7 +78,7 @@ const forgotPasswordStep1 = asyncHandler(
       return response.ok(
         req,
         res,
-        { email_sent: true },
+        { session_token: sessionToken, otp },
         i18nService.translate('auth.otp_sent_for_password_reset', language),
       );
     } catch (error: any) {
@@ -87,35 +94,60 @@ const forgotPasswordStep1 = asyncHandler(
   },
 );
 
-//& Étape 2: Vérifier l'OTP et générer le session token
+//& Étape 2: Vérifier l'OTP avec le session token dans le header Authorization
 const forgotPasswordStep2 = asyncHandler(
   async (req: Request, res: Response): Promise<void | Response<any>> => {
-    const { email, otp } = req.body;
+    const { otp } = req.body;
+    const authHeader = req.headers.authorization;
 
     // Détecter la langue depuis le header ou utiliser le français par défaut
     const acceptLanguage = req.headers['accept-language'] as string;
     const i18nService = new I18nService();
     const language = i18nService.detectLanguage(acceptLanguage) as 'fr' | 'en';
 
-    if (!email || !otp) {
+    if (!otp) {
       return response.badRequest(
         req,
         res,
-        i18nService.translate('validation.email_and_otp_required', language),
+        i18nService.translate('validation.otp_required', language),
       );
     }
 
+    if (!authHeader?.startsWith('Bearer ')) {
+      return response.unauthorized(
+        req,
+        res,
+        i18nService.translate('auth.bearer_token_required', language),
+      );
+    }
+
+    const sessionToken = authHeader.substring(7); // Remove "Bearer " prefix
+
     try {
-      // Vérifier l'utilisateur et l'OTP
+      // Vérifier et décoder le session token
+      const decoded = userToken.verifyPasswordResetToken(sessionToken);
+
+      if (!decoded.userId) {
+        return response.unauthorized(
+          req,
+          res,
+          i18nService.translate('auth.invalid_session_token', language),
+        );
+      }
+
+      // Vérifier l'utilisateur
       const user = await prisma.users.findFirst({
         where: {
-          email,
-          otp,
+          user_id: decoded.userId,
+          otp: {
+            isSet: true, // Vérifier que l'OTP existe
+          },
           is_deleted: false,
         },
       });
 
-      if (!user) {
+      // Vérifier si l'OTP correspond et n'est pas expiré
+      if (!user?.otp?.code || user.otp.code !== otp || user.otp.expire_at < new Date()) {
         return response.badRequest(
           req,
           res,
@@ -123,29 +155,25 @@ const forgotPasswordStep2 = asyncHandler(
         );
       }
 
-      // Générer un session token pour la réinitialisation
-      const sessionToken = userToken.generatePasswordResetToken(user.user_id);
-
       // Nettoyer l'OTP après utilisation
       await prisma.users.update({
         where: { user_id: user.user_id },
         data: {
           otp: null,
           updated_at: new Date(),
-        } as any, // Cast pour éviter l'erreur TypeScript
+        },
       });
 
-      log.info('Session token de réinitialisation généré', { email, language });
+      log.info('OTP vérifié avec succès', { userId: user.user_id, language });
 
       return response.ok(
         req,
         res,
-        { session_token: sessionToken },
-        i18nService.translate('auth.session_token_generated', language),
+        { otp_verified: true },
+        i18nService.translate('auth.otp_verified_success', language),
       );
     } catch (error: any) {
       log.error("Erreur lors de la vérification de l'OTP", {
-        email,
         error: error.message,
         stack: error.stack,
         language,
@@ -156,23 +184,34 @@ const forgotPasswordStep2 = asyncHandler(
   },
 );
 
-//& Étape 3: Récupérer le nouveau mot de passe et le mettre à jour
+//& Étape 3: Récupérer le nouveau mot de passe et le mettre à jour avec le session token
 const forgotPasswordStep3 = asyncHandler(
   async (req: Request, res: Response): Promise<void | Response<any>> => {
-    const { session_token: session_token, password, passwordConfirm } = req.body;
+    const { password, passwordConfirm } = req.body;
+    const authHeader = req.headers.authorization;
 
     // Détecter la langue depuis le header ou utiliser le français par défaut
     const acceptLanguage = req.headers['accept-language'] as string;
     const i18nService = new I18nService();
     const language = i18nService.detectLanguage(acceptLanguage) as 'fr' | 'en';
 
-    if (!session_token || !password || !passwordConfirm) {
+    if (!password || !passwordConfirm) {
       return response.badRequest(
         req,
         res,
         i18nService.translate('validation.all_fields_required', language),
       );
     }
+
+    if (!authHeader?.startsWith('Bearer ')) {
+      return response.unauthorized(
+        req,
+        res,
+        i18nService.translate('auth.bearer_token_required', language),
+      );
+    }
+
+    const sessionToken = authHeader.substring(7); // Remove "Bearer " prefix
 
     if (password !== passwordConfirm) {
       return response.badRequest(
@@ -192,7 +231,7 @@ const forgotPasswordStep3 = asyncHandler(
 
     try {
       // Vérifier et décoder le session token
-      const decoded = userToken.verifyPasswordResetToken(session_token);
+      const decoded = userToken.verifyPasswordResetToken(sessionToken);
 
       if (!decoded.userId) {
         return response.unauthorized(
@@ -224,8 +263,28 @@ const forgotPasswordStep3 = asyncHandler(
         data: {
           password: hashedPassword,
           updated_at: new Date(),
-        } as any, // Cast pour éviter l'erreur TypeScript
+        },
       });
+
+      // Mettre à jour la date de dernière connexion
+      await prisma.users.update({
+        where: { user_id: user.user_id },
+        data: { last_login_at: new Date() },
+      });
+
+      // Générer le JWT de login définitif (7 jours)
+      const loginToken = jwt.sign(
+        {
+          userId: user.user_id,
+          email: user.email,
+          fullname: user.fullname,
+          role: user.role,
+          step: 'authenticated',
+          type: 'login',
+        },
+        process.env.JWT_SECRET || 'your-secret-key',
+        { expiresIn: '7d' },
+      );
 
       log.info('Mot de passe réinitialisé avec succès', {
         userId: user.user_id,
@@ -236,7 +295,18 @@ const forgotPasswordStep3 = asyncHandler(
       return response.ok(
         req,
         res,
-        { password_updated: true },
+        {
+          password_updated: true,
+          token: loginToken,
+          user: {
+            user_id: user.user_id,
+            email: user.email,
+            fullname: user.fullname,
+            role: user.role,
+            is_verified: user.is_verified,
+            is_active: user.is_active,
+          },
+        },
         i18nService.translate('auth.password_reset_success', language),
       );
     } catch (error: any) {

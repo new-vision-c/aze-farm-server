@@ -86,7 +86,10 @@ export const envs = {
 
   // Health Check
   HEALTH_CHECK_EMAIL: env.get('HEALTH_CHECK_EMAIL').default('admin@aze-farm.com').asString(),
-  HEALTH_CHECK_API_URL: env.get('HEALTH_CHECK_API_URL').default('https://aze-farm-api.onrender.com').asString(),
+  HEALTH_CHECK_API_URL: env
+    .get('HEALTH_CHECK_API_URL')
+    .default('https://aze-farm-api.onrender.com')
+    .asString(),
 
   // ============================================
 
@@ -114,7 +117,7 @@ export const envs = {
   JWT_COOKIE_HTTP_STATUS: env.get('JWT_COOKIE_HTTP_STATUS').default('true').asBool(),
   JWT_ACCESS_EXPIRES_IN: env.get('JWT_ACCESS_EXPIRES_IN').default('15m').asString(),
   JWT_REFRESH_EXPIRES_IN: env.get('JWT_REFRESH_EXPIRES_IN').default('7d').asString(),
-  JWT_ALGORITHM: env.get('JWT_ALGORITHM').default('HS256').asString(),
+  JWT_ALGORITHM: env.get('JWT_ALGORITHM').default('RS256').asString(),
   JWT_PRIVATE_KEY_PATH: env
     .get('JWT_PRIVATE_KEY_PATH')
     .default('src/config/keys/private.key')

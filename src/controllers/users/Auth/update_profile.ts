@@ -26,7 +26,7 @@ const updateProfile = asyncHandler(
   async (req: Request, res: Response): Promise<void | Response<any>> => {
     const { fullname } = req.body as UpdateProfileData;
     const avatarFile = (req as any).file; // Fichier uploadé via multer
-    const userId = (req as any).user?.id;
+    const userId = (req as any).user?.user_id || (req as any).user?.id;
 
     // Détecter la langue depuis le header ou utiliser le français par défaut
     const acceptLanguage = req.headers['accept-language'] as string;
@@ -180,7 +180,7 @@ const updateProfile = asyncHandler(
 //& Récupérer le profil utilisateur
 const getProfile = asyncHandler(
   async (req: Request, res: Response): Promise<void | Response<any>> => {
-    const userId = (req as any).user?.id;
+    const userId = (req as any).user?.user_id || (req as any).user?.id;
 
     // Détecter la langue depuis le header ou utiliser le français par défaut
     const acceptLanguage = req.headers['accept-language'] as string;
