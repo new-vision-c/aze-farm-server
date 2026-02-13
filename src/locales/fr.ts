@@ -22,6 +22,9 @@ export const fr = {
     user_already_verified: 'Utilisateur déjà vérifié',
     otp_invalid: 'Code OTP invalide',
     otp_expired: 'Le code OTP a expiré',
+    user_not_authenticated: 'Utilisateur non authentifié',
+    credentials_invalid: 'Identifiants invalides',
+    account_disabled: 'Compte désactivé',
   },
 
   // Messages pour les utilisateurs

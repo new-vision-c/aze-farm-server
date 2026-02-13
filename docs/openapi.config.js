@@ -51,18 +51,6 @@ const swaggerDefinition = {
       name: 'OAuth',
       description: 'Third-party authentication (Google, Apple, etc.)',
     },
-    {
-      name: 'Items',
-      description: 'Items management',
-    },
-    {
-      name: 'Blogs',
-      description: 'Blog posts management',
-    },
-    {
-      name: 'System',
-      description: 'System health and configuration',
-    },
   ],
   components: {
     securitySchemes: {
@@ -96,12 +84,8 @@ module.exports = {
   apis: [
     // Fichiers de documentation YAML/JSON
     './docs/paths/*.yaml',
-    './docs/paths/**/*.yaml',
     './docs/components/parameters/*.yaml',
     './docs/components/responses/*.yaml',
     './docs/components/schemas/*.yaml',
-    // Fichiers source pour l'extraction automatique
-    './src/router/*.ts',
-    './src/controllers/**/*.ts',
   ],
 };

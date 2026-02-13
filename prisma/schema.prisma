@@ -10,8 +10,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-//* ========================================================================================================================================================================================================
-
 // =====================================================================================================
 // USERS MODEL
 // =====================================================================================================
@@ -39,14 +37,26 @@ model users {
   deleted_at DateTime?
 
   // --- Role: USER / ADMIN ---
-  role String @default("USER")
+  role UserRole @default(CONSUMER)
 
   // --- OAuth2.0 Integration ---
   oauth_accounts oauth_account[]
 
+  // Relations
+  farm             Farm?
+  orders           Order[]
+  cart             Cart?
+  favorites        Favorite[]
+  farmRatings      FarmRating[]
+  messagesSent     Message[]       @relation("SentMessages")
+  messagesReceived Message[]       @relation("ReceivedMessages")
+  notifications    Notification[]
+  payments         MobilePayment[]
+
   // --- Indexes ---
   @@index([email, is_verified])
   @@index([email, deleted_at])
+  @@map("users")
 }
 
 // =====================================================================================================
@@ -79,16 +89,12 @@ model oauth_account {
   updated_at DateTime @updatedAt
 
   // --- Unique constraint: one account per provider per user ---
-  // @@unique([provider, provider_user_id])
-  // @@unique([user_id, provider])
-}
-
-// =====================================================================================================
-// OAUTH PROVIDER ENUM
-// =====================================================================================================
-enum oauth_provider {
-  GOOGLE
-  APPLE
+  @@unique([provider, provider_user_id])
+  @@unique([user_id, provider])
+  // --- Indexes ---
+  @@index([user_id])
+  @@index([provider, user_id])
+  @@index([created_at])
 }
 
 // =====================================================================================================
@@ -113,4 +119,374 @@ type Otp {
   expire_at DateTime
 }
 
-//* ========================================================================================================================================================================================================
+// =====================================================================================================
+// OAUTH PROVIDER ENUM
+// =====================================================================================================
+enum oauth_provider {
+  GOOGLE
+  APPLE
+}
+
+// =====================================================================================================
+// ÉNUMÉRATIONS - UTILISATEURS ET AUTHENTIFICATION
+// =====================================================================================================
+enum UserRole {
+  FARMER
+  CONSUMER
+}
+
+// =====================================================================================================
+// ÉNUMÉRATIONS - COMMANDES ET PAIEMENTS
+// =====================================================================================================
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  DELIVERED
+  CANCELLED
+}
+
+enum DeliveryType {
+  PICKUP // Retrait à la ferme
+  DELIVERY // Livraison à domicile
+  MARKET // Point de collecte/marché
+}
+
+enum DeliveryStatus {
+  PENDING
+  IN_TRANSIT
+  DELIVERED
+}
+
+enum MobilePaymentMethod {
+  ORANGE_MONEY
+  MTN_MONEY
+  WAVE
+  MOOV_MONEY
+}
+
+enum PaymentStatus {
+  PENDING
+  INITIATED
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+// =====================================================================================================
+// ÉNUMÉRATIONS - PANIER ET NOTIFICATIONS
+// =====================================================================================================
+enum CartStatus {
+  ACTIVE
+  CONVERTED
+  ABANDONED
+}
+
+enum NotificationType {
+  ORDER_STATUS
+  CART_REMINDER
+  NEW_PRODUCT
+  FAVORITE_BACK
+  PRICE_DROP
+  MESSAGE
+  DELIVERY
+  REVIEW
+}
+
+enum NotificationRelatedType {
+  CART
+  ORDER
+  PRODUCT
+  FARM
+  MESSAGE
+}
+
+// ==================== MODELS ====================
+
+model Farm {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String
+  address     String
+  geoLocation GeoPoint?
+  siret       String?   @unique
+  images      String[] // URLs des images
+  isActive    Boolean   @default(true)
+  ratingAvg   Float     @default(0)
+  ratingCount Int       @default(0)
+
+  // Relations
+  farmerId      String         @unique @db.ObjectId
+  farmer        users          @relation(fields: [farmerId], references: [user_id])
+  products      Product[]
+  orders        Order[]
+  deliveryZones DeliveryZone[]
+  ratings       FarmRating[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // --- Indexes ---
+  @@index([isActive])
+  @@index([ratingAvg])
+  @@map("farms")
+}
+
+type GeoPoint {
+  latitude  Float
+  longitude Float
+}
+
+model Product {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String
+  price       Float // Decimal géré comme Float dans MongoDB
+  unit        String // "kg", "unité", "botte", etc.
+  stock       Int      @default(0)
+  category    String // Enum géré côté application ou String[]
+  isAvailable Boolean  @default(true)
+  seasonality Int[] // [6, 7, 8] pour juin-août
+  images      String[] // URLs
+
+  // Relations
+  farmId     String      @db.ObjectId
+  farm       Farm        @relation(fields: [farmId], references: [id])
+  orderItems OrderItem[]
+  cartItems  CartItem[]
+  favorites  Favorite[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // --- Indexes ---
+  @@index([farmId])
+  @@index([category])
+  @@index([isAvailable])
+  @@index([price])
+  @@map("products")
+}
+
+model Favorite {
+  id        String @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String @db.ObjectId
+  productId String @db.ObjectId
+
+  // Relations
+  user    users   @relation(fields: [userId], references: [user_id])
+  product Product @relation(fields: [productId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId]) // Un user ne peut favoriser qu'une fois
+  @@map("favorites")
+}
+
+model FarmRating {
+  id      String  @id @default(auto()) @map("_id") @db.ObjectId
+  score   Int // 1-5
+  comment String?
+
+  // Relations
+  farmId String @db.ObjectId
+  farm   Farm   @relation(fields: [farmId], references: [id])
+  userId String @db.ObjectId
+  user   users  @relation(fields: [userId], references: [user_id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([farmId, userId]) // Un user = un avis par ferme
+  @@map("farm_ratings")
+}
+
+model Cart {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  status      CartStatus @default(ACTIVE)
+  totalItems  Int        @default(0)
+  totalAmount Float      @default(0)
+  expiresAt   DateTime // Auto-suppression après 7 jours
+
+  // Relations
+  userId String     @unique @db.ObjectId
+  user   users      @relation(fields: [userId], references: [user_id])
+  farmId String?    @db.ObjectId // Nullable jusqu'au premier ajout
+  items  CartItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // --- Indexes ---
+  @@index([status])
+  @@index([expiresAt])
+  @@map("carts")
+}
+
+model CartItem {
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  quantity  Int
+  unitPrice Float // Prix figé au moment de l'ajout
+  subtotal  Float
+  notes     String? // "Plus mûr possible", etc.
+
+  // Relations
+  cartId    String  @db.ObjectId
+  cart      Cart    @relation(fields: [cartId], references: [id])
+  productId String  @db.ObjectId
+  product   Product @relation(fields: [productId], references: [id])
+
+  addedAt DateTime @default(now())
+
+  @@unique([cartId, productId]) // Un produit = une ligne dans le panier
+  @@map("cart_items")
+}
+
+model Order {
+  id           String      @id @default(auto()) @map("_id") @db.ObjectId
+  orderNumber  String      @unique // "CMD-2024-000001"
+  status       OrderStatus @default(PENDING)
+  totalAmount  Float
+  orderDate    DateTime    @default(now())
+  deliveryDate DateTime?
+  cartSnapshot Json? // Backup du panier au moment de la commande
+
+  // Relations
+  consumerId String         @db.ObjectId
+  consumer   users          @relation(fields: [consumerId], references: [user_id])
+  farmId     String         @db.ObjectId
+  farm       Farm           @relation(fields: [farmId], references: [id])
+  items      OrderItem[]
+  delivery   Delivery?
+  payment    MobilePayment?
+  messages   Message[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // --- Indexes ---
+  @@index([consumerId])
+  @@index([farmId])
+  @@index([status])
+  @@index([orderDate])
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String @id @default(auto()) @map("_id") @db.ObjectId
+  quantity  Int
+  unitPrice Float // Prix au moment de la commande
+  subtotal  Float
+
+  // Relations
+  orderId   String  @db.ObjectId
+  order     Order   @relation(fields: [orderId], references: [id])
+  productId String  @db.ObjectId
+  product   Product @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+model Delivery {
+  id            String         @id @default(auto()) @map("_id") @db.ObjectId
+  type          DeliveryType
+  status        DeliveryStatus @default(PENDING)
+  pickupAddress String? // Si retrait ou point de collecte
+  deliverySlot  DateTimeRange? // Créneau horaire
+  deliveryFee   Float          @default(0)
+  carrier       String? // Transporteur si livraison
+  trackingCode  String?
+
+  // Relations
+  orderId String @unique @db.ObjectId
+  order   Order  @relation(fields: [orderId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("deliveries")
+}
+
+type DateTimeRange {
+  start DateTime
+  end   DateTime
+}
+
+model DeliveryZone {
+  id             String  @id @default(auto()) @map("_id") @db.ObjectId
+  name           String // "Zone Centre-Ville", "Rayon 10km"
+  polygon        Json // GeoJSON Polygon
+  deliveryFee    Float   @default(0)
+  minOrderAmount Float   @default(0) // Montant min pour livraison gratuite
+  isActive       Boolean @default(true)
+
+  // Relations
+  farmId String @db.ObjectId
+  farm   Farm   @relation(fields: [farmId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@map("delivery_zones")
+}
+
+model MobilePayment {
+  id             String              @id @default(auto()) @map("_id") @db.ObjectId
+  amount         Float
+  method         MobilePaymentMethod
+  status         PaymentStatus       @default(PENDING)
+  phoneNumber    String // Numéro de confirmation
+  transactionRef String              @unique // Notre référence interne
+  providerRef    String? // Référence chez l'opérateur
+  paidAt         DateTime?
+  failureReason  String?
+
+  // Relations
+  orderId String @unique @db.ObjectId
+  order   Order  @relation(fields: [orderId], references: [id])
+  userId  String @db.ObjectId
+  user    users  @relation(fields: [userId], references: [user_id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("mobile_payments")
+}
+
+model Message {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  content     String
+  attachments String[] // URLs images/documents
+  isRead      Boolean   @default(false)
+  sentAt      DateTime  @default(now())
+  readAt      DateTime?
+
+  // Relations
+  senderId   String  @db.ObjectId
+  sender     users   @relation("SentMessages", fields: [senderId], references: [user_id])
+  receiverId String  @db.ObjectId
+  receiver   users   @relation("ReceivedMessages", fields: [receiverId], references: [user_id])
+  orderId    String? @db.ObjectId // Optionnel, pour contexte commande
+  order      Order?  @relation(fields: [orderId], references: [id])
+
+  @@map("messages")
+}
+
+model Notification {
+  id      String           @id @default(auto()) @map("_id") @db.ObjectId
+  type    NotificationType
+  title   String
+  message String
+  isRead  Boolean          @default(false)
+
+  // Polymorphisme : lié à n'importe quelle entité
+  relatedId   String?                  @db.ObjectId
+  relatedType NotificationRelatedType?
+
+  // Relations
+  userId String @db.ObjectId
+  user   users  @relation(fields: [userId], references: [user_id])
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead]) // Pour requête "mes notifications non lues"
+  @@map("notifications")
+}

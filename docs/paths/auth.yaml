@@ -12,7 +12,7 @@
       Crée un nouveau compte utilisateur avec email et profil optionnel.
       Envoie un OTP (One-Time Password) à l'adresse email fournie pour la vérification du compte.
       La photo de profil est optionnelle et doit être une image au format JPEG ou PNG (max 5MB).
-      
+
       **Étapes suivantes :**
       1. L'utilisateur reçoit un code OTP par email
       2. Appeler `/auth/verify-otp` pour vérifier le compte
@@ -42,18 +42,12 @@
                 minLength: 8
                 description: Mot de passe sécurisé (minimum 8 caractères, doit contenir majuscules, minuscules et chiffres)
                 example: 'SecurePass123!'
-              firstName:
+              fullname:
                 type: string
                 minLength: 2
                 maxLength: 50
-                description: Prénom de l'utilisateur
-                example: John
-              lastName:
-                type: string
-                minLength: 2
-                maxLength: 50
-                description: Nom de famille de l'utilisateur
-                example: Doe
+                description: Nom complet de l'utilisateur
+                example: 'John Doe'
               profile:
                 type: string
                 format: binary
@@ -107,7 +101,7 @@
       Authentifie un utilisateur avec son email et mot de passe.
       Retourne un JWT access token et un refresh token pour les requêtes authentifiées.
       L'utilisateur doit avoir un compte actif, vérifié et non supprimé.
-      
+
       **Tokens retournés :**
       - `accessToken` : JWT valide pendant 15 minutes pour les requêtes authentifiées
       - `refreshToken` : Token valide pendant 7 jours pour obtenir un nouveau access token
@@ -168,7 +162,7 @@
       Valide le compte utilisateur en utilisant le code OTP à 6 chiffres reçu par email.
       Cette étape est obligatoire après l'enregistrement.
       Après vérification réussie, l'utilisateur a accès à toutes les fonctionnalités.
-      
+
       **Délai d'expiration :** Le code OTP expire après 15 minutes.
     operationId: verifyAccount
     security:
@@ -235,7 +229,7 @@
     description: |
       Renvoie un nouveau code OTP à l'adresse email de l'utilisateur.
       Utilisé si l'utilisateur n'a pas reçu le premier code ou s'il a expiré.
-      
+
       **Limite de taux :** Délai minimum de 5 minutes entre les renvois.
     operationId: resendOtp
     security: []
@@ -298,7 +292,7 @@
       Envoie un email contenant un lien de réinitialisation du mot de passe à l'utilisateur.
       Le lien expires après 1 heure pour des raisons de sécurité.
       Utilisé quand l'utilisateur oublie son mot de passe.
-      
+
       **Sécurité :** Ne révèle pas si l'email existe ou non dans la base de données.
     operationId: forgotPassword
     security: []
@@ -342,7 +336,7 @@
       Réinitialise le mot de passe à l'aide du token reçu par email.
       Le token doit être valide et ne pas être expiré (validité 1 heure).
       Le nouveau mot de passe doit respecter les critères de sécurité et être différent de l'ancien.
-      
+
       **Validations :**
       - Token valide et non expiré
       - Mot de passe minimum 8 caractères
@@ -456,7 +450,7 @@
       Change le mot de passe d'un utilisateur authentifié sans oublier son mot de passe.
       Nécessite le mot de passe actuel pour sécurité (anti-CSRF).
       Le nouveau mot de passe doit être différent de l'ancien et respecter les critères de sécurité.
-      
+
       **Prérequis :** Utilisateur doit être authentifié (token valide)
     operationId: changePassword
     security:
@@ -540,7 +534,7 @@
     description: |
       Redirige vers la page de connexion du fournisseur OAuth (Google, Apple, etc.).
       Paramètre `redirectUri` pour retourner après authentification.
-      
+
       **Fournisseurs supportés :** google, apple
     operationId: initiateOAuth
     security: []
@@ -571,7 +565,7 @@
       URL de callback qui gère la réponse du fournisseur OAuth.
       Appelée automatiquement par le fournisseur OAuth après authentification.
       Crée ou met à jour le profil utilisateur et retourne les tokens.
-      
+
       **Ne pas appeler manuellement** - c'est un callback système.
     operationId: handleOAuthCallback
     security: []

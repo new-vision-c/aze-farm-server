@@ -4,8 +4,7 @@ UserSignup:
   required:
     - email
     - password
-    - firstName
-    - lastName
+    - fullname
   properties:
     email:
       type: string
@@ -16,12 +15,9 @@ UserSignup:
       format: password
       minLength: 8
       example: 'SecurePassword123!'
-    firstName:
+    fullname:
       type: string
-      example: 'John'
-    lastName:
-      type: string
-      example: 'Doe'
+      example: 'John Doe'
     profile:
       type: string
       format: binary
@@ -47,12 +43,11 @@ UserLogin:
 VerifyOTP:
   type: object
   required:
-    - email
+    - sessionToken
     - otp
   properties:
-    email:
+    sessionToken:
       type: string
-      format: email
       example: 'user@example.com'
     otp:
       type: string
@@ -62,7 +57,7 @@ VerifyOTP:
 ResendOTP:
   type: object
   required:
-    - email
+    - sessionToken
   properties:
     email:
       type: string

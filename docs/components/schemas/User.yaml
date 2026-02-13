@@ -11,22 +11,19 @@ properties:
     format: email
     description: User's email address
     example: 'user@example.com'
-  firstName:
+  
+  fullname:
     type: string
-    description: User's first name
-    example: 'John'
-  lastName:
-    type: string
-    description: User's last name
-    example: 'Doe'
+    description: User's fullname
+    example: 'John Doe'
   isEmailVerified:
     type: boolean
     description: Whether the user's email has been verified
     default: false
   role:
     type: string
-    enum: [user, admin, moderator]
-    default: user
+    enum: [consumer, farmer, admin]
+    default: consumer
     description: User's role
   avatar:
     type: string

@@ -7,7 +7,7 @@ required:
 properties:
   provider:
     type: string
-    enum: [google, github, facebook, instagram, twitter, linkedin, telegram]
+    enum: [google, apple]
     description: The OAuth provider that issued the authorization code
     example: google
   code:

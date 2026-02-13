@@ -74,7 +74,7 @@ const login = asyncHandler(async (req: Request, res: Response): Promise<void | R
       result.message,
     );
   } catch (error: any) {
-    console.error('Login error:', error);
+    log.error('Login error:', error);
     return response.serverError(req, res, i18nService.translate('server.error', language));
   }
 });

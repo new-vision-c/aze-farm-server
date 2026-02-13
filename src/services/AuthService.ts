@@ -387,7 +387,7 @@ export class AuthService {
       if (!user) {
         return {
           success: false,
-          message: this.i18nService.translate('auth.login_failed', language),
+          message: this.i18nService.translate('auth.credentials_invalid', language),
         };
       }
 
@@ -395,7 +395,7 @@ export class AuthService {
       if (!user.password) {
         return {
           success: false,
-          message: this.i18nService.translate('auth.login_failed', language),
+          message: this.i18nService.translate('auth.credentials_invalid', language),
         };
       }
 
@@ -404,7 +404,7 @@ export class AuthService {
       if (!isValidPassword) {
         return {
           success: false,
-          message: this.i18nService.translate('auth.login_failed', language),
+          message: this.i18nService.translate('auth.credentials_invalid', language),
         };
       }
 
@@ -419,7 +419,7 @@ export class AuthService {
       if (!user.is_active) {
         return {
           success: false,
-          message: this.i18nService.translate('auth.access_denied', language),
+          message: this.i18nService.translate('auth.account_disabled', language),
         };
       }
 
