@@ -16,7 +16,7 @@
     "prisma:format": "npx prisma format",
     "prisma:seed": "tsx prisma/seed.ts",
     "prisma:reset": "npx prisma db push --force-reset && npm run prisma:seed",
-    "generate:openapi": "npx swagger-jsdoc -d ./docs/openapi.config.js -o ./docs/openapi.yaml",
+    "generate:openapi": "echo 'OpenAPI file already exists - skipping generation'",
     "postinstall": "npm run generate:openapi && npm run prisma:generate",
     "lint": "npm run lint:check -- --fix",
     "lint:check": "eslint . --ext .ts,.tsx,.js,.jsx --max-warnings=10",

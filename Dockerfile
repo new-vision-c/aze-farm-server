@@ -18,6 +18,7 @@ COPY tsconfig.json ./
 COPY prisma ./prisma/
 COPY src ./src/
 COPY docs/openapi.config.js ./docs/
+COPY docs/openapi.yaml ./docs/
 
 # Set up module aliases
 RUN mkdir -p node_modules

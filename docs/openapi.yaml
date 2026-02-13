@@ -1,0 +1,51 @@
+openapi: 3.0.3
+info:
+  title: 'AZE FARM API Documentation'
+  description: 'API complète pour la gestion des produits agricoles, fermes et commandes avec recherche géolocalisée. Fonctionnalités principales: Recherche de produits avec filtres et localisation, Géolocalisation avec tri par distance, Gestion des fermes, Authentification JWT et OAuth2.0, Gestion des commandes.'
+  version: '1.0.0'
+  contact:
+    name: 'Équipe Support AZE FARM'
+    email: 'support@azefarm.com'
+    url: 'https://azefarm.com/support'
+  license:
+    name: 'Propriétaire'
+    url: 'https://azefarm.com/terms'
+externalDocs:
+  description: 'Documentation complète'
+  url: 'https://docs.azefarm.com/api'
+servers:
+  - url: 'http://localhost:3000'
+    description: 'Environnement de développement local'
+  - url: 'https://api.staging.azefarm.com'
+    description: 'Environnement de staging'
+  - url: 'https://api.azefarm.com'
+    description: 'Production'
+tags:
+  - name: 'Products'
+    description: 'Product search and management with geolocation'
+  - name: 'Authentication'
+    description: 'User authentication and account management'
+  - name: 'Users'
+    description: 'User profile management'
+  - name: 'OAuth'
+    description: 'Third-party authentication (Google, Apple, etc.)'
+paths:
+  # Les chemins seront ajoutés ici manuellement ou via un script ultérieur
+components:
+  securitySchemes:
+    bearerAuth:
+      type: 'http'
+      scheme: 'bearer'
+      bearerFormat: 'JWT'
+      description: 'JWT obtained after authentication'
+    OAuth2:
+      type: 'oauth2'
+      description: 'OAuth2 authentication'
+      flows:
+        authorizationCode:
+          authorizationUrl: 'https://accounts.google.com/o/oauth2/v2/auth'
+          tokenUrl: 'https://oauth2.googleapis.com/token'
+          scopes:
+            openid: 'OpenID authentication'
+            profile: 'Access to profile information'
+            email: 'Access to email address'
