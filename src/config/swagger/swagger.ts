@@ -2,40 +2,37 @@ import type { Express } from 'express';
 import fs from 'fs';
 import path from 'path';
 import swaggerUi from 'swagger-ui-express';
+import yaml from 'yamljs';
 
 /**
- * Sets up Swagger UI and OpenAPI documentation routes for the provided Express application.
+ * Sets up Swagger UI and OpenAPI documentation routes for the Express application.
  *
- * This function loads the OpenAPI configuration from an absolute path, generates the Swagger documentation,
- * and configures the Swagger UI with custom options. It also exposes the raw OpenAPI JSON at `/api-docs.json`.
+ * This function loads the OpenAPI specification from the generated YAML file
+ * and configures Swagger UI with custom options.
  *
  * @param app - The Express application instance to which Swagger documentation routes will be attached.
- *
- * @remarks
- * - The OpenAPI configuration file is expected at `../../../docs/openapi.config.js` relative to this file.
- * - If the configuration file is not found, an error is logged and Swagger is not set up.
- * - The Swagger UI is available at `/api-docs`.
- * - The raw OpenAPI JSON is available at `/api-docs.json`.
  */
 const setupSwagger = (app: Express) => {
-  // Use absolute path to load the configuration
-  const configPath = path.resolve(__dirname, '../../../docs/openapi.config.js');
+  // Use absolute path to load the generated OpenAPI YAML file
+  const openapiPath = path.resolve(__dirname, '../../../docs/openapi.yaml');
 
-  if (!fs.existsSync(configPath)) {
-    console.error(`OpenAPI config file not found at: ${configPath}`);
+  if (!fs.existsSync(openapiPath)) {
+    console.error(`OpenAPI file not found at: ${openapiPath}`);
     return;
   }
 
-  const swaggerDocument = require('swagger-jsdoc')(require(configPath));
+  // Load the OpenAPI specification from YAML file
+  const swaggerDocument = yaml.load(openapiPath);
 
   // Custom Swagger UI options
   const optionsUI = {
     explorer: true,
     customCss: '.swagger-ui .topbar { display: none }',
-    customSiteTitle: 'AZE FARM api Documentation',
+    customSiteTitle: 'AZE FARM API Documentation',
     swaggerOptions: {
-      defaultModelsExpandDepth: -1,
-      docExpansion: 'none',
+      defaultModelsExpandDepth: 2,
+      docExpansion: 'list',
+      persistAuthorization: true,
     },
   };
 
@@ -45,7 +42,7 @@ const setupSwagger = (app: Express) => {
   // Generate openapi.json file
   app.get('/api-docs.json', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
-    res.send(swaggerDocument);
+    res.json(swaggerDocument);
   });
 };
 

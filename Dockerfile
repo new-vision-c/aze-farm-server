@@ -44,14 +44,11 @@ ENV NODE_ENV=production
 # Copy environment files
 COPY --from=builder /usr/src/app/.env.example ./
 
-# Copy docs directory
+# Copy docs directory (contient le openapi.yaml généré)
 COPY --from=builder /usr/src/app/docs ./docs
 
 # Set up module aliases in node_modules
 COPY module-alias.config.js ./
-
-# Set up open api doc (copié depuis le builder)
-COPY --from=builder /usr/src/app/docs/openapi.yaml ./docs/
 
 # Install production dependencies only avec bun
 COPY package.json bun.lock ./
