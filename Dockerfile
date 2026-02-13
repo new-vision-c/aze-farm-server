@@ -49,8 +49,8 @@ COPY --from=builder /usr/src/app/docs ./docs
 # Set up module aliases in node_modules
 COPY module-alias.config.js ./
 
-# Set up open ai doc
-COPY docs/openapi.yaml /usr/src/app/docs/
+# Set up open api doc (copié depuis le builder)
+COPY --from=builder /usr/src/app/docs/openapi.yaml ./docs/
 
 # Install production dependencies only avec bun
 COPY package.json bun.lock ./
