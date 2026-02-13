@@ -17,6 +17,20 @@ async function send_mail<K extends keyof typeof templateManager>(
       template: templateName,
     });
 
+    // Test de connexion SMTP
+    try {
+      await transporter.verify();
+      log.info('SMTP connection verified successfully');
+    } catch (smtpError: any) {
+      log.error('SMTP connection failed', {
+        error: smtpError.message,
+        host: envs.SMTP_HOST,
+        port: envs.SMTP_PORT,
+        user: envs.SMTP_USER,
+      });
+      throw new Error(`SMTP connection failed: ${smtpError.message}`);
+    }
+
     const renderTemplate = templateManager[templateName];
     if (!renderTemplate) {
       const error = `Template '${templateName}' not found in templateManager`;
@@ -33,7 +47,7 @@ async function send_mail<K extends keyof typeof templateManager>(
 
     // Mail options
     const mailOptions = {
-      from: `GTA:<${envs.USER_EMAIL}>`,
+      from: `AzeFarm:<${envs.USER_EMAIL}>`,
       to: receiver,
       subject: subjet,
       html: content,
@@ -55,6 +69,8 @@ async function send_mail<K extends keyof typeof templateManager>(
       subject: subjet,
       messageId: info.messageId,
       response: info.response,
+      accepted: info.accepted,
+      rejected: info.rejected,
     });
 
     return info;

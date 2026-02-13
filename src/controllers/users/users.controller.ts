@@ -1,10 +1,15 @@
 import change_password from './Auth/change_password';
-import forgot_password from './Auth/forgot_password';
+import {
+  forgotPasswordStep1,
+  forgotPasswordStep2,
+  forgotPasswordStep3,
+} from './Auth/forgot_password';
 import login from './Auth/login';
 import logout from './Auth/logout';
 import resend_otp from './Auth/resend_otp';
 import reset_password from './Auth/reset_password';
 import signup from './Auth/signup';
+import { getProfile, updateProfile } from './Auth/update_profile';
 import verify_otp from './Auth/verify_otp_new';
 import oauth_accounts from './OAuth/oauth-accounts';
 import oauth_authorize from './OAuth/oauth-authorize';
@@ -31,8 +36,12 @@ const users_controller = {
   resend_otp,
   signup,
   reset_password,
-  forgot_password,
+  forgotPasswordStep1,
+  forgotPasswordStep2,
+  forgotPasswordStep3,
   change_password,
+  updateProfile,
+  getProfile,
 
   // ***************************************************************************************************************************************************************************************************************************************
   //* OAUTH2.0 AUTHENTICATION ******************************************************************************************

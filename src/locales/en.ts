@@ -25,6 +25,30 @@ export const en = {
     user_not_authenticated: 'User not authenticated',
     credentials_invalid: 'Invalid credentials',
     account_disabled: 'Account disabled',
+    password_reset_sent_if_exists: 'If email exists, a reset code has been sent',
+    otp_sent_for_password_reset: 'OTP sent for password reset',
+    email_otp_sent: 'An OTP code has been sent to your email address',
+    otp_email_subject: 'Password reset code',
+    otp_email_subject_otp: 'Verification code',
+    invalid_or_expired_otp: 'Invalid or expired OTP',
+    session_token_generated: 'Session token generated successfully',
+    invalid_session_token: 'Invalid session token',
+    password_reset_success: 'Password reset successfully',
+    otp_welcome_message:
+      'We are delighted to welcome you to the great AzeFarm family! To finalize your account verification, please use the code below.',
+    otp_validity_message:
+      'This code is valid for 10 minutes. If you did not initiate this request, simply ignore this message.',
+    otp_thank_you:
+      "Thank you for trusting AzeFarm. Together, let's shape the future with technology and passion.",
+    otp_platform_description: 'An agricultural products sales platform',
+    welcome_email_subject: 'Welcome to AzeFarm',
+    welcome_platform_description: 'An agricultural products sales platform',
+    welcome_message:
+      'We are delighted to welcome you to the great AzeFarm family! Your account has been created successfully.',
+    welcome_next_steps:
+      'To start using our platform, please verify your email address using the code that was sent to you.',
+    welcome_cta_button: 'Verify my account',
+    welcome_thank_you: "Thank you for trusting AzeFarm. Together, let's grow the future!",
   },
 
   // User messages
@@ -35,16 +59,7 @@ export const en = {
     not_found: 'User not found',
     already_exists: 'User already exists',
     profile_updated: 'Profile updated successfully',
-  },
-
-  // Generic CRUD messages
-  crud: {
-    created: '{resource} created successfully',
-    updated: '{resource} updated successfully',
-    deleted: '{resource} deleted successfully',
-    not_found: '{resource} not found',
-    list_empty: 'No {resource} found',
-    list_loaded: '{count} {resource}(s) loaded successfully',
+    profile_retrieved: 'Profile retrieved successfully',
   },
 
   // Validation messages
@@ -55,8 +70,11 @@ export const en = {
     min_length: 'The {field} field must contain at least {min} characters',
     max_length: 'The {field} field must not exceed {max} characters',
     invalid_date: 'The date is not valid',
-    future_date: 'The date must be in the future',
-    past_date: 'The date must be in the past',
+    email_required: 'Email is required',
+    email_and_otp_required: 'Email and OTP code are required',
+    all_fields_required: 'All fields are required',
+    passwords_not_match: 'Passwords do not match',
+    password_too_short: 'Password must contain at least 8 characters',
 
     // Password validation
     password_required: 'Password is required',
@@ -152,6 +170,7 @@ export const en = {
     rate_limit: 'Rate limit exceeded',
     maintenance: 'Service under maintenance',
     quota_exceeded: 'Quota exceeded',
+    server_error: 'Internal server error',
   },
 
   // Success messages

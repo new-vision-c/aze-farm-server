@@ -17,7 +17,7 @@
       1. L'utilisateur reçoit un code OTP par email
       2. Appeler `/auth/verify-otp` pour vérifier le compte
       3. Une fois vérifié, l'utilisateur peut se connecter normalement
-    operationId: signupUser
+    operationId: RegisterUser
     security: []
     requestBody:
       required: true
@@ -28,8 +28,7 @@
             required:
               - email
               - password
-              - firstName
-              - lastName
+              - fullname
             properties:
               email:
                 type: string
@@ -39,8 +38,8 @@
               password:
                 type: string
                 format: password
-                minLength: 8
-                description: Mot de passe sécurisé (minimum 8 caractères, doit contenir majuscules, minuscules et chiffres)
+                minLength: 6
+                description: Mot de passe sécurisé (minimum 6 caractères, doit contenir majuscules, minuscules et caractères spéciaux)
                 example: 'SecurePass123!'
               fullname:
                 type: string
@@ -48,10 +47,7 @@
                 maxLength: 50
                 description: Nom complet de l'utilisateur
                 example: 'John Doe'
-              profile:
-                type: string
-                format: binary
-                description: Image de profil de l'utilisateur (optionnel - JPEG, PNG, max 5MB)
+
     responses:
       '201':
         description: Compte créé avec succès. Un code OTP a été envoyé à l'email de l'utilisateur.
@@ -290,7 +286,7 @@
     summary: Demander la réinitialisation du mot de passe
     description: |
       Envoie un email contenant un lien de réinitialisation du mot de passe à l'utilisateur.
-      Le lien expires après 1 heure pour des raisons de sécurité.
+      Le lien expire après 1 heure pour des raisons de sécurité.
       Utilisé quand l'utilisateur oublie son mot de passe.
 
       **Sécurité :** Ne révèle pas si l'email existe ou non dans la base de données.
@@ -523,6 +519,209 @@
         $ref: '../components/responses/common.yaml#/ServerError'
 
 # ============================================
+# ROUTES DE PROFIL UTILISATEUR
+# ============================================
+
+/auth/me/profile:
+  get:
+    tags:
+      - Authentication
+    summary: Récupérer le profil utilisateur
+    description: |
+      Récupère les informations du profil de l'utilisateur authentifié.
+      Retourne les données personnelles non sensibles de l'utilisateur.
+
+      **Prérequis :** Utilisateur doit être authentifié avec un token valide.
+    operationId: getUserProfile
+    security:
+      - bearerAuth: []
+    responses:
+      '200':
+        description: Profil utilisateur récupéré avec succès
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: 'Profil récupéré avec succès'
+                data:
+                  type: object
+                  properties:
+                    user_id:
+                      type: string
+                      example: '507f1f77bcf86cd799439011'
+                    email:
+                      type: string
+                      format: email
+                      example: 'john.doe@example.com'
+                    fullname:
+                      type: string
+                      example: 'John Doe'
+                    avatar_url:
+                      type: string
+                      format: uri
+                      example: 'https://example.com/avatars/john.jpg'
+                      nullable: true
+                    role:
+                      type: string
+                      enum: [CONSUMER, ADMIN, FARMER]
+                      example: 'CONSUMER'
+                    is_active:
+                      type: boolean
+                      example: true
+                    is_verified:
+                      type: boolean
+                      example: true
+                    created_at:
+                      type: string
+                      format: date-time
+                      example: '2024-01-15T10:30:00Z'
+                    updated_at:
+                      type: string
+                      format: date-time
+                      example: '2024-01-20T14:22:00Z'
+                    last_login_at:
+                      type: string
+                      format: date-time
+                      example: '2024-01-20T09:15:00Z'
+                      nullable: true
+                    email_verified_at:
+                      type: string
+                      format: date-time
+                      example: '2024-01-15T11:00:00Z'
+                      nullable: true
+      '401':
+        $ref: '../components/responses/common.yaml#/Unauthorized'
+      '404':
+        description: Utilisateur non trouvé
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: 'Utilisateur non trouvé'
+      '500':
+        $ref: '../components/responses/common.yaml#/ServerError'
+
+  put:
+    tags:
+      - Authentication
+    summary: Mettre à jour le profil utilisateur
+    description: |
+      Met à jour les informations du profil de l'utilisateur authentifié.
+      Permet de modifier le nom complet et/ou l'URL de l'avatar.
+
+      **Champs modifiables :**
+      - `fullname` : Nom complet de l'utilisateur (optionnel)
+      - `avatar` : Fichier image pour l'avatar (optionnel, multipart/form-data)
+
+      **Prérequis :** Utilisateur doit être authentifié avec un token valide.
+
+      **Upload d'avatar :** Le fichier sera uploadé sur Cloudinary et l'URL sera automatiquement générée. L'ancien avatar sera supprimé de Cloudinary.
+
+      **Format supporté :** Images (JPEG, PNG, WebP) - Maximum 5MB
+    operationId: updateUserProfile
+    security:
+      - bearerAuth: []
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            properties:
+              fullname:
+                type: string
+                minLength: 2
+                maxLength: 50
+                description: Nom complet de l'utilisateur (optionnel)
+                example: 'John Smith'
+              avatar:
+                type: string
+                format: binary
+                description: Fichier image pour l'avatar (JPEG, PNG, WebP, max 5MB)
+                example: 'binary-avatar-data'
+    responses:
+      '200':
+        description: Profil mis à jour avec succès
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: 'Profil mis à jour avec succès'
+                data:
+                  type: object
+                  properties:
+                    user_id:
+                      type: string
+                      example: '507f1f77bcf86cd799439011'
+                    email:
+                      type: string
+                      format: email
+                      example: 'john.doe@example.com'
+                    fullname:
+                      type: string
+                      example: 'John Smith'
+                    avatar_url:
+                      type: string
+                      format: uri
+                      example: 'https://example.com/avatars/john-new.jpg'
+                      nullable: true
+                    role:
+                      type: string
+                      enum: [CONSUMER, ADMIN, FARMER]
+                      example: 'CONSUMER'
+                    is_active:
+                      type: boolean
+                      example: true
+                    is_verified:
+                      type: boolean
+                      example: true
+                    created_at:
+                      type: string
+                      format: date-time
+                      example: '2024-01-15T10:30:00Z'
+                    updated_at:
+                      type: string
+                      format: date-time
+                      example: '2024-01-20T14:22:00Z'
+      '401':
+        $ref: '../components/responses/common.yaml#/Unauthorized'
+      '404':
+        description: Utilisateur non trouvé
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: 'Utilisateur non trouvé'
+      '422':
+        $ref: '../components/responses/common.yaml#/ValidationError'
+      '500':
+        $ref: '../components/responses/common.yaml#/ServerError'
+
+# ============================================
 # ROUTES OAUTH
 # ============================================
 
@@ -577,14 +776,14 @@
         description: Code d'autorisation reçu du fournisseur OAuth
         schema:
           type: string
-        example: '4/0AY0e-g7xAb...'
+          example: '4/0AY0e-g7xAb...'
       - name: state
         in: query
         required: true
         description: État CSRF pour validation de sécurité
         schema:
           type: string
-        example: 'a1b2c3d4e5f6g7h8'
+          example: 'a1b2c3d4e5f6g7h8'
     responses:
       '302':
         description: Redirection vers l'URL de succès avec tokens en paramètres

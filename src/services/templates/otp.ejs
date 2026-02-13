@@ -141,40 +141,24 @@
   <div class="container">
     <div class="header">
       <h1>AzeFarm</h1>
-      <p>Une plateforme de vente de produits agricoles</p>
+      <p><%= otp_platform_description || 'Une plateforme de vente de produits agricoles' %></p>
     </div>
 
     <div class="content">
-      <h2>Bonjour <%= name %>,</h2>
-      <p>Nous sommes ravis de vous accueillir dans la grande famille <strong>AzeFarm</strong> !
-        Pour finaliser la vérification de votre compte, veuillez utiliser le code ci-dessous.</p>
+      <h2><%= language === 'fr' ? 'Bonjour' : 'Hello' %> <%= name %>,</h2>
+      <p><%= otp_welcome_message %></p>
 
       <div class="otp-box">
         <%= otp %>
       </div>
 
-      <p>Ce code est <span class="highlight">valable pendant 10 minutes</span>.
-        Si vous n’êtes pas à l’origine de cette demande, ignorez simplement ce message.</p>
+      <p><%= otp_validity_message %></p>
 
-      <p>Chez <strong>GTA</strong>, nous accompagnons les particuliers et les entreprises dans leur transformation
-        digitale, leur formation et leurs projets techniques.
-        Explorez nos pôles d’expertise :</p>
-      <ul>
-        <li><strong>GTA IT</strong> – Solutions numériques & développement d’applications</li>
-        <li><strong>GTA-Academy</strong> – Formations certifiantes, techniques et professionnelles</li>
-        <li><strong>GTA Visite Technique</strong> – Sécurité et conformité automobile</li>
-      </ul>
-
-      <div class="cta">
-        <a href="https://www.gta-it.com/services">Découvrir nos services</a>
-      </div>
-
-      <p>Merci de faire confiance à <span class="highlight">GTA</span>.
-        Ensemble, façonnons l’avenir avec technologie et passion.</p>
+      <p><%= otp_thank_you %></p>
     </div>
 
     <div class="footer">
-      <p>© 2025 GTA Group. Tous droits réservés.</p>
+      <p> 2025 AzeFarm. <%= language === 'fr' ? 'Tous droits réservés.' : 'All rights reserved.' %></p>
       <p>Contact : <a href="mailto:academy@gta-it.com">contact@gta-it.com</a> | +237 690 419 336</p>
       <div class="social">
         <a href="https://www.facebook.com/academyGTA">Facebook</a> |
@@ -190,4 +174,4 @@
 </html>
 
 <!--* Variables -->
-<!-- <%= name %>, <%= otp %> -->
+<!-- <%= name %>, <%= otp %>, <%= language %>, <%= otp_platform_description %>, <%= otp_welcome_message %>, <%= otp_validity_message %>, <%= otp_thank_you %>, <%= otp_email_subject %> -->

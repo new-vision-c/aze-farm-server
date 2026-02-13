@@ -114,18 +114,32 @@ export class AuthService {
         { expiresIn: '24h' },
       );
 
-      // TODO: Envoyer l'email OTP (mode développement: afficher dans la console)
-      console.log(`🔑 OTP généré pour ${email}: ${otpCode} (expire à ${otpExpireDate})`);
-
       // Envoyer l'email OTP
       try {
-        await send_mail(email, 'Code de vérification', 'otp', {
-          date: new Date().toLocaleDateString('fr-FR'),
-          name: fullname,
-          content: otpCode,
-        });
-      } catch (emailError) {
-        console.error('Erreur envoi email OTP:', emailError);
+        await send_mail(
+          email,
+          this.i18nService.translate('auth.otp_email_subject_otp', language),
+          'otp',
+          {
+            name: fullname,
+            otp: otpCode,
+            language,
+            otp_email_subject: this.i18nService.translate('auth.otp_email_subject_otp', language),
+            otp_platform_description: this.i18nService.translate(
+              'auth.otp_platform_description',
+              language,
+            ),
+            otp_welcome_message: this.i18nService.translate('auth.otp_welcome_message', language),
+            otp_validity_message: this.i18nService.translate('auth.otp_validity_message', language),
+            otp_thank_you: this.i18nService.translate('auth.otp_thank_you', language),
+          },
+        );
+        console.log(`✅ Email OTP envoyé avec succès à: ${email}`);
+      } catch (emailError: any) {
+        console.error(`❌ Erreur envoi email OTP: ${emailError}`);
+        console.error(`Détails de l'erreur: ${emailError.message}`);
+        console.error(`Stack: ${emailError.stack}`);
+        // Ne pas bloquer le processus même si l'email échoue
       }
 
       return {
@@ -244,12 +258,34 @@ export class AuthService {
 
       // Envoyer l'email de bienvenue
       try {
-        await send_mail(user.email, 'Bienvenue !', 'welcome', {
-          date: new Date().toLocaleDateString('fr-FR'),
-          name: user.fullname,
-        });
-      } catch (emailError) {
-        console.error('Erreur envoi email bienvenue:', emailError);
+        await send_mail(
+          user.email,
+          this.i18nService.translate('auth.welcome_email_subject', language),
+          'welcome',
+          {
+            name: user.fullname,
+            language,
+            welcome_email_subject: this.i18nService.translate(
+              'auth.welcome_email_subject',
+              language,
+            ),
+            welcome_platform_description: this.i18nService.translate(
+              'auth.welcome_platform_description',
+              language,
+            ),
+            welcome_message: this.i18nService.translate('auth.welcome_message', language),
+            welcome_next_steps: this.i18nService.translate('auth.welcome_next_steps', language),
+            welcome_cta_button: this.i18nService.translate('auth.welcome_cta_button', language),
+            welcome_thank_you: this.i18nService.translate('auth.welcome_thank_you', language),
+            verification_link: `${process.env.FRONTEND_URL}/auth/verify-otp?token=${sessionToken}`,
+          },
+        );
+        console.log(`✅ Email de bienvenue envoyé avec succès à: ${user.email}`);
+      } catch (emailError: any) {
+        console.error(`❌ Erreur envoi email de bienvenue: ${emailError}`);
+        console.error(`Détails de l'erreur: ${emailError.message}`);
+        console.error(`Stack: ${emailError.stack}`);
+        // Ne pas bloquer le processus même si l'email échoue
       }
 
       return {
@@ -340,18 +376,34 @@ export class AuthService {
         },
       });
 
-      // TODO: Envoyer l'email OTP (mode développement: afficher dans la console)
+      // Envoyer l'email OTP
       console.log(`🔑 OTP renvoyé pour ${user.email}: ${newOtpCode} (expire à ${otpExpireDate})`);
 
-      // Envoyer l'email OTP
       try {
-        await send_mail(user.email, 'Code de vérification', 'otp', {
-          date: new Date().toLocaleDateString('fr-FR'),
-          name: user.fullname,
-          content: newOtpCode,
-        });
-      } catch (emailError) {
-        console.error('Erreur envoi email OTP:', emailError);
+        await send_mail(
+          user.email,
+          this.i18nService.translate('auth.otp_email_subject', language),
+          'otp',
+          {
+            name: user.fullname,
+            otp: newOtpCode,
+            language,
+            otp_email_subject: this.i18nService.translate('auth.otp_email_subject', language),
+            otp_platform_description: this.i18nService.translate(
+              'auth.otp_platform_description',
+              language,
+            ),
+            otp_welcome_message: this.i18nService.translate('auth.otp_welcome_message', language),
+            otp_validity_message: this.i18nService.translate('auth.otp_validity_message', language),
+            otp_thank_you: this.i18nService.translate('auth.otp_thank_you', language),
+          },
+        );
+        console.log(`✅ Email OTP renvoyé avec succès à: ${user.email}`);
+      } catch (emailError: any) {
+        console.error(`❌ Erreur envoi email OTP: ${emailError}`);
+        console.error(`Détails de l'erreur: ${emailError.message}`);
+        console.error(`Stack: ${emailError.stack}`);
+        // Ne pas bloquer le processus même si l'email échoue
       }
 
       return {

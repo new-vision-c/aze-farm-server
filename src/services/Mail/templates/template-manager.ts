@@ -3,6 +3,7 @@ import type {
   ITemplateNotificationSuccess,
   ITemplateOTP,
   ITemplateResetPassword,
+  ITemplateWelcome,
 } from '../interface/types';
 import { renderTemplate } from '../utils/utils';
 
@@ -15,7 +16,7 @@ const templateManager = {
   resetPassword: (data: ITemplateResetPassword) =>
     renderTemplate('reset-password.ejs', data, 'Reset Password'),
 
-  welcome: (data: any) => renderTemplate('welcome.ejs', data, 'Welcome'),
+  welcome: (data: ITemplateWelcome) => renderTemplate('welcome.ejs', data, 'Welcome'),
 
   alert_login: (data: ITemplateResetPassword) =>
     renderTemplate('alert-login.ejs', data, 'Alert Login'),

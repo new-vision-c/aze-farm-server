@@ -100,6 +100,70 @@ export const validate_user = {
       .escape(),
   ],
 
+  forgotPasswordStep1: [
+    // Email validation
+    body('email')
+      .trim()
+      .notEmpty()
+      .withMessage(i18n.translate('validation.required', undefined, { field: 'email' }))
+      .isEmail()
+      .withMessage(i18n.translate('validation.invalid_email'))
+      .escape(),
+  ],
+
+  forgotPasswordStep2: [
+    // Email validation
+    body('email')
+      .trim()
+      .notEmpty()
+      .withMessage(i18n.translate('validation.required', undefined, { field: 'email' }))
+      .isEmail()
+      .withMessage(i18n.translate('validation.invalid_email'))
+      .escape(),
+
+    // OTP validation
+    body('otp')
+      .trim()
+      .notEmpty()
+      .withMessage(i18n.translate('validation.required', undefined, { field: 'otp' }))
+      .isString()
+      .withMessage(i18n.translate('validation.invalid_format', undefined, { field: 'otp' }))
+      .isLength({ min: 6, max: 6 })
+      .withMessage(i18n.translate('validation.otp_invalid_length'))
+      .isNumeric()
+      .withMessage(i18n.translate('validation.otp_invalid_format')),
+  ],
+
+  forgotPasswordStep3: [
+    // Session token validation
+    body('session_token')
+      .trim()
+      .notEmpty()
+      .withMessage(i18n.translate('validation.required', undefined, { field: 'session_token' }))
+      .isString()
+      .withMessage(
+        i18n.translate('validation.invalid_format', undefined, { field: 'session_token' }),
+      ),
+
+    // Password validation
+    body('password')
+      .trim()
+      .notEmpty()
+      .withMessage(i18n.translate('validation.required', undefined, { field: 'password' }))
+      .isLength({ min: 8 })
+      .withMessage(i18n.translate('validation.password_too_short')),
+
+    // Password confirmation validation
+    body('passwordConfirm')
+      .trim()
+      .notEmpty()
+      .withMessage(i18n.translate('validation.required', undefined, { field: 'passwordConfirm' }))
+      .isString()
+      .withMessage(
+        i18n.translate('validation.invalid_format', undefined, { field: 'passwordConfirm' }),
+      ),
+  ],
+
   resendOtp: [
     // Session token validation (header Authorization)
     header('authorization')

@@ -25,6 +25,30 @@ export const fr = {
     user_not_authenticated: 'Utilisateur non authentifié',
     credentials_invalid: 'Identifiants invalides',
     account_disabled: 'Compte désactivé',
+    password_reset_sent_if_exists: "Si l'email existe, un code de réinitialisation a été envoyé",
+    otp_sent_for_password_reset: 'Code OTP envoyé pour la réinitialisation du mot de passe',
+    email_otp_sent: 'Un code OTP a été envoyé à votre adresse email',
+    otp_email_subject: 'Code de réinitialisation de mot de passe',
+    otp_email_subject_otp: 'Code de vérification',
+    invalid_or_expired_otp: 'Code OTP invalide ou expiré',
+    session_token_generated: 'Token de session généré avec succès',
+    invalid_session_token: 'Token de session invalide',
+    password_reset_success: 'Mot de passe réinitialisé avec succès',
+    otp_welcome_message:
+      'Nous sommes ravis de vous accueillir dans la grande famille AzeFarm ! Pour finaliser la vérification de votre compte, veuillez utiliser le code ci-dessous.',
+    otp_validity_message:
+      "Ce code est valable pendant 10 minutes. Si vous n'êtes pas à l'origine de cette demande, ignorez simplement ce message.",
+    otp_thank_you:
+      "Merci de faire confiance à AzeFarm. Ensemble, façonnons l'avenir avec technologie et passion.",
+    otp_platform_description: 'Une plateforme de vente de produits agricoles',
+    welcome_email_subject: 'Bienvenue sur AzeFarm',
+    welcome_platform_description: 'Une plateforme de vente de produits agricoles',
+    welcome_message:
+      'Nous sommes ravis de vous accueillir dans la grande famille AzeFarm ! Votre compte a été créé avec succès.',
+    welcome_next_steps:
+      'Pour commencer à utiliser notre plateforme, veuillez vérifier votre adresse email en utilisant le code qui vous a été envoyé.',
+    welcome_cta_button: 'Vérifier mon compte',
+    welcome_thank_you: "Merci de faire confiance à AzeFarm. Ensemble, cultivons l'avenir !",
   },
 
   // Messages pour les utilisateurs
@@ -35,20 +59,16 @@ export const fr = {
     not_found: 'Utilisateur non trouvé',
     already_exists: 'Utilisateur déjà existant',
     profile_updated: 'Profil mis à jour avec succès',
-  },
-
-  // Messages pour les CRUD génériques
-  crud: {
-    created: '{resource} créé avec succès',
-    updated: '{resource} mis à jour avec succès',
-    deleted: '{resource} supprimé avec succès',
-    not_found: '{resource} non trouvé',
-    list_empty: 'Aucun {resource} trouvé',
-    list_loaded: '{count} {resource}(s) chargé(s) avec succès',
+    profile_retrieved: 'Profil récupéré avec succès',
   },
 
   // Messages de validation
   validation: {
+    email_required: "L'email est requis",
+    email_and_otp_required: "L'email et le code OTP sont requis",
+    all_fields_required: 'Tous les champs sont requis',
+    passwords_not_match: 'Les mots de passe ne correspondent pas',
+    password_too_short: 'Le mot de passe doit contenir au moins 6 caractères',
     required: 'Le champ {field} est requis',
     invalid_email: "L'email n'est pas valide",
     invalid_format: 'Le format du champ {field} est invalide',
@@ -153,6 +173,7 @@ export const fr = {
     rate_limit: 'Limite de taux dépassée',
     maintenance: 'Service en maintenance',
     quota_exceeded: 'Quota dépassé',
+    server_error: 'Erreur interne du serveur',
   },
 
   // Messages de succès

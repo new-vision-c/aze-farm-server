@@ -2,10 +2,10 @@ import type { Request, Response } from 'express';
 
 import { envs } from '@/config/env/env';
 import prisma from '@/config/prisma/prisma';
-import { MAIL } from '@/core/constant/global';
+// import { MAIL } from '@/core/constant/global';
 import { AuthService } from '@/services/AuthService';
 import { I18nService } from '@/services/I18nService';
-import send_mail from '@/services/Mail/send-mail';
+// import send_mail from '@/services/Mail/send-mail';
 import userToken from '@/services/jwt/functions-jwt';
 import log from '@/services/logging/logger';
 import { asyncHandler, response } from '@/utils/responses/helpers';
@@ -50,13 +50,13 @@ const login = asyncHandler(async (req: Request, res: Response): Promise<void | R
       log.info('User logged in successfully', { email: result.user.email });
     });
 
-    // Envoyer l'email d'alerte de connexion (non-bloquant)
-    send_mail(email, MAIL.LOGIN_ALERT_SUBJECT, 'alert_login', {
-      name: result.user.fullname,
-      date: new Date(),
-    }).catch((error) => {
-      log.warn('Failed to send login alert email', { email, error: error.message });
-    });
+    // // Envoyer l'email d'alerte de connexion (non-bloquant)
+    // send_mail(email, MAIL.LOGIN_ALERT_SUBJECT, 'alert_login', {
+    //   name: result.user.fullname,
+    //   date: new Date(),
+    // }).catch((error) => {
+    //   log.warn('Failed to send login alert email', { email, error: error.message });
+    // });
 
     // Retourner la réponse
     return response.ok(

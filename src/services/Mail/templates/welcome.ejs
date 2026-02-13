@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0"
     />
-    <title><%= otp_email_subject || 'Code de Vérification' %></title>
+    <title><%= welcome_email_subject || 'Bienvenue sur AzeFarm' %></title>
     <style>
       body {
         font-family: 'Segoe UI', Roboto, Arial, sans-serif;
@@ -48,19 +48,6 @@
       .highlight {
         color: #28a745;
         font-weight: 600;
-      }
-
-      .otp-box {
-        background-color: #f4eaea;
-        border: 2px dashed #28a745;
-        color: #28a745;
-        font-weight: bold;
-        font-size: 2.2em;
-        letter-spacing: 8px;
-        text-align: center;
-        border-radius: 10px;
-        padding: 20px;
-        margin: 25px 0;
       }
 
       .cta-button {
@@ -106,27 +93,25 @@
   <body>
     <div class="container">
       <div class="header">
-        <h1>🔐 AzeFarm</h1>
-        <p><%= otp_platform_description || 'Une plateforme de vente de produits agricoles' %></p>
+        <h1>🌱 AzeFarm</h1>
+        <p><%= welcome_platform_description || 'Une plateforme de vente de produits agricoles' %></p>
       </div>
 
       <div class="content">
         <h2><%= language === 'fr' ? 'Bonjour' : 'Hello' %> <%= name %>!</h2>
         
         <p class="welcome-message">
-          <%= otp_welcome_message %>
-        </p>
-
-        <div class="otp-box">
-          <%= otp %>
-        </div>
-
-        <p>
-          <%= otp_validity_message %>
+          <%= welcome_message %>
         </p>
 
         <p>
-          <%= otp_thank_you %>
+          <%= welcome_next_steps %>
+        </p>
+
+       
+
+        <p>
+          <%= welcome_thank_you %>
         </p>
       </div>
 
@@ -143,3 +128,6 @@
     </div>
   </body>
 </html>
+
+<!--* Variables -->
+<!-- <%= name %>, <%= language %>, <%= welcome_email_subject %>, <%= welcome_platform_description %>, <%= welcome_message %>, <%= welcome_next_steps %>, <%= welcome_cta_button %>, <%= welcome_thank_you %>, <%= verification_link %> -->

@@ -41,12 +41,28 @@ auth.post(
 // Login
 auth.post('/login', validate_user.login, validationErrorHandler, users_controller.login);
 
-// Forgot password
+// Forgot password - Step 1: Send OTP
 auth.post(
   '/forgot-password',
-  validate_user.forgotPassword,
+  validate_user.forgotPasswordStep1,
   validationErrorHandler,
-  users_controller.forgot_password,
+  users_controller.forgotPasswordStep1,
+);
+
+// Forgot password - Step 2: Verify OTP and generate session token
+auth.post(
+  '/forgot-password/verify-otp',
+  validate_user.forgotPasswordStep2,
+  validationErrorHandler,
+  users_controller.forgotPasswordStep2,
+);
+
+// Forgot password - Step 3: Reset password with session token
+auth.post(
+  '/forgot-password/reset',
+  validate_user.forgotPasswordStep3,
+  validationErrorHandler,
+  users_controller.forgotPasswordStep3,
 );
 
 // Reset password
@@ -75,6 +91,21 @@ auth.post(
   validate_user.changePassword,
   validationErrorHandler,
   users_controller.change_password,
+);
+
+// Update profile
+auth.put(
+  '/me/profile',
+  upload.single('avatar'), // Gérer l'upload d'un fichier nommé 'avatar'
+  // isAuthenticated,
+  users_controller.updateProfile,
+);
+
+// Get profile
+auth.get(
+  '/me/profile',
+  // isAuthenticated,
+  users_controller.getProfile,
 );
 
 export default auth;

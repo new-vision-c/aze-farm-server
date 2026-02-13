@@ -1,0 +1,732 @@
+{
+  "info": {
+    "_postman_id": "complete-auth-i18n-collection",
+    "name": "Complete Authentication API - Internationalization Tests",
+    "description": "Complete authentication endpoint tests with French (fr) and English (en) message translations for all Auth endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Registration",
+      "item": [
+        {
+          "name": "Register - Step 1 (FR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullname\": \"Jean Dupont\",\n  \"email\": \"jean.dupont@example.com\",\n  \"password\": \"SecurePassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register/step1",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register", "step1"]
+            },
+            "description": "Registration step 1 - French messages. Should receive:\n- auth.registration_step1_success (French)\n- sessionToken for next step\n- email and fullname confirmation"
+          },
+          "response": []
+        },
+        {
+          "name": "Register - Step 1 (EN)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en-US,en;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullname\": \"John Smith\",\n  \"email\": \"john.smith@example.com\",\n  \"password\": \"SecurePassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register/step1",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register", "step1"]
+            },
+            "description": "Registration step 1 - English messages. Should receive:\n- auth.registration_step1_success (English)\n- sessionToken for next step\n- email and fullname confirmation"
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Account (FR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{session_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/verify-account",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "verify-account"]
+            },
+            "description": "Verify account with OTP - French messages. Should receive:\n- auth.verification_success (French)\n- User data with tokens"
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Account (EN)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en-US,en;q=0.9"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{session_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/verify-account",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "verify-account"]
+            },
+            "description": "Verify account with OTP - English messages. Should receive:\n- auth.verification_success (English)\n- User data with tokens"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Login",
+      "item": [
+        {
+          "name": "Login (FR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jean.dupont@example.com\",\n  \"password\": \"SecurePassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login - French messages. Should receive:\n- auth.login_success (French)\n- User data with tokens"
+          },
+          "response": []
+        },
+        {
+          "name": "Login (EN)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en-US,en;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.smith@example.com\",\n  \"password\": \"SecurePassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login - English messages. Should receive:\n- auth.login_success (English)\n- User data with tokens"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Forgot Password - 3 Steps Flow",
+      "item": [
+        {
+          "name": "Step 1 - Send OTP (FR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jean.dupont@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/forgot-password",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "forgot-password"]
+            },
+            "description": "Forgot Password Step 1 - French messages. Should receive:\n- auth.otp_sent_for_password_reset (French)\n- email_sent: true"
+          },
+          "response": []
+        },
+        {
+          "name": "Step 1 - Send OTP (EN)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en-US,en;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.smith@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/forgot-password",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "forgot-password"]
+            },
+            "description": "Forgot Password Step 1 - English messages. Should receive:\n- auth.otp_sent_for_password_reset (English)\n- email_sent: true"
+          },
+          "response": []
+        },
+        {
+          "name": "Step 2 - Verify OTP (FR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jean.dupont@example.com\",\n  \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/forgot-password/verify-otp",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "forgot-password", "verify-otp"]
+            },
+            "description": "Forgot Password Step 2 - French messages. Should receive:\n- auth.session_token_generated (French)\n- session_token for next step"
+          },
+          "response": []
+        },
+        {
+          "name": "Step 2 - Verify OTP (EN)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en-US,en;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.smith@example.com\",\n  \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/forgot-password/verify-otp",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "forgot-password", "verify-otp"]
+            },
+            "description": "Forgot Password Step 2 - English messages. Should receive:\n- auth.session_token_generated (English)\n- session_token for next step"
+          },
+          "response": []
+        },
+        {
+          "name": "Step 3 - Reset Password (FR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"session_token\": \"{{session_token}}\",\n  \"password\": \"NewSecurePassword123!\",\n  \"passwordConfirm\": \"NewSecurePassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/forgot-password/reset",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "forgot-password", "reset"]
+            },
+            "description": "Forgot Password Step 3 - French messages. Should receive:\n- auth.password_reset_success (French)\n- password_updated: true"
+          },
+          "response": []
+        },
+        {
+          "name": "Step 3 - Reset Password (EN)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en-US,en;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"session_token\": \"{{session_token}}\",\n  \"password\": \"NewSecurePassword123!\",\n  \"passwordConfirm\": \"NewSecurePassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/forgot-password/reset",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "forgot-password", "reset"]
+            },
+            "description": "Forgot Password Step 3 - English messages. Should receive:\n- auth.password_reset_success (English)\n- password_updated: true"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Profile Management",
+      "item": [
+        {
+          "name": "Get Profile (FR)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/me/profile",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me", "profile"]
+            },
+            "description": "Get user profile - French messages. Should receive:\n- users.profile_retrieved (French)\n- User profile data"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Profile (EN)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "en-US,en;q=0.9"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/me/profile",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me", "profile"]
+            },
+            "description": "Get user profile - English messages. Should receive:\n- users.profile_retrieved (English)\n- User profile data"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Profile - Text Only (FR)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullname\": \"Jean Dupont Modifié\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/me/profile",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me", "profile"]
+            },
+            "description": "Update profile with text - French messages. Should receive:\n- users.profile_updated (French)\n- Updated user data"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Profile - Text Only (EN)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en-US,en;q=0.9"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullname\": \"John Smith Modified\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/me/profile",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me", "profile"]
+            },
+            "description": "Update profile with text - English messages. Should receive:\n- users.profile_updated (English)\n- Updated user data"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Profile - With Avatar (FR)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "fullname",
+                  "value": "Jean Dupont avec Avatar",
+                  "type": "text"
+                },
+                {
+                  "key": "avatar",
+                  "type": "file",
+                  "src": "/path/to/avatar.jpg",
+                  "description": "Avatar image file"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/me/profile",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me", "profile"]
+            },
+            "description": "Update profile with avatar - French messages. Should receive:\n- users.profile_updated (French)\n- Updated user data with avatar_url"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Profile - With Avatar (EN)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "en-US,en;q=0.9"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "fullname",
+                  "value": "John Smith with Avatar",
+                  "type": "text"
+                },
+                {
+                  "key": "avatar",
+                  "type": "file",
+                  "src": "/path/to/avatar.jpg",
+                  "description": "Avatar image file"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/me/profile",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me", "profile"]
+            },
+            "description": "Update profile with avatar - English messages. Should receive:\n- users.profile_updated (English)\n- Updated user data with avatar_url"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. Error Scenarios",
+      "item": [
+        {
+          "name": "Invalid Email (FR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"invalid-email\",\n  \"password\": \"password\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Should return French validation error: validation.invalid_email"
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid Email (EN)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en-US,en;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"invalid-email\",\n  \"password\": \"password\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Should return English validation error: validation.invalid_email"
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid OTP (FR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jean.dupont@example.com\",\n  \"otp\": \"999999\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/forgot-password/verify-otp",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "forgot-password", "verify-otp"]
+            },
+            "description": "Should return French error: auth.invalid_or_expired_otp"
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid OTP (EN)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en-US,en;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.smith@example.com\",\n  \"otp\": \"999999\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/forgot-password/verify-otp",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "forgot-password", "verify-otp"]
+            },
+            "description": "Should return English error: auth.invalid_or_expired_otp"
+          },
+          "response": []
+        },
+        {
+          "name": "Password Mismatch (FR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR,fr;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"session_token\": \"{{session_token}}\",\n  \"password\": \"Password123!\",\n  \"passwordConfirm\": \"DifferentPassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/forgot-password/reset",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "forgot-password", "reset"]
+            },
+            "description": "Should return French error: validation.passwords_not_match"
+          },
+          "response": []
+        },
+        {
+          "name": "Password Mismatch (EN)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en-US,en;q=0.9"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"session_token\": \"{{session_token}}\",\n  \"password\": \"Password123!\",\n  \"passwordConfirm\": \"DifferentPassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/forgot-password/reset",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "forgot-password", "reset"]
+            },
+            "description": "Should return English error: validation.passwords_not_match"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5001",
+      "type": "string"
+    },
+    {
+      "key": "session_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
