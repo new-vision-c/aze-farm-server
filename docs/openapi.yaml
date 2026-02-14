@@ -1,5 +1,61 @@
 components:
+  parameters:
+    limit:
+      description: Nombre maximum de résultats
+      in: query
+      name: limit
+      schema:
+        default: 10
+        maximum: 100
+        minimum: 1
+        type: integer
+    page:
+      description: Numéro de page
+      in: query
+      name: page
+      schema:
+        default: 1
+        minimum: 1
+        type: integer
+    productId:
+      description: ID du produit
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+    userId:
+      description: ID de l'utilisateur
+      in: path
+      name: userId
+      required: true
+      schema:
+        type: string
   schemas:
+    AuthResponse:
+      properties:
+        data:
+          properties:
+            token:
+              type: string
+            user:
+              $ref: '#/components/schemas/User'
+          type: object
+        message:
+          type: string
+        success:
+          type: boolean
+      type: object
+    ErrorResponse:
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        success:
+          example: false
+          type: boolean
+      type: object
     Product:
       properties:
         category:
@@ -8,6 +64,19 @@ components:
           type: string
         id:
           type: string
+        images:
+          items:
+            type: string
+          type: array
+        location:
+          properties:
+            address:
+              type: string
+            lat:
+              type: number
+            lng:
+              type: number
+          type: object
         name:
           type: string
         price:
@@ -25,6 +94,15 @@ components:
           type: string
         id:
           type: string
+        role:
+          enum:
+          - user
+          - admin
+          - moderator
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
       type: object
   securitySchemes:
     bearerAuth:
@@ -37,33 +115,21 @@ info:
     email: support@azefarm.com
     name: Équipe Support AZE FARM
     url: https://azefarm.com/support
-  description: API complète pour la gestion des produits agricoles, fermes et commandes
-    avec recherche géolocalisée
+  description: API complète pour la gestion des produits agricoles, fermes et commandes avec recherche géolocalisée
   title: AZE FARM API Documentation
   version: 1.0.0
 openapi: 3.0.3
 paths:
-  /auth/register:
+  /_csp-reports:
     post:
-      description: Crée un nouveau compte utilisateur avec email et mot de passe
+      description: Endpoint post pour /_csp-reports
       requestBody:
         content:
           application/json:
             schema:
               properties:
-                email:
-                  format: email
-                  type: string
-                fullname:
-                  minLength: 2
-                  type: string
-                password:
-                  minLength: 6
-                  type: string
-              required:
-              - email
-              - password
-              - fullname
+                data:
+                  type: object
               type: object
         required: true
       responses:
@@ -77,71 +143,676 @@ paths:
                   success:
                     type: boolean
                 type: object
-          description: Compte créé avec succès
-      summary: Créer un nouveau compte utilisateur
+          description: Succès
+        '400':
+          description: Requête invalide
+        '500':
+          description: Erreur serveur
+      summary: Post /_csp-reports
       tags:
-      - Authentication
-  /products/search:
-    get:
-      description: Recherche des produits avec filtres et localisation
-      parameters:
-      - in: query
-        name: limit
-        schema:
-          default: 10
-          type: integer
-      - in: query
-        name: page
-        schema:
-          default: 1
-          type: integer
-      - in: query
-        name: category
-        schema:
-          type: string
-      - in: query
-        name: lat
-        schema:
-          type: number
-      - in: query
-        name: lng
-        schema:
-          type: number
+      - System
+  /auth/change-password:
+    post:
+      description: Endpoint post pour /auth/change-password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                data:
+                  type: object
+              type: object
+        required: true
       responses:
         '200':
           content:
             application/json:
               schema:
                 properties:
-                  data:
-                    items:
-                      type: object
-                    type: array
+                  message:
+                    type: string
                   success:
                     type: boolean
                 type: object
-          description: Produits trouvés
-      summary: Rechercher des produits
-      tags:
-      - Products
-  /users/profile:
-    get:
-      description: Récupère les informations du profil utilisateur
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                properties:
-                  data:
-                    type: object
-                  success:
-                    type: boolean
-                type: object
-          description: Profil récupéré avec succès
+          description: Succès
+        '400':
+          description: Requête invalide
+        '500':
+          description: Erreur serveur
       security:
       - bearerAuth: []
-      summary: Obtenir le profil utilisateur
+      summary: Post /auth/change-password
+      tags:
+      - Authentication
+  /auth/forgot-password:
+    post:
+      description: Endpoint post pour /auth/forgot-password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                data:
+                  type: object
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                  success:
+                    type: boolean
+                type: object
+          description: Succès
+        '400':
+          description: Requête invalide
+        '500':
+          description: Erreur serveur
+      summary: Post /auth/forgot-password
+      tags:
+      - Authentication
+  /auth/login:
+    post:
+      description: Endpoint post pour /auth/login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                data:
+                  type: object
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                  success:
+                    type: boolean
+                type: object
+          description: Succès
+        '400':
+          description: Requête invalide
+        '500':
+          description: Erreur serveur
+      summary: Post /auth/login
+      tags:
+      - Authentication
+  /auth/logout:
+    post:
+      description: Endpoint post pour /auth/logout
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                data:
+                  type: object
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                  success:
+                    type: boolean
+                type: object
+          description: Succès
+        '400':
+          description: Requête invalide
+        '500':
+          description: Erreur serveur
+      security:
+      - bearerAuth: []
+      summary: Post /auth/logout
+      tags:
+      - Authentication
+  /auth/me/profile:
+    get:
+      description: Endpoint get pour /auth/me/profile
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                  success:
+                    type: boolean
+                type: object
+          description: Succès
+        '400':
+          description: Requête invalide
+        '500':
+          description: Erreur serveur
+      security:
+      - bearerAuth: []
+      summary: Get /auth/me/profile
+      tags:
+      - Authentication
+  /auth/register:
+    post:
+      description: Endpoint post pour /auth/register
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                data:
+                  type: object
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                  success:
+                    type: boolean
+                type: object
+          description: Succès
+        '400':
+          description: Requête invalide
+        '500':
+          description: Erreur serveur
+      summary: Post /auth/register
+      tags:
+      - Authentication
+  /auth/resend-otp:
+    post:
+      description: Endpoint post pour /auth/resend-otp
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                data:
+                  type: object
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                  success:
+                    type: boolean
+                type: object
+          description: Succès
+        '400':
+          description: Requête invalide
+        '500':
+          description: Erreur serveur
+      security:
+      - bearerAuth: []
+      summary: Post /auth/resend-otp
+      tags:
+      - Authentication
+  /auth/reset-password/{resetToken}:
+    post:
+      description: Endpoint post pour /auth/reset-password/{resetToken}
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                data:
+                  type: object
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                  success:
+                    type: boolean
+                type: object
+          description: Succès
+        '400':
+          description: Requête invalide
+        '500':
+          description: Erreur serveur
+      summary: Post /auth/reset-password/{resetToken}
+      tags:
+      - Authentication
+  /auth/verify-otp:
+    post:
+      description: Endpoint post pour /auth/verify-otp
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                data:
+                  type: object
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                  success:
+                    type: boolean
+                type: object
+          description: Succès
+        '400':
+          description: Requête invalide
+        '500':
+          description: Erreur serveur
+      summary: Post /auth/verify-otp
+      tags:
+      - Authentication
+  /csrf-token:
+    get:
+      description: Endpoint get pour /csrf-token
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                  success:
+                    type: boolean
+                type: object
+          description: Succès
+        '400':
+          description: Requête invalide
+        '500':
+          description: Erreur serveur
+      summary: Get /csrf-token
+      tags:
+      - System
+  /health:
+    get:
+      description: Endpoint get pour /health
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                  success:
+                    type: boolean
+                type: object
+          description: Succès
+        '400':
+          description: Requête invalide
+        '500':
+          description: Erreur serveur
+      summary: Get /health
+      tags:
+      - System
+  /oauth/token:
+    post:
+      description: Endpoint post pour /oauth/token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                data:
+                  type: object
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                  success:
+                    type: boolean
+                type: object
+          description: Succès
+        '400':
+          description: Requête invalide
+        '500':
+          description: Erreur serveur
+      security:
+      - bearerAuth: []
+      summary: Post /oauth/token
+      tags:
+      - OAuth
+  /oauth/{provider}:
+    get:
+      description: Endpoint get pour /oauth/{provider}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                  success:
+                    type: boolean
+                type: object
+          description: Succès
+        '400':
+          description: Requête invalide
+        '500':
+          description: Erreur serveur
+      security:
+      - bearerAuth: []
+      summary: Get /oauth/{provider}
+      tags:
+      - OAuth
+  /oauth/{provider}/callback:
+    get:
+      description: Endpoint get pour /oauth/{provider}/callback
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                  success:
+                    type: boolean
+                type: object
+          description: Succès
+        '400':
+          description: Requête invalide
+        '500':
+          description: Erreur serveur
+      security:
+      - bearerAuth: []
+      summary: Get /oauth/{provider}/callback
+      tags:
+      - OAuth
+  /products/categories:
+    get:
+      description: Endpoint get pour /products/categories
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                  success:
+                    type: boolean
+                type: object
+          description: Succès
+        '400':
+          description: Requête invalide
+        '500':
+          description: Erreur serveur
+      summary: Get /products/categories
+      tags:
+      - Products
+  /products/search:
+    get:
+      description: Endpoint get pour /products/search
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                  success:
+                    type: boolean
+                type: object
+          description: Succès
+        '400':
+          description: Requête invalide
+        '500':
+          description: Erreur serveur
+      summary: Get /products/search
+      tags:
+      - Products
+  /products/{id}:
+    get:
+      description: Endpoint get pour /products/{id}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                  success:
+                    type: boolean
+                type: object
+          description: Succès
+        '400':
+          description: Requête invalide
+        '500':
+          description: Erreur serveur
+      summary: Get /products/{id}
+      tags:
+      - Products
+  /users:
+    get:
+      description: Endpoint get pour /users
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                  success:
+                    type: boolean
+                type: object
+          description: Succès
+        '400':
+          description: Requête invalide
+        '500':
+          description: Erreur serveur
+      security:
+      - bearerAuth: []
+      summary: Get /users
+      tags:
+      - Users
+  /users/export:
+    get:
+      description: Endpoint get pour /users/export
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                  success:
+                    type: boolean
+                type: object
+          description: Succès
+        '400':
+          description: Requête invalide
+        '500':
+          description: Erreur serveur
+      security:
+      - bearerAuth: []
+      summary: Get /users/export
+      tags:
+      - Users
+  /users/profile:
+    put:
+      description: Endpoint put pour /users/profile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                data:
+                  type: object
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                  success:
+                    type: boolean
+                type: object
+          description: Succès
+        '400':
+          description: Requête invalide
+        '500':
+          description: Erreur serveur
+      security:
+      - bearerAuth: []
+      summary: Put /users/profile
+      tags:
+      - Users
+  /users/search:
+    get:
+      description: Endpoint get pour /users/search
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                  success:
+                    type: boolean
+                type: object
+          description: Succès
+        '400':
+          description: Requête invalide
+        '500':
+          description: Erreur serveur
+      security:
+      - bearerAuth: []
+      summary: Get /users/search
+      tags:
+      - Users
+  /users/{userId}:
+    get:
+      description: Endpoint get pour /users/{userId}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                  success:
+                    type: boolean
+                type: object
+          description: Succès
+        '400':
+          description: Requête invalide
+        '500':
+          description: Erreur serveur
+      security:
+      - bearerAuth: []
+      summary: Get /users/{userId}
+      tags:
+      - Users
+  /users/{userId}/restore:
+    post:
+      description: Endpoint post pour /users/{userId}/restore
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                data:
+                  type: object
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                  success:
+                    type: boolean
+                type: object
+          description: Succès
+        '400':
+          description: Requête invalide
+        '500':
+          description: Erreur serveur
+      security:
+      - bearerAuth: []
+      summary: Post /users/{userId}/restore
+      tags:
+      - Users
+  /users/{userId}/role:
+    put:
+      description: Endpoint put pour /users/{userId}/role
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                data:
+                  type: object
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                  success:
+                    type: boolean
+                type: object
+          description: Succès
+        '400':
+          description: Requête invalide
+        '500':
+          description: Erreur serveur
+      security:
+      - bearerAuth: []
+      summary: Put /users/{userId}/role
       tags:
       - Users
 servers:
@@ -160,3 +831,5 @@ tags:
   name: Users
 - description: Third-party authentication (Google, Apple, etc.)
   name: OAuth
+- description: System endpoints
+  name: System
