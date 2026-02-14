@@ -17,6 +17,7 @@ RUN bun install --frozen-lockfile --ignore-scripts
 COPY tsconfig.json ./
 COPY prisma ./prisma/
 COPY src ./src/
+COPY scripts ./scripts/
 COPY docs/openapi.config.js ./docs/
 COPY docs/openapi.yaml ./docs/
 
