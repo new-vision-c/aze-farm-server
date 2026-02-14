@@ -26,7 +26,9 @@ RUN mkdir -p node_modules
 RUN echo "{\"dependencies\":{\"@config\":\"file:./src/config\",\"@services\":\"file:./src/services\",\"@middlewares\":\"file:./src/middlewares\",\"@router\":\"file:./src/router\",\"@utils\":\"file:./src/utils\"}}" > node_modules/package.json
 
 # Install Python YAML module for OpenAPI generation
-RUN pip3 install PyYAML
+RUN apt-get update && apt-get install -y python3 python3-pip && \
+    pip3 install PyYAML && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Generate OpenAPI and Prisma client
 RUN bun run generate:openapi && bun run prisma:generate
