@@ -29,6 +29,34 @@ def load_all_yaml_files(directory):
     
     return result
 
+def resolve_references(obj, base_path=""):
+    """Résout les références $ref dans un objet"""
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            if key == '$ref' and isinstance(value, str):
+                if value.startswith('../'):
+                    # Remplacer les références relatives par des références absolues
+                    ref = value.replace('../components/', '#/components/')
+                    # Enlever l'extension .yaml et les chemins supplémentaires
+                    ref = ref.replace('.yaml', '')
+                    if '#/components/responses/' in ref:
+                        ref = ref.split('#/components/responses/')[1]
+                        ref = f'#/components/responses/{ref}'
+                    elif '#/components/parameters/' in ref:
+                        ref = ref.split('#/components/parameters/')[1]
+                        ref = f'#/components/parameters/{ref}'
+                    elif '#/components/schemas/' in ref:
+                        ref = ref.split('#/components/schemas/')[1]
+                        ref = f'#/components/schemas/{ref}'
+                    obj[key] = ref
+                elif value.startswith('./'):
+                    obj[key] = value.replace('./', '#/paths/')
+            else:
+                resolve_references(value, base_path)
+    elif isinstance(obj, list):
+        for item in obj:
+            resolve_references(item, base_path)
+
 def merge_openapi_spec():
     """Fusionne tous les fichiers pour créer la spécification OpenAPI complète"""
     
@@ -84,6 +112,10 @@ def merge_openapi_spec():
     for filename, content in response_files.items():
         if isinstance(content, dict):
             openapi_spec['components']['responses'].update(content)
+    
+    # Résoudre les références $ref
+    print("Résolution des références...")
+    resolve_references(openapi_spec)
     
     # Écrire le fichier final
     output_path = 'docs/openapi.yaml'
