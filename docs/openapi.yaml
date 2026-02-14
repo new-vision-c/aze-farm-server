@@ -245,8 +245,7 @@ components:
           type: string
         error_description:
           description: Human-readable error description
-          example: The provided authorization grant is invalid, expired, revoked,
-            or does not match the redirection URI used in the authorization request.
+          example: The provided authorization grant is invalid, expired, revoked, or does not match the redirection URI used in the authorization request.
           type: string
         error_uri:
           description: A URI identifying the error
@@ -301,8 +300,7 @@ components:
           example: Tomates cerises bio, cultivées avec amour
           type: string
         distance:
-          description: Distance en km depuis la position de l'utilisateur (présent
-            uniquement si localisation fournie)
+          description: Distance en km depuis la position de l'utilisateur (présent uniquement si localisation fournie)
           example: 2.3
           format: float
           type: number
@@ -504,10 +502,7 @@ info:
     email: support@azefarm.com
     name: Équipe Support AZE FARM
     url: https://azefarm.com/support
-  description: 'API complète pour la gestion des produits agricoles, fermes et commandes
-    avec recherche géolocalisée. Fonctionnalités principales: Recherche de produits
-    avec filtres et localisation, Géolocalisation avec tri par distance, Gestion des
-    fermes, Authentification JWT et OAuth2.0, Gestion des commandes.'
+  description: 'API complète pour la gestion des produits agricoles, fermes et commandes avec recherche géolocalisée. Fonctionnalités principales: Recherche de produits avec filtres et localisation, Géolocalisation avec tri par distance, Gestion des fermes, Authentification JWT et OAuth2.0, Gestion des commandes.'
   license:
     name: Propriétaire
     url: https://azefarm.com/terms
@@ -553,13 +548,11 @@ paths:
       - System
   /auth/change-password:
     post:
-      description: 'Change le mot de passe d''un utilisateur authentifié sans oublier
-        son mot de passe.
+      description: 'Change le mot de passe d''un utilisateur authentifié sans oublier son mot de passe.
 
         Nécessite le mot de passe actuel pour sécurité (anti-CSRF).
 
-        Le nouveau mot de passe doit être différent de l''ancien et respecter les
-        critères de sécurité.
+        Le nouveau mot de passe doit être différent de l''ancien et respecter les critères de sécurité.
 
 
         **Prérequis :** Utilisateur doit être authentifié (token valide)
@@ -606,8 +599,7 @@ paths:
                     example: true
                     type: boolean
                 type: object
-          description: Mot de passe changé avec succès. L'utilisateur devra se reconnecter
-            avec le nouveau mot de passe.
+          description: Mot de passe changé avec succès. L'utilisateur devra se reconnecter avec le nouveau mot de passe.
         '400':
           content:
             application/json:
@@ -640,8 +632,7 @@ paths:
       - Authentication
   /auth/forgot-password:
     post:
-      description: 'Envoie un email contenant un lien de réinitialisation du mot de
-        passe à l''utilisateur.
+      description: 'Envoie un email contenant un lien de réinitialisation du mot de passe à l''utilisateur.
 
         Le lien expire après 1 heure pour des raisons de sécurité.
 
@@ -673,15 +664,13 @@ paths:
               schema:
                 properties:
                   message:
-                    example: Email de réinitialisation envoyé avec succès. Veuillez
-                      vérifier votre email.
+                    example: Email de réinitialisation envoyé avec succès. Veuillez vérifier votre email.
                     type: string
                   success:
                     example: true
                     type: boolean
                 type: object
-          description: Email de réinitialisation envoyé avec succès (même si l'email
-            n'existe pas)
+          description: Email de réinitialisation envoyé avec succès (même si l'email n'existe pas)
         '500':
           $ref: '#/components/responses/common#/ServerError'
       security: []
@@ -701,8 +690,7 @@ paths:
 
         - `accessToken` : JWT valide pendant 15 minutes pour les requêtes authentifiées
 
-        - `refreshToken` : Token valide pendant 7 jours pour obtenir un nouveau access
-        token
+        - `refreshToken` : Token valide pendant 7 jours pour obtenir un nouveau access token
 
         '
       operationId: loginUser
@@ -727,8 +715,7 @@ paths:
                     example: true
                     type: boolean
                 type: object
-          description: Connexion réussie. Les tokens d'authentification sont retournés
-            dans la réponse et en cookies.
+          description: Connexion réussie. Les tokens d'authentification sont retournés dans la réponse et en cookies.
         '400':
           content:
             application/json:
@@ -901,8 +888,7 @@ paths:
         **Prérequis :** Utilisateur doit être authentifié avec un token valide.
 
 
-        **Upload d''avatar :** Le fichier sera uploadé sur Cloudinary et l''URL sera
-        automatiquement générée. L''ancien avatar sera supprimé de Cloudinary.
+        **Upload d''avatar :** Le fichier sera uploadé sur Cloudinary et l''URL sera automatiquement générée. L''ancien avatar sera supprimé de Cloudinary.
 
 
         **Format supporté :** Images (JPEG, PNG, WebP) - Maximum 5MB
@@ -1008,11 +994,9 @@ paths:
     post:
       description: 'Crée un nouveau compte utilisateur avec email et profil optionnel.
 
-        Envoie un OTP (One-Time Password) à l''adresse email fournie pour la vérification
-        du compte.
+        Envoie un OTP (One-Time Password) à l''adresse email fournie pour la vérification du compte.
 
-        La photo de profil est optionnelle et doit être une image au format JPEG ou
-        PNG (max 5MB).
+        La photo de profil est optionnelle et doit être une image au format JPEG ou PNG (max 5MB).
 
 
         **Étapes suivantes :**
@@ -1031,8 +1015,7 @@ paths:
             schema:
               properties:
                 email:
-                  description: Adresse email unique de l'utilisateur (sera l'identifiant
-                    de connexion)
+                  description: Adresse email unique de l'utilisateur (sera l'identifiant de connexion)
                   example: john.doe@example.com
                   format: email
                   type: string
@@ -1043,8 +1026,7 @@ paths:
                   minLength: 2
                   type: string
                 password:
-                  description: Mot de passe sécurisé (minimum 6 caractères, doit contenir
-                    majuscules, minuscules et caractères spéciaux)
+                  description: Mot de passe sécurisé (minimum 6 caractères, doit contenir majuscules, minuscules et caractères spéciaux)
                   example: SecurePass123!
                   format: password
                   minLength: 6
@@ -1064,15 +1046,13 @@ paths:
                   data:
                     $ref: '#/components/schemas/AuthResponse'
                   message:
-                    example: Compte créé avec succès. Veuillez vérifier votre email
-                      pour le code de vérification.
+                    example: Compte créé avec succès. Veuillez vérifier votre email pour le code de vérification.
                     type: string
                   success:
                     example: true
                     type: boolean
                 type: object
-          description: Compte créé avec succès. Un code OTP a été envoyé à l'email
-            de l'utilisateur.
+          description: Compte créé avec succès. Un code OTP a été envoyé à l'email de l'utilisateur.
         '400':
           content:
             application/json:
@@ -1132,8 +1112,7 @@ paths:
               schema:
                 properties:
                   message:
-                    example: Code OTP renvoyé avec succès. Veuillez vérifier votre
-                      email.
+                    example: Code OTP renvoyé avec succès. Veuillez vérifier votre email.
                     type: string
                   success:
                     example: true
@@ -1151,8 +1130,7 @@ paths:
                         example: RATE_LIMIT_EXCEEDED
                         type: string
                       message:
-                        example: Veuillez attendre 5 minutes avant de renvoyer un
-                          autre code
+                        example: Veuillez attendre 5 minutes avant de renvoyer un autre code
                         type: string
                     type: object
                   success:
@@ -1172,8 +1150,7 @@ paths:
 
         Le token doit être valide et ne pas être expiré (validité 1 heure).
 
-        Le nouveau mot de passe doit respecter les critères de sécurité et être différent
-        de l''ancien.
+        Le nouveau mot de passe doit respecter les critères de sécurité et être différent de l''ancien.
 
 
         **Validations :**
@@ -1228,8 +1205,7 @@ paths:
                     example: true
                     type: boolean
                 type: object
-          description: Mot de passe réinitialisé avec succès. L'utilisateur peut se
-            connecter avec le nouveau mot de passe.
+          description: Mot de passe réinitialisé avec succès. L'utilisateur peut se connecter avec le nouveau mot de passe.
         '400':
           content:
             application/json:
@@ -1259,8 +1235,7 @@ paths:
       - Authentication
   /auth/verify-otp:
     post:
-      description: 'Valide le compte utilisateur en utilisant le code OTP à 6 chiffres
-        reçu par email.
+      description: 'Valide le compte utilisateur en utilisant le code OTP à 6 chiffres reçu par email.
 
         Cette étape est obligatoire après l''enregistrement.
 
@@ -1300,8 +1275,7 @@ paths:
                     example: true
                     type: boolean
                 type: object
-          description: Compte vérifié avec succès. L'utilisateur peut maintenant accéder
-            à tous les services.
+          description: Compte vérifié avec succès. L'utilisateur peut maintenant accéder à tous les services.
         '400':
           content:
             application/json:
@@ -1384,8 +1358,7 @@ paths:
       - OAuth
   /oauth/{provider}:
     get:
-      description: 'Redirige vers la page de connexion du fournisseur OAuth (Google,
-        Apple, etc.).
+      description: 'Redirige vers la page de connexion du fournisseur OAuth (Google, Apple, etc.).
 
         Paramètre `redirectUri` pour retourner après authentification.
 
@@ -1396,8 +1369,7 @@ paths:
       operationId: initiateOAuth
       parameters:
       - $ref: '#/components/parameters/oauthProvider'
-      - description: URL de retour après authentification réussie (doit correspondre
-          à la configuration du serveur)
+      - description: URL de retour après authentification réussie (doit correspondre à la configuration du serveur)
         example: https://app.example.com/auth/callback
         in: query
         name: redirectUri
@@ -1491,11 +1463,9 @@ paths:
       - Products
   /products/search:
     get:
-      description: 'Recherche des produits disponibles avec filtres avancés et tri
-        par proximité géographique.
+      description: 'Recherche des produits disponibles avec filtres avancés et tri par proximité géographique.
 
-        Les produits sont classés par distance de l''utilisateur si les coordonnées
-        sont fournies,
+        Les produits sont classés par distance de l''utilisateur si les coordonnées sont fournies,
 
         sinon par note de la ferme.
 
@@ -1546,8 +1516,7 @@ paths:
       - Products
   /products/{id}:
     get:
-      description: Récupère les informations complètes d'un produit spécifique incluant
-        les détails de la ferme
+      description: Récupère les informations complètes d'un produit spécifique incluant les détails de la ferme
       parameters:
       - $ref: '#/components/parameters/path_product_id'
       responses:
@@ -1597,8 +1566,7 @@ paths:
       parameters:
       - $ref: '#/components/parameters/common#/page'
       - $ref: '#/components/parameters/common#/limit'
-      - description: Terme de recherche pour filtrer par email, nom ou prénom (insensible
-          à la casse)
+      - description: Terme de recherche pour filtrer par email, nom ou prénom (insensible à la casse)
         example: john
         in: query
         name: search
@@ -1905,8 +1873,7 @@ paths:
     delete:
       description: 'Supprime logiquement un utilisateur (soft delete).
 
-        L''utilisateur et ses données restent en base de données mais sont marqués
-        comme supprimés.
+        L''utilisateur et ses données restent en base de données mais sont marqués comme supprimés.
 
         L''utilisateur ne peut plus se connecter mais ses données restent pour l''audit.
 
@@ -1950,8 +1917,7 @@ paths:
       tags:
       - Users
     get:
-      description: 'Récupère les informations complètes d''un utilisateur spécifique
-        par son ID.
+      description: 'Récupère les informations complètes d''un utilisateur spécifique par son ID.
 
         Inclut le profil complet, rôle, statut et dates importantes.
 
@@ -1995,8 +1961,7 @@ paths:
 
         Peut être appelé par l''utilisateur lui-même ou par un administrateur.
 
-        Les champs sensibles (email, mot de passe) ne peuvent être modifiés que par
-        l''utilisateur lui-même.
+        Les champs sensibles (email, mot de passe) ne peuvent être modifiés que par l''utilisateur lui-même.
 
         '
       operationId: updateUser

@@ -29,6 +29,25 @@ def load_all_yaml_files(directory):
     
     return result
 
+def clean_description(text):
+    """Nettoie les descriptions pour éviter les erreurs YAML"""
+    if not isinstance(text, str):
+        return text
+    # Remplacer toutes les apostrophes problématiques
+    return text.replace("'", "'").replace("'", "'")
+
+def clean_object(obj):
+    """Nettoie récursivement les descriptions dans un objet"""
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            if key in ['description', 'summary']:
+                obj[key] = clean_description(value)
+            else:
+                clean_object(value)
+    elif isinstance(obj, list):
+        for item in obj:
+            clean_object(item)
+
 def resolve_references(obj, base_path=""):
     """Résout les références $ref dans un objet"""
     if isinstance(obj, dict):
@@ -117,11 +136,15 @@ def merge_openapi_spec():
     print("Résolution des références...")
     resolve_references(openapi_spec)
     
+    # Nettoyer les descriptions
+    print("Nettoyage des descriptions...")
+    clean_object(openapi_spec)
+    
     # Écrire le fichier final
     output_path = 'docs/openapi.yaml'
     try:
         with open(output_path, 'w', encoding='utf-8') as f:
-            yaml.dump(openapi_spec, f, default_flow_style=False, allow_unicode=True, indent=2)
+            yaml.dump(openapi_spec, f, default_flow_style=False, allow_unicode=True, indent=2, width=1000)
         
         print(f"\n✅ Fichier OpenAPI généré: {output_path}")
         print(f"📊 Stats:")
