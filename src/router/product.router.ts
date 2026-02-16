@@ -53,6 +53,36 @@ router.get(
 );
 
 /**
+ * @route GET /api/v1/products/categories
+ * @desc Obtenir toutes les catégories disponibles
+ * @access Public
+ */
+router.get('/categories', productController.getCategories);
+
+/**
+ * @route GET /api/v1/products/suggestions
+ * @desc Obtenir des suggestions de produits basées sur la saisie utilisateur
+ * @access Public
+ * @query {string} q - Terme de recherche pour suggestions
+ * @query {number} limit - Nombre de suggestions (max 20, défaut: 5)
+ */
+router.get(
+  '/suggestions',
+  [
+    query('q')
+      .trim()
+      .isLength({ min: 1, max: 50 })
+      .withMessage('Le terme de recherche doit contenir entre 1 et 50 caractères'),
+    query('limit')
+      .optional()
+      .isInt({ min: 1, max: 20 })
+      .withMessage('Le nombre limite doit être entre 1 et 20'),
+  ],
+  validateRequest,
+  productController.getProductSuggestions,
+);
+
+/**
  * @route GET /api/v1/products/:id
  * @desc Obtenir les détails d'un produit spécifique
  * @access Public
@@ -64,12 +94,5 @@ router.get(
   validateRequest,
   productController.getProductById,
 );
-
-/**
- * @route GET /api/v1/products/categories
- * @desc Obtenir toutes les catégories disponibles
- * @access Public
- */
-router.get('/categories', productController.getCategories);
 
 export default router;

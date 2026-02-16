@@ -264,4 +264,62 @@ export class ProductService {
 
     return result.products.filter((product) => product.distance !== undefined);
   }
+
+  /**
+   * Obtenir des suggestions de produits basées sur un terme de recherche
+   * @param searchTerm - Terme de recherche (insensible à la casse)
+   * @param limit - Nombre maximum de suggestions à retourner
+   * @returns Tableau des noms de produits suggérés
+   */
+  async getProductSuggestions(searchTerm: string, limit: number = 5): Promise<string[]> {
+    try {
+      // Créer une expression régulière pour la recherche partielle
+      const searchRegex = new RegExp(searchTerm, 'i'); // 'i' pour insensible à la casse
+
+      // Rechercher les produits dont le nom correspond au terme
+      const products = await prisma.product.findMany({
+        where: {
+          name: {
+            contains: searchTerm,
+            mode: 'insensitive', // Prisma supporte la recherche insensible à la casse
+          },
+          isAvailable: true, // Uniquement les produits disponibles
+        },
+        select: {
+          name: true,
+        },
+        take: limit * 2, // Prendre plus de résultats pour pouvoir filtrer et dédupliquer
+        orderBy: {
+          name: 'asc',
+        },
+      });
+
+      // Extraire les noms uniques et les trier par pertinence
+      const uniqueNames = Array.from(
+        new Map(products.map((product) => [product.name.toLowerCase(), product.name])).values(),
+      );
+
+      // Trier par pertinence : commence par le terme recherché en premier
+      const sortedSuggestions = uniqueNames.sort((a, b) => {
+        const aLower = a.toLowerCase();
+        const bLower = b.toLowerCase();
+        const searchLower = searchTerm.toLowerCase();
+
+        // Priorité aux noms qui commencent par le terme de recherche
+        const aStartsWith = aLower.startsWith(searchLower);
+        const bStartsWith = bLower.startsWith(searchLower);
+
+        if (aStartsWith && !bStartsWith) return -1;
+        if (!aStartsWith && bStartsWith) return 1;
+
+        // Sinon, tri alphabétique
+        return a.localeCompare(b, 'fr', { sensitivity: 'base' });
+      });
+
+      return sortedSuggestions.slice(0, limit);
+    } catch (error) {
+      console.error('Erreur lors de la récupération des suggestions:', error);
+      throw new Error('Impossible de récupérer les suggestions de produits');
+    }
+  }
 }

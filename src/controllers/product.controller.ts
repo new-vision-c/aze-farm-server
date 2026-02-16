@@ -282,6 +282,76 @@ export class ProductController {
       }
     },
   );
+
+  /**
+   * Obtenir des suggestions de produits basées sur la saisie utilisateur
+   * @swagger
+   * /api/products/suggestions:
+   *   get:
+   *     tags:
+   *       - Products
+   *     summary: Obtenir des suggestions de produits
+   *     description: Retourne des suggestions de produits basées sur un terme de recherche partiel
+   *     parameters:
+   *       - in: query
+   *         name: q
+   *         required: true
+   *         schema:
+   *           type: string
+   *           minLength: 1
+   *           maxLength: 50
+   *         description: Terme de recherche pour suggestions
+   *       - in: query
+   *         name: limit
+   *         required: false
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           maximum: 20
+   *           default: 5
+   *         description: Nombre de suggestions à retourner
+   *     responses:
+   *       200:
+   *         description: Suggestions récupérées avec succès
+   *       400:
+   *         description: Erreur de validation
+   *       500:
+   *         description: Erreur serveur
+   */
+  getProductSuggestions = asyncHandler(
+    async (req: Request, res: Response): Promise<void | Response<any>> => {
+      try {
+        const { q, limit = '5' } = req.query;
+
+        // Validation des paramètres
+        const searchTerm = (q as string)?.trim().toLowerCase();
+        const suggestionLimit = Math.min(parseInt(limit as string) || 5, 20);
+
+        if (!searchTerm || searchTerm.length < 1) {
+          return response.badRequest(req, res, 'Le terme de recherche est requis');
+        }
+
+        if (searchTerm.length > 50) {
+          return response.badRequest(req, res, 'Le terme de recherche est trop long');
+        }
+
+        // Obtenir les suggestions depuis le service
+        const suggestions = await this.productService.getProductSuggestions(
+          searchTerm,
+          suggestionLimit,
+        );
+
+        return response.success(req, res, suggestions, 'Suggestions récupérées avec succès');
+      } catch (error) {
+        return response.serverError(
+          req,
+          res,
+          'Erreur lors de la récupération des suggestions',
+          error as Error,
+        );
+      }
+    },
+  );
 }
 
 export default ProductController;

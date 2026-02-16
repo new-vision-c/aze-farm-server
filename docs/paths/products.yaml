@@ -109,3 +109,70 @@
                   example: ['légumes', 'fruits', 'céréales', 'produits laitiers']
       500:
         $ref: '../components/responses/internal_server_error.yaml'
+
+/products/suggestions:
+  get:
+    tags:
+      - Products
+    summary: Obtenir des suggestions de produits
+    description: |
+      Retourne des suggestions de produits basées sur un terme de recherche partiel.
+      Utile pour l'autocomplétion dans les champs de recherche.
+      La recherche est insensible à la casse et trie les résultats par pertinence.
+    parameters:
+      - name: q
+        in: query
+        required: true
+        description: Terme de recherche pour suggestions
+        schema:
+          type: string
+          minLength: 1
+          maxLength: 50
+          example: 'tom'
+      - name: limit
+        in: query
+        required: false
+        description: Nombre de suggestions à retourner
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 20
+          default: 5
+          example: 5
+    responses:
+      200:
+        description: Suggestions récupérées avec succès
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: 'Suggestions récupérées avec succès'
+                data:
+                  type: array
+                  items:
+                    type: string
+                  example: ['Tomates', 'Tomates cerises', 'Sauces tomates']
+      400:
+        description: Erreur de validation des paramètres
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: 'Le terme de recherche est requis'
+                statusCode:
+                  type: integer
+                  example: 400
+      500:
+        $ref: '../components/responses/internal_server_error.yaml'
