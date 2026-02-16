@@ -4,7 +4,6 @@ import initMiddlewares from '@utils/middleware/_initMiddlewares';
 import express from 'express';
 
 import health from '@/router/_config/healtcheck/health.router';
-import productRouter from '@/router/product.router';
 import metricsRouter from '@/services/metrics/metrics';
 
 import { initializeServices } from './config/services';
@@ -30,9 +29,6 @@ app.use('/metrics', metricsRouter);
 
 // Health check endpoint
 app.use('/health', health);
-
-// Products endpoints
-app.use('/api/products', productRouter);
 
 // Initialize scheduler dependencies
 const uploader = initUploader();

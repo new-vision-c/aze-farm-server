@@ -8,7 +8,7 @@ const router = Router();
 const productController = new ProductController();
 
 /**
- * @route GET /api/products/search
+ * @route GET /api/v1/products/search
  * @desc Rechercher des produits avec filtres et localisation
  * @access Public
  * @query {number} limit - Nombre de résultats (max 100, défaut: 10)
@@ -53,7 +53,7 @@ router.get(
 );
 
 /**
- * @route GET /api/products/:id
+ * @route GET /api/v1/products/:id
  * @desc Obtenir les détails d'un produit spécifique
  * @access Public
  * @param {string} id - ID du produit
@@ -66,7 +66,7 @@ router.get(
 );
 
 /**
- * @route GET /api/products/categories
+ * @route GET /api/v1/products/categories
  * @desc Obtenir toutes les catégories disponibles
  * @access Public
  */

@@ -9,6 +9,7 @@ import oauth from '@/router/users/oauth.router';
 import users from '@/router/users/users.router';
 
 import exampleRouter from '../../router/example.router';
+import productRouter from '../../router/product.router';
 import { rateLimitingSubRoute } from './securityConfig';
 
 const api_version = envs.API_PREFIX || '/api/v1';
@@ -31,6 +32,7 @@ const setupRoutes = (app: Express): void => {
   api.use('/auth/oauth', rateLimitingSubRoute, oauth);
   api.use('/users', rateLimitingSubRoute, users);
   api.use('/example', rateLimitingSubRoute, exampleRouter);
+  api.use('/products', rateLimitingSubRoute, productRouter);
 
   app.use(api_version, api);
 };
