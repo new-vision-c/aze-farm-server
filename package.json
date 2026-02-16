@@ -17,7 +17,7 @@
     "prisma:seed": "tsx prisma/seed.ts",
     "prisma:reset": "npx prisma db push --force-reset && npm run prisma:seed",
     "generate:openapi": "python3 scripts/merge-openapi-complete.py",
-    "postinstall": "npm run generate:openapi && npm run prisma:generate",
+    "postinstall": "npm run prisma:generate",
     "lint": "npm run lint:check -- --fix",
     "lint:check": "eslint . --ext .ts,.tsx,.js,.jsx --max-warnings=10",
     "lint:ci": "eslint . --ext .ts,.tsx,.js,.jsx --max-warnings=0",

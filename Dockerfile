@@ -30,7 +30,7 @@ RUN apt-get update && apt-get install -y python3 python3-yaml && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Generate OpenAPI and Prisma client
-RUN bun run generate:openapi && bun run prisma:generate
+RUN bun run prisma:generate
 
 # Build TypeScript
 RUN bun run build
