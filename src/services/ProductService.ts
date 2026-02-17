@@ -67,6 +67,22 @@ interface ProductResponse {
   };
 }
 
+// Interface étendue pour getProductById (inclut description, stock, et autres produits)
+interface ProductDetailResponse extends ProductResponse {
+  description: string;
+  stock: number;
+  farm: {
+    id: string;
+    name: string;
+    image: string;
+    rating: {
+      average: number;
+      count: number;
+    };
+  };
+  otherProducts: ProductResponse[];
+}
+
 // Interface pour le résultat de recherche
 interface SearchResult {
   products: ProductWithDistance[];
@@ -372,7 +388,9 @@ export class ProductService {
   /**
    * Obtenir un produit par son ID avec les autres produits de la même ferme
    */
-  async getProductById(id: string): Promise<any | null> {
+  async getProductById(id: string): Promise<ProductDetailResponse | null> {
+    console.log('🔍 DEBUG ProductService.getProductById - Recherche du produit:', { id });
+
     // Récupérer le produit principal avec sa ferme
     const product = await this.prisma.product.findUnique({
       where: { id },
@@ -391,9 +409,27 @@ export class ProductService {
       },
     });
 
+    console.log('🔍 DEBUG ProductService.getProductById - Produit trouvé:', {
+      found: !!product,
+      productId: product?.id,
+      productName: product?.name,
+      farmId: product?.farmId,
+      hasFarm: !!product?.farm,
+      farmName: product?.farm?.name,
+    });
+
     if (!product) {
+      console.log('🔍 DEBUG ProductService.getProductById - Produit non trouvé, retourne null');
       return null;
     }
+
+    console.log(
+      '🔍 DEBUG ProductService.getProductById - Recherche des autres produits de la ferme:',
+      {
+        farmId: product.farmId,
+        excludeProductId: id,
+      },
+    );
 
     // Récupérer les autres produits de la même ferme (sauf le produit actuel)
     // Trier par date de création (plus récents d'abord)
@@ -419,18 +455,30 @@ export class ProductService {
       take: 10, // Limiter à 10 produits
     });
 
-    // Formater la réponse selon le format demandé
+    console.log('🔍 DEBUG ProductService.getProductById - Autres produits trouvés:', {
+      count: otherProducts.length,
+      products: otherProducts.map((p) => ({ id: p.id, name: p.name })),
+    });
+
+    // Formater la réponse selon le format ProductDetailResponse
     return {
       id: product.id,
       name: product.name,
       description: product.description,
-      price: product.price,
-      unit: product.unit,
       stock: product.stock,
-      image: product.images[0] || null, // Première image ou null
+      price: {
+        current: product.price,
+        // TODO: Ajouter la gestion des réductions ici
+        // original: product.originalPrice || undefined,
+      },
+      unit: product.unit,
+      images: {
+        main: product.images[0] || '', // Première image
+      },
       farm: {
+        id: product.farmId,
         name: product.farm.name,
-        image: product.farm.images[0] || null, // Première image de la ferme ou null
+        image: product.farm.images[0] || '', // Première image de la ferme
         rating: {
           average: product.farm.ratingAvg,
           count: product.farm.ratingCount,
@@ -439,11 +487,22 @@ export class ProductService {
       otherProducts: otherProducts.map((otherProduct) => ({
         id: otherProduct.id,
         name: otherProduct.name,
-        price: otherProduct.price,
+        price: {
+          current: otherProduct.price,
+          // TODO: Ajouter la gestion des réductions ici
+          // original: otherProduct.originalPrice || undefined,
+        },
         unit: otherProduct.unit,
         stock: otherProduct.stock,
-        image: otherProduct.images[0] || null,
-        createdAt: otherProduct.createdAt,
+        images: {
+          main: otherProduct.images[0] || '',
+        },
+        farm: {
+          id: product.farmId, // Même ferme que le produit principal
+          name: product.farm.name,
+          image: product.farm.images[0] || '',
+        },
+        createdAt: otherProduct.createdAt.toISOString(),
       })),
     };
   }

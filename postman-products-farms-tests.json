@@ -1,0 +1,517 @@
+{
+  "info": {
+    "_postman_id": "products-farms-test-collection",
+    "name": "Products & Farms API Tests",
+    "description": "Complete tests for product search, product details and farm details endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Products",
+      "item": [
+        {
+          "name": "Product Search",
+          "item": [
+            {
+              "name": "Search Products - Basic",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "fr",
+                    "description": "French language for response messages"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/products/search?q=legumes&limit=10&page=1",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "products", "search"],
+                  "query": [
+                    {
+                      "key": "q",
+                      "value": "legumes",
+                      "description": "Search query for products"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10",
+                      "description": "Maximum number of results"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1",
+                      "description": "Page number"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Search Products - With Location",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "fr"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/products/search?q=tomates&lat=45.764043&lng=4.835659&radius=10&limit=5",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "products", "search"],
+                  "query": [
+                    {
+                      "key": "q",
+                      "value": "tomates",
+                      "description": "Search query"
+                    },
+                    {
+                      "key": "lat",
+                      "value": "45.764043",
+                      "description": "Latitude for geolocation search"
+                    },
+                    {
+                      "key": "lng",
+                      "value": "4.835659",
+                      "description": "Longitude for geolocation search"
+                    },
+                    {
+                      "key": "radius",
+                      "value": "10",
+                      "description": "Search radius in km"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "5",
+                      "description": "Maximum number of results"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Search Products - By Category",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "fr"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/products/search?category=légumes&limit=15",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "products", "search"],
+                  "query": [
+                    {
+                      "key": "category",
+                      "value": "légumes",
+                      "description": "Filter by product category"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "15",
+                      "description": "Maximum number of results"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Search Products - Empty Query",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "fr"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/products/search?limit=20",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "products", "search"],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "20",
+                      "description": "Get all products with limit"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Product Details",
+          "item": [
+            {
+              "name": "Get Product By ID - Valid",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "fr"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/products/{{productId}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "products", "{{productId}}"],
+                  "variable": [
+                    {
+                      "key": "productId",
+                      "value": "507f1f77bcf86cd799439011",
+                      "description": "Replace with actual product ID"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Product By ID - Invalid ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "fr"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/products/invalid-id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "products", "invalid-id"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Product By ID - Not Found",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "fr"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/products/507f1f77bcf86cd799439999",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "products", "507f1f77bcf86cd799439999"]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Product Categories",
+          "item": [
+            {
+              "name": "Get All Categories",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "fr"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/products/categories",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "products", "categories"]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Farms",
+      "item": [
+        {
+          "name": "Farm Details",
+          "item": [
+            {
+              "name": "Get Farm By ID - Valid",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "fr"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/farms/{{farmId}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "farms", "{{farmId}}"],
+                  "variable": [
+                    {
+                      "key": "farmId",
+                      "value": "507f1f77bcf86cd799439012",
+                      "description": "Replace with actual farm ID"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Farm By ID - With Category Filter",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "fr"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/farms/{{farmId}}?category=légumes",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "farms", "{{farmId}}"],
+                  "query": [
+                    {
+                      "key": "category",
+                      "value": "légumes",
+                      "description": "Filter farm products by category"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "farmId",
+                      "value": "507f1f77bcf86cd799439012",
+                      "description": "Replace with actual farm ID"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Farm By ID - Partial Category Filter",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "fr"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/farms/{{farmId}}?category=tom",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "farms", "{{farmId}}"],
+                  "query": [
+                    {
+                      "key": "category",
+                      "value": "tom",
+                      "description": "Partial category search (case insensitive)"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "farmId",
+                      "value": "507f1f77bcf86cd799439012",
+                      "description": "Replace with actual farm ID"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Farm By ID - Invalid ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "fr"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/farms/invalid-farm-id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "farms", "invalid-farm-id"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Farm By ID - Not Found",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "fr"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/farms/507f1f77bcf86cd799439888",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "farms", "507f1f77bcf86cd799439888"]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "description": "Base URL for the API (change for different environments)"
+    },
+    {
+      "key": "productId",
+      "value": "507f1f77bcf86cd799439011",
+      "description": "Sample product ID (replace with actual ID from your database)"
+    },
+    {
+      "key": "farmId",
+      "value": "507f1f77bcf86cd799439012",
+      "description": "Sample farm ID (replace with actual ID from your database)"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "exec": [
+          "// Pre-request script for setting up test data",
+          "// You can add authentication tokens here if needed",
+          "// Example: pm.collectionVariables.set('authToken', 'your-jwt-token');",
+          "",
+          "// Log the current request for debugging",
+          "console.log('Request URL:', pm.request.url.toString());",
+          "console.log('Request Method:', pm.request.method);",
+          "console.log('Headers:', pm.request.headers);"
+        ],
+        "type": "text/javascript"
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "exec": [
+          "// Test script for validating responses",
+          "",
+          "// Check if response is successful",
+          "if (pm.response.code >= 200 && pm.response.code < 300) {",
+          "    pm.test('Status code is successful', function () {",
+          "        pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+          "    });",
+          "    ",
+          "    // Check response structure",
+          "    try {",
+          "        const responseJson = pm.response.json();",
+          "        ",
+          "        pm.test('Response has success field', function () {",
+          "            pm.expect(responseJson).to.have.property('success');",
+          "        });",
+          "        ",
+          "        pm.test('Response has message field', function () {",
+          "            pm.expect(responseJson).to.have.property('message');",
+          "        });",
+          "        ",
+          "        if (responseJson.success) {",
+          "            pm.test('Response has data field', function () {",
+          "                pm.expect(responseJson).to.have.property('data');",
+          "            });",
+          "        }",
+          "    } catch (e) {",
+          "        console.log('Error parsing JSON response:', e);",
+          "    }",
+          "} else {",
+          "    pm.test('Error response handled', function () {",
+          "        pm.expect(pm.response.code).to.be.oneOf([400, 404, 500]);",
+          "    });",
+          "    ",
+          "    try {",
+          "        const responseJson = pm.response.json();",
+          "        pm.test('Error response has success=false', function () {",
+          "            pm.expect(responseJson.success).to.be.false;",
+          "        });",
+          "    } catch (e) {",
+          "        console.log('Error parsing error response:', e);",
+          "    }",
+          "}"
+        ],
+        "type": "text/javascript"
+      }
+    }
+  ]
+}

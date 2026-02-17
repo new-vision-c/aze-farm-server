@@ -379,12 +379,26 @@ export class ProductController {
     async (req: Request, res: Response): Promise<void | Response<any>> => {
       const { id } = req.params;
 
+      console.log('🔍 DEBUG getProductById - Requête reçue:', {
+        id,
+        idType: typeof id,
+      });
+
       if (!id) {
         return response.badRequest(req, res, 'ID du produit requis');
       }
 
       try {
+        console.log('🔍 DEBUG getProductById - Appel au service avec ID:', id);
         const product = await this.productService.getProductById(id);
+
+        console.log('🔍 DEBUG getProductById - Résultat du service:', {
+          found: !!product,
+          hasName: !!product?.name,
+          hasFarm: !!product?.farm,
+          hasOtherProducts: !!product?.otherProducts,
+          otherProductsCount: product?.otherProducts?.length || 0,
+        });
 
         if (!product) {
           return response.notFound(req, res, 'Produit non trouvé');
@@ -392,6 +406,11 @@ export class ProductController {
 
         return response.success(req, res, product, 'Produit récupéré avec succès');
       } catch (error) {
+        console.log('🔍 DEBUG getProductById - Erreur:', {
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
+        });
+
         return response.serverError(
           req,
           res,

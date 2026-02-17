@@ -11,23 +11,29 @@ export class FarmController {
     const { id } = req.params;
     const { category } = req.query;
 
+    console.log('🔍 DEBUG getFarmById - Requête reçue:', {
+      id,
+      category,
+      idType: typeof id,
+      categoryType: typeof category,
+    });
+
     if (!id) {
       return response.badRequest(req, res, 'ID de la ferme requis');
     }
 
     try {
-      // Récupérer la ferme avec ses informations de base
+      console.log('🔍 DEBUG getFarmById - Recherche de la ferme avec ID:', id);
+
+      // Récupérer la ferme avec ses informations de base (sans farmer pour éviter l'erreur)
       const farm = await prisma.farm.findUnique({
         where: { id },
-        include: {
-          farmer: {
-            select: {
-              user_id: true,
-              fullname: true,
-              email: true,
-            },
-          },
-        },
+      });
+
+      console.log('🔍 DEBUG getFarmById - Résultat recherche ferme:', {
+        found: !!farm,
+        farmId: farm?.id,
+        farmName: farm?.name,
       });
 
       if (!farm) {
@@ -47,7 +53,13 @@ export class FarmController {
           contains: category.trim(),
           mode: 'insensitive',
         };
+        console.log('🔍 DEBUG getFarmById - Filtre catégorie appliqué:', {
+          category: category.trim(),
+          productWhere,
+        });
       }
+
+      console.log('🔍 DEBUG getFarmById - Recherche des catégories...');
 
       // Récupérer les catégories uniques des produits de la ferme
       const categories = await prisma.product.findMany({
@@ -61,6 +73,13 @@ export class FarmController {
         },
         distinct: ['category'],
       });
+
+      console.log('🔍 DEBUG getFarmById - Catégories trouvées:', {
+        count: categories.length,
+        categories: categories.map((c) => c.category),
+      });
+
+      console.log('🔍 DEBUG getFarmById - Recherche des produits...');
 
       // Récupérer les produits de la ferme (limités et triés)
       const products = await prisma.product.findMany({
@@ -80,6 +99,11 @@ export class FarmController {
           { name: 'asc' }, // Puis par ordre alphabétique
         ],
         take: 20, // Limiter à 20 produits
+      });
+
+      console.log('🔍 DEBUG getFarmById - Produits trouvés:', {
+        count: products.length,
+        products: products.map((p) => ({ id: p.id, name: p.name, category: p.category })),
       });
 
       // Formater la réponse
@@ -106,6 +130,13 @@ export class FarmController {
           createdAt: product.createdAt,
         })),
       };
+
+      console.log('🔍 DEBUG getFarmById - Réponse formatée:', {
+        farmId: formattedFarm.id,
+        farmName: formattedFarm.name,
+        categoriesCount: formattedFarm.categories.length,
+        productsCount: formattedFarm.products.length,
+      });
 
       return response.success(req, res, formattedFarm, 'Ferme récupérée avec succès');
     } catch (error) {
