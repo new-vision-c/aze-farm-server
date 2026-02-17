@@ -7,6 +7,10 @@ const redis = new Redis({
   password: process.env.REDIS_PASSWORD,
   retryDelayOnFailover: 100,
   maxRetriesPerRequest: 3,
+  lazyConnect: true,
+  keepAlive: 30000,
+  family: 4,
+  keyPrefix: 'aze_farm:',
 });
 
 // Interfaces pour le cache
@@ -57,7 +61,11 @@ export class CacheService {
   /**
    * Mettre en cache les suggestions de produits
    */
-  async cacheSuggestions(searchTerm: string, suggestions: string[], ttl: number = 300): Promise<void> {
+  async cacheSuggestions(
+    searchTerm: string,
+    suggestions: string[],
+    ttl: number = 300,
+  ): Promise<void> {
     try {
       const key = `suggestions:${searchTerm.toLowerCase()}`;
       const value: CachedSuggestions = {
@@ -86,7 +94,7 @@ export class CacheService {
       }
 
       const parsed: CachedSuggestions = JSON.parse(cached);
-      
+
       // Vérifier si le cache est encore valide (5 minutes max)
       const maxAge = 5 * 60 * 1000; // 5 minutes en ms
       if (Date.now() - parsed.timestamp > maxAge) {
@@ -109,10 +117,14 @@ export class CacheService {
   async cacheTrends(trends: any[], ttl: number = 600): Promise<void> {
     try {
       const key = 'trends:searches';
-      await this.redis.setex(key, ttl, JSON.stringify({
-        trends,
-        timestamp: Date.now(),
-      }));
+      await this.redis.setex(
+        key,
+        ttl,
+        JSON.stringify({
+          trends,
+          timestamp: Date.now(),
+        }),
+      );
       console.log(`📊 Tendances mises en cache (${ttl}s)`);
     } catch (error) {
       console.error('❌ Erreur cache tendances:', error);
@@ -132,7 +144,7 @@ export class CacheService {
       }
 
       const parsed = JSON.parse(cached);
-      
+
       // Vérifier si le cache est encore valide (10 minutes max)
       const maxAge = 10 * 60 * 1000; // 10 minutes en ms
       if (Date.now() - parsed.timestamp > maxAge) {
@@ -152,13 +164,22 @@ export class CacheService {
   /**
    * Mettre en cache les résultats de recherche d'un utilisateur
    */
-  async cacheUserSearch(userId: string, searchParams: any, results: any[], ttl: number = 1800): Promise<void> {
+  async cacheUserSearch(
+    userId: string,
+    searchParams: any,
+    results: any[],
+    ttl: number = 1800,
+  ): Promise<void> {
     try {
       const key = `search:user:${userId}:${JSON.stringify(searchParams)}`;
-      await this.redis.setex(key, ttl, JSON.stringify({
-        results,
-        timestamp: Date.now(),
-      }));
+      await this.redis.setex(
+        key,
+        ttl,
+        JSON.stringify({
+          results,
+          timestamp: Date.now(),
+        }),
+      );
       console.log(`🔍 Recherche utilisateur mise en cache: ${userId}`);
     } catch (error) {
       console.error('❌ Erreur cache recherche utilisateur:', error);
@@ -178,7 +199,7 @@ export class CacheService {
       }
 
       const parsed = JSON.parse(cached);
-      
+
       // Vérifier si le cache est encore valide (30 minutes max)
       const maxAge = 30 * 60 * 1000; // 30 minutes en ms
       if (Date.now() - parsed.timestamp > maxAge) {
@@ -200,10 +221,14 @@ export class CacheService {
   async cacheUserFavorites(userId: string, favorites: string[], ttl: number = 3600): Promise<void> {
     try {
       const key = `favorites:${userId}`;
-      await this.redis.setex(key, ttl, JSON.stringify({
-        favorites,
-        timestamp: Date.now(),
-      }));
+      await this.redis.setex(
+        key,
+        ttl,
+        JSON.stringify({
+          favorites,
+          timestamp: Date.now(),
+        }),
+      );
       console.log(`❤️ Favoris mis en cache: ${userId}`);
     } catch (error) {
       console.error('❌ Erreur cache favoris:', error);
@@ -223,7 +248,7 @@ export class CacheService {
       }
 
       const parsed = JSON.parse(cached);
-      
+
       // Vérifier si le cache est encore valide (1 heure max)
       const maxAge = 60 * 60 * 1000; // 1 heure en ms
       if (Date.now() - parsed.timestamp > maxAge) {
@@ -246,7 +271,7 @@ export class CacheService {
     try {
       const pattern = `*:${userId}:*`;
       const keys = await this.redis.keys(pattern);
-      
+
       if (keys.length > 0) {
         await this.redis.del(...keys);
         console.log(`🗑️ Cache utilisateur invalidé: ${userId} (${keys.length} clés)`);
@@ -267,10 +292,15 @@ export class CacheService {
     try {
       const info = await this.redis.info('memory');
       const keys = await this.redis.dbsize();
-      
+
       return {
         totalKeys: keys,
-        memoryUsage: info.split('\r\n').find(line => line.startsWith('used_memory:'))?.split(':')[1]?.trim() || 'unknown',
+        memoryUsage:
+          info
+            .split('\r\n')
+            .find((line) => line.startsWith('used_memory:'))
+            ?.split(':')[1]
+            ?.trim() || 'unknown',
         connected: this.redis.status === 'ready',
       };
     } catch (error) {
