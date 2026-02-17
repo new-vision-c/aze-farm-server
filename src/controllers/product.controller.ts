@@ -310,7 +310,64 @@ export class ProductController {
    *                   type: string
    *                   example: "Produit récupéré avec succès"
    *                 data:
-   *                   $ref: '#/components/schemas/ProductWithDistance'
+   *                   type: object
+   *                   properties:
+   *                     name:
+   *                       type: string
+   *                       example: "Tomate cerise"
+   *                     description:
+   *                       type: string
+   *                       example: "Tomates cerise sucrées et juteuses"
+   *                     price:
+   *                       type: number
+   *                       example: 4.50
+   *                     unit:
+   *                       type: string
+   *                       example: "kg"
+   *                     stock:
+   *                       type: integer
+   *                       example: 25
+   *                     image:
+   *                       type: string
+   *                       example: "https://example.com/image.jpg"
+   *                     farm:
+   *                       type: object
+   *                       properties:
+   *                         name:
+   *                           type: string
+   *                           example: "Ferme du Soleil"
+   *                         image:
+   *                           type: string
+   *                           example: "https://example.com/farm.jpg"
+   *                         rating:
+   *                           type: object
+   *                           properties:
+   *                             average:
+   *                               type: number
+   *                               example: 4.5
+   *                             count:
+   *                               type: integer
+   *                               example: 12
+   *                     otherProducts:
+   *                       type: array
+   *                       items:
+   *                         type: object
+   *                         properties:
+   *                           id:
+   *                             type: string
+   *                           name:
+   *                             type: string
+   *                           price:
+   *                             type: number
+   *                           unit:
+   *                             type: string
+   *                           stock:
+   *                             type: integer
+   *                           image:
+   *                             type: string
+   *                           createdAt:
+   *                             type: string
+   *                             format: date-time
    *       404:
    *         $ref: '#/components/responses/NotFound'
    *       400:

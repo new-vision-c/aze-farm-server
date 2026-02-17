@@ -10,6 +10,7 @@ import oauth from '@/router/users/oauth.router';
 import users from '@/router/users/users.router';
 
 import exampleRouter from '../../router/example.router';
+import farmRouter from '../../router/farm.router';
 import productRouter from '../../router/product.router';
 import { rateLimitingSubRoute } from './securityConfig';
 
@@ -32,6 +33,7 @@ const setupRoutes = (app: Express): void => {
   api.use('/auth', rateLimitingSubRoute, auth);
   api.use('/auth/oauth', rateLimitingSubRoute, oauth);
   api.use('/example', rateLimitingSubRoute, exampleRouter);
+  api.use('/farms', rateLimitingSubRoute, farmRouter);
   api.use('/products', rateLimitingSubRoute, productRouter);
   api.use('/users', rateLimitingSubRoute, users);
   api.use('/location', rateLimitingSubRoute, locationRouter);

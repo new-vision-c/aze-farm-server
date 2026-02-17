@@ -370,9 +370,10 @@ export class ProductService {
   }
 
   /**
-   * Obtenir un produit par son ID
+   * Obtenir un produit par son ID avec les autres produits de la même ferme
    */
-  async getProductById(id: string): Promise<ProductWithDistance | null> {
+  async getProductById(id: string): Promise<any | null> {
+    // Récupérer le produit principal avec sa ferme
     const product = await this.prisma.product.findUnique({
       where: { id },
       include: {
@@ -384,6 +385,7 @@ export class ProductService {
             geoLocation: true,
             ratingAvg: true,
             ratingCount: true,
+            images: true,
           },
         },
       },
@@ -393,6 +395,31 @@ export class ProductService {
       return null;
     }
 
+    // Récupérer les autres produits de la même ferme (sauf le produit actuel)
+    // Trier par date de création (plus récents d'abord)
+    const otherProducts = await this.prisma.product.findMany({
+      where: {
+        farmId: product.farmId,
+        id: { not: id }, // Exclure le produit actuel
+        isAvailable: true,
+        stock: { gt: 0 },
+      },
+      select: {
+        id: true,
+        name: true,
+        price: true,
+        unit: true,
+        stock: true,
+        images: true,
+        createdAt: true,
+      },
+      orderBy: {
+        createdAt: 'desc', // Plus récents d'abord
+      },
+      take: 10, // Limiter à 10 produits
+    });
+
+    // Formater la réponse selon le format demandé
     return {
       id: product.id,
       name: product.name,
@@ -400,11 +427,24 @@ export class ProductService {
       price: product.price,
       unit: product.unit,
       stock: product.stock,
-      category: product.category,
-      isAvailable: product.isAvailable,
-      seasonality: product.seasonality,
-      images: product.images,
-      farm: product.farm as any,
+      image: product.images[0] || null, // Première image ou null
+      farm: {
+        name: product.farm.name,
+        image: product.farm.images[0] || null, // Première image de la ferme ou null
+        rating: {
+          average: product.farm.ratingAvg,
+          count: product.farm.ratingCount,
+        },
+      },
+      otherProducts: otherProducts.map((otherProduct) => ({
+        id: otherProduct.id,
+        name: otherProduct.name,
+        price: otherProduct.price,
+        unit: otherProduct.unit,
+        stock: otherProduct.stock,
+        image: otherProduct.images[0] || null,
+        createdAt: otherProduct.createdAt,
+      })),
     };
   }
 
