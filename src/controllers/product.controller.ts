@@ -14,6 +14,9 @@ interface ProductSearchQuery {
   suggestions?: string; // Mode suggestions : "true" ou "false"
   farmId?: string; // Filtrer par ferme spécifique
   seasonal?: string; // Produits de saison actuelle
+  userId?: string; // Personnaliser selon préférences
+  favorites?: string; // Mettre en avant les favoris
+  history?: string; // Éviter les doublons avec l'historique
 }
 
 export class ProductController {
@@ -106,6 +109,24 @@ export class ProductController {
    *           type: boolean
    *           default: false
    *         description: Uniquement les produits de saison actuelle (ignoré en mode suggestions)
+   *       - in: query
+   *         name: userId
+   *         schema:
+   *           type: string
+   *           example: "507f1f77bcf86cd799439011"
+   *         description: Personnaliser les résultats selon les préférences utilisateur (ignoré en mode suggestions)
+   *       - in: query
+   *         name: favorites
+   *         schema:
+   *           type: boolean
+   *           default: false
+   *         description: Mettre en avant les produits favoris de l'utilisateur (ignoré en mode suggestions)
+   *       - in: query
+   *         name: history
+   *         schema:
+   *           type: boolean
+   *           default: false
+   *         description: Éviter les doublons avec l'historique de recherche (ignoré en mode suggestions)
    *     responses:
    *       200:
    *         description: Produits ou suggestions récupérés avec succès
@@ -200,6 +221,9 @@ export class ProductController {
       const userLng = query.lng ? parseFloat(query.lng) : null;
       const farmId = query.farmId?.trim();
       const seasonal = query.seasonal === 'true';
+      const userId = query.userId?.trim();
+      const favorites = query.favorites === 'true';
+      const history = query.history === 'true';
 
       // Validation des paramètres
       if (limit < 1 || limit > 100) {
@@ -227,6 +251,9 @@ export class ProductController {
           userLocation: userLat && userLng ? { latitude: userLat, longitude: userLng } : null,
           farmId,
           seasonal,
+          userId,
+          favorites,
+          history,
         });
 
         return response.success(

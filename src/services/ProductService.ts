@@ -1,6 +1,7 @@
 import type { PrismaClient } from '@prisma/client';
 
 import prisma from '../config/prisma/prisma';
+import CacheService from './CacheService';
 import { SearchAnalyticsService } from './SearchAnalyticsService';
 
 // Interface pour les coordonnées géographiques
@@ -18,6 +19,9 @@ interface SearchProductsParams {
   userLocation?: GeoLocation | null;
   farmId?: string; // Filtrer par ferme spécifique
   seasonal?: boolean; // Produits de saison actuelle
+  userId?: string; // Personnaliser selon préférences
+  favorites?: boolean; // Mettre en avant les favoris
+  history?: boolean; // Éviter les doublons avec l'historique
 }
 
 // Interface pour le produit avec distance (format complet)
@@ -77,10 +81,12 @@ interface SearchResult {
 export class ProductService {
   private prisma: PrismaClient;
   private analyticsService: SearchAnalyticsService;
+  private cacheService: CacheService;
 
   constructor() {
     this.prisma = prisma;
     this.analyticsService = new SearchAnalyticsService();
+    this.cacheService = new CacheService();
   }
 
   /**
@@ -150,8 +156,45 @@ export class ProductService {
     },
   ): Promise<SearchResult> {
     const startTime = Date.now();
-    const { limit, page, category, productName, userLocation, farmId, seasonal } = params;
+    const {
+      limit,
+      page,
+      category,
+      productName,
+      userLocation,
+      farmId,
+      seasonal,
+      userId,
+      favorites,
+      history,
+    } = params;
     const skip = (page - 1) * limit;
+
+    // Vérifier le cache utilisateur en premier
+    if (userId) {
+      const cacheKey = {
+        limit,
+        page,
+        category,
+        productName,
+        userLocation,
+        farmId,
+        seasonal,
+        favorites,
+        history,
+      };
+      const cachedResults = await this.cacheService.getCachedUserSearch(userId, cacheKey);
+
+      if (cachedResults) {
+        console.log(`📦 Résultats récupérés depuis cache utilisateur: ${userId}`);
+        return {
+          products: cachedResults,
+          total: cachedResults.length,
+          totalPages: Math.ceil(cachedResults.length / limit),
+          currentPage: page,
+        };
+      }
+    }
 
     // Construire les filtres
     const where: any = {
