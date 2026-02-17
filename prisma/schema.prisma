@@ -42,6 +42,10 @@ model users {
   // --- OAuth2.0 Integration ---
   oauth_accounts oauth_account[]
 
+  // --- Location ---
+  longitude Float?
+  latitude  Float?
+
   // Relations
   farm             Farm?
   orders           Order[]
@@ -489,4 +493,32 @@ model Notification {
 
   @@index([userId, isRead]) // Pour requête "mes notifications non lues"
   @@map("notifications")
+}
+
+// =====================================================================================================
+// SEARCH ANALYTICS MODEL
+// =====================================================================================================
+model SearchAnalytics {
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  searchTerm  String // Terme de recherche normalisé
+  searchType  String // "product", "category", "suggestions"
+  resultCount Int // Nombre de résultats retournés
+  userId      String? @db.ObjectId // Optionnel pour anonymiser
+  userAgent   String? // Navigateur/client
+  ipAddress   String? // IP (hashée pour la confidentialité)
+  location    Json? // Coordonnées si disponibles
+
+  // Filtres utilisés
+  filters Json? // { category: "légumes", priceMin: 10, ... }
+
+  // Performance
+  responseTime Int // Temps de réponse en ms
+
+  createdAt DateTime @default(now())
+
+  // Indexes pour les analytics
+  @@index([searchTerm, createdAt])
+  @@index([searchType, createdAt])
+  @@index([createdAt])
+  @@map("search_analytics")
 }

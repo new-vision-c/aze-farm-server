@@ -1,6 +1,7 @@
 import type { PrismaClient } from '@prisma/client';
 
-import prisma from '@/config/prisma/prisma';
+import prisma from '../config/prisma/prisma';
+import { SearchAnalyticsService } from './SearchAnalyticsService';
 
 // Interface pour les coordonnées géographiques
 interface GeoLocation {
@@ -15,9 +16,11 @@ interface SearchProductsParams {
   category?: string;
   productName?: string;
   userLocation?: GeoLocation | null;
+  farmId?: string; // Filtrer par ferme spécifique
+  seasonal?: boolean; // Produits de saison actuelle
 }
 
-// Interface pour le produit avec distance
+// Interface pour le produit avec distance (format complet)
 interface ProductWithDistance {
   id: string;
   name: string;
@@ -36,8 +39,28 @@ interface ProductWithDistance {
     geoLocation?: GeoLocation | null;
     ratingAvg: number;
     ratingCount: number;
+    images?: string[]; // Images de la ferme
   };
   distance?: number; // Distance en km depuis la position de l'utilisateur
+}
+
+// Interface pour le format de réponse simplifié
+interface ProductResponse {
+  id: string;
+  name: string;
+  price: {
+    current: number;
+    original?: number; // Prix avant réduction
+  };
+  unit: string;
+  images: {
+    main: string; // Première image
+  };
+  farm: {
+    id: string;
+    name: string;
+    image: string; // Image de la ferme
+  };
 }
 
 // Interface pour le résultat de recherche
@@ -53,9 +76,37 @@ interface SearchResult {
  */
 export class ProductService {
   private prisma: PrismaClient;
+  private analyticsService: SearchAnalyticsService;
 
   constructor() {
     this.prisma = prisma;
+    this.analyticsService = new SearchAnalyticsService();
+  }
+
+  /**
+   * Transformer un produit complet en format de réponse simplifié
+   * @param product Produit complet avec distance
+   * @returns Produit au format de réponse simplifié
+   */
+  private transformProductResponse(product: ProductWithDistance): ProductResponse {
+    return {
+      id: product.id,
+      name: product.name,
+      price: {
+        current: product.price,
+        // TODO: Ajouter la gestion des réductions ici
+        // original: product.originalPrice || undefined,
+      },
+      unit: product.unit,
+      images: {
+        main: product.images[0] || '', // Prendre la première image
+      },
+      farm: {
+        id: product.farm.id,
+        name: product.farm.name,
+        image: product.farm.images?.[0] || '', // Prendre la première image de la ferme
+      },
+    };
   }
 
   /**
@@ -90,8 +141,16 @@ export class ProductService {
   /**
    * Rechercher des produits avec filtres et localisation
    */
-  async searchProducts(params: SearchProductsParams): Promise<SearchResult> {
-    const { limit, page, category, productName, userLocation } = params;
+  async searchProducts(
+    params: SearchProductsParams,
+    trackingData?: {
+      userId?: string;
+      userAgent?: string;
+      ipAddress?: string;
+    },
+  ): Promise<SearchResult> {
+    const startTime = Date.now();
+    const { limit, page, category, productName, userLocation, farmId, seasonal } = params;
     const skip = (page - 1) * limit;
 
     // Construire les filtres
@@ -109,6 +168,16 @@ export class ProductService {
       where.name = { contains: productName, mode: 'insensitive' };
     }
 
+    if (farmId) {
+      where.farmId = farmId;
+    }
+
+    if (seasonal) {
+      // Obtenir le mois actuel (1-12)
+      const currentMonth = new Date().getMonth() + 1;
+      where.seasonality = { has: currentMonth };
+    }
+
     // Compter le nombre total de produits correspondants
     const total = await this.prisma.product.count({ where });
 
@@ -124,12 +193,13 @@ export class ProductService {
             geoLocation: true,
             ratingAvg: true,
             ratingCount: true,
+            images: true, // Ajouter les images de la ferme
           },
         },
       },
       orderBy: [
         { farm: { ratingAvg: 'desc' } }, // Priorité aux fermes mieux notées
-        { name: 'asc' }, // Ordre alphabétique
+        { createdAt: 'desc' }, // Produits les plus récents d'abord
       ],
       skip,
       take: limit,
@@ -181,11 +251,78 @@ export class ProductService {
     // Calculer le nombre total de pages
     const totalPages = Math.ceil(total / limit);
 
-    return {
+    const result = {
       products: productsWithDistance,
       total,
       totalPages,
       currentPage: page,
+    };
+
+    // Tracking de la recherche (asynchrone pour ne pas bloquer)
+    if (productName || category) {
+      const responseTime = Date.now() - startTime;
+      void this.trackSearch({
+        searchTerm: productName || category || '',
+        searchType: productName ? 'product' : 'category',
+        resultCount: total,
+        userId: trackingData?.userId,
+        userAgent: trackingData?.userAgent,
+        ipAddress: trackingData?.ipAddress,
+        location: userLocation || undefined,
+        filters: { category, limit, page },
+        responseTime,
+      });
+    }
+
+    return result;
+  }
+
+  /**
+   * Tracker une recherche (méthode privée)
+   */
+  private async trackSearch(data: {
+    searchTerm: string;
+    searchType: 'product' | 'category';
+    resultCount: number;
+    userId?: string;
+    userAgent?: string;
+    ipAddress?: string;
+    location?: { latitude: number; longitude: number };
+    filters?: Record<string, any>;
+    responseTime: number;
+  }): Promise<void> {
+    try {
+      await this.analyticsService.trackSearch(data);
+    } catch (error) {
+      // Ne pas bloquer la recherche si le tracking échoue
+      console.error('Erreur lors du tracking de recherche:', error);
+    }
+  }
+
+  /**
+   * Rechercher des produits avec format de réponse simplifié
+   * @param params Paramètres de recherche
+   * @returns Produits au format de réponse simplifié avec pagination
+   */
+  async searchProductsSimplified(params: SearchProductsParams): Promise<{
+    items: ProductResponse[];
+    totalItems: number;
+    totalPages: number;
+    currentPage: number;
+  }> {
+    // Utiliser la méthode existante pour obtenir les produits complets
+    const result = await this.searchProducts(params);
+
+    // Transformer chaque produit en format simplifié
+    const simplifiedProducts = result.products.map((product) =>
+      this.transformProductResponse(product),
+    );
+
+    return {
+      items: simplifiedProducts,
+      totalItems: result.total,
+      totalPages: result.totalPages,
+      currentPage: result.currentPage,
     };
   }
 
@@ -266,16 +403,13 @@ export class ProductService {
   }
 
   /**
-   * Obtenir des suggestions de produits basées sur un terme de recherche
+   * Obtenir des suggestions de produits basées sur un terme de recherche avec tendances
    * @param searchTerm - Terme de recherche (insensible à la casse)
    * @param limit - Nombre maximum de suggestions à retourner
    * @returns Tableau des noms de produits suggérés
    */
   async getProductSuggestions(searchTerm: string, limit: number = 5): Promise<string[]> {
     try {
-      // Créer une expression régulière pour la recherche partielle
-      const searchRegex = new RegExp(searchTerm, 'i'); // 'i' pour insensible à la casse
-
       // Rechercher les produits dont le nom correspond au terme
       const products = await prisma.product.findMany({
         where: {
@@ -294,16 +428,39 @@ export class ProductService {
         },
       });
 
-      // Extraire les noms uniques et les trier par pertinence
+      // Extraire les noms uniques
       const uniqueNames = Array.from(
         new Map(products.map((product) => [product.name.toLowerCase(), product.name])).values(),
       );
 
-      // Trier par pertinence : commence par le terme recherché en premier
-      const sortedSuggestions = uniqueNames.sort((a, b) => {
+      // Obtenir les suggestions basées sur les tendances
+      const trendingSuggestions = await this.analyticsService.getTrendingSuggestions(
+        searchTerm,
+        Math.floor(limit / 2),
+      );
+
+      // Combiner les suggestions tendances avec les suggestions classiques
+      const allSuggestions = [...trendingSuggestions];
+
+      // Ajouter les suggestions classiques qui ne sont pas déjà dans les tendances
+      uniqueNames.forEach((name: string) => {
+        if (!allSuggestions.includes(name)) {
+          allSuggestions.push(name);
+        }
+      });
+
+      // Trier par pertinence : tendances en premier, puis commence par le terme
+      const sortedSuggestions = allSuggestions.sort((a, b) => {
         const aLower = a.toLowerCase();
         const bLower = b.toLowerCase();
         const searchLower = searchTerm.toLowerCase();
+
+        // Les tendances gardent leur ordre
+        const aIsTrending = trendingSuggestions.includes(a);
+        const bIsTrending = trendingSuggestions.includes(b);
+
+        if (aIsTrending && !bIsTrending) return -1;
+        if (!aIsTrending && bIsTrending) return 1;
 
         // Priorité aux noms qui commencent par le terme de recherche
         const aStartsWith = aLower.startsWith(searchLower);
@@ -320,6 +477,42 @@ export class ProductService {
     } catch (error) {
       console.error('Erreur lors de la récupération des suggestions:', error);
       throw new Error('Impossible de récupérer les suggestions de produits');
+    }
+  }
+
+  /**
+   * Obtenir les recherches tendances
+   */
+  async getTrendingSearches(
+    limit: number = 10,
+  ): Promise<Array<{ term: string; count: number; growth: number }>> {
+    try {
+      return await this.analyticsService.getTrendingSearches(limit);
+    } catch (error) {
+      console.error('Erreur lors de la récupération des tendances:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Obtenir les statistiques de recherche
+   */
+  async getSearchStats(days: number = 30): Promise<{
+    totalSearches: number;
+    uniqueTerms: number;
+    avgResponseTime: number;
+    topCategories: Array<{ category: string; count: number }>;
+  }> {
+    try {
+      return await this.analyticsService.getSearchStats(days);
+    } catch (error) {
+      console.error('Erreur lors de la récupération des statistiques:', error);
+      return {
+        totalSearches: 0,
+        uniqueTerms: 0,
+        avgResponseTime: 0,
+        topCategories: [],
+      };
     }
   }
 }

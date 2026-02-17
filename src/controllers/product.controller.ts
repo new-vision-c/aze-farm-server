@@ -11,6 +11,9 @@ interface ProductSearchQuery {
   lat?: string;
   lng?: string;
   page?: string;
+  suggestions?: string; // Mode suggestions : "true" ou "false"
+  farmId?: string; // Filtrer par ferme spécifique
+  seasonal?: string; // Produits de saison actuelle
 }
 
 export class ProductController {
@@ -31,8 +34,21 @@ export class ProductController {
    *     description: |
    *       Recherche des produits disponibles avec filtres avancés et tri par proximité géographique.
    *       Les produits sont classés par distance de l'utilisateur si les coordonnées sont fournies,
-   *       sinon par note de la ferme.
+   *       sinon par note de la ferme puis par date de création.
+   *
+   *       **Filtres disponibles** :
+   *       - `farmId` : Filtrer par ferme spécifique
+   *       - `seasonal=true` : Uniquement les produits de saison actuelle
+   *
+   *       **Mode suggestions** : Ajoutez `suggestions=true` pour obtenir des suggestions de noms de produits.
+   *       Dans ce mode, seul le paramètre `product` est requis.
    *     parameters:
+   *       - in: query
+   *         name: suggestions
+   *         schema:
+   *           type: boolean
+   *           default: false
+   *         description: Activer le mode suggestions (retourne uniquement des noms de produits)
    *       - in: query
    *         name: limit
    *         schema:
@@ -47,19 +63,21 @@ export class ProductController {
    *           type: integer
    *           minimum: 1
    *           default: 1
-   *         description: Numéro de page pour la pagination
+   *         description: Numéro de page pour la pagination (ignoré en mode suggestions)
    *       - in: query
    *         name: category
    *         schema:
    *           type: string
    *           example: "légumes"
-   *         description: Filtrer par catégorie de produit
+   *         description: Filtrer par catégorie de produit (ignoré en mode suggestions)
    *       - in: query
    *         name: product
    *         schema:
    *           type: string
    *           example: "tomate"
-   *         description: Filtrer par nom de produit (recherche partielle)
+   *         description: |
+   *           Filtrer par nom de produit (recherche partielle).
+   *           En mode suggestions, ce paramètre est requis pour générer les suggestions.
    *       - in: query
    *         name: lat
    *         schema:
@@ -67,7 +85,7 @@ export class ProductController {
    *           minimum: -90
    *           maximum: 90
    *           example: 48.8566
-   *         description: Latitude de l'utilisateur pour le calcul de distance
+   *         description: Latitude de l'utilisateur pour le calcul de distance (ignoré en mode suggestions)
    *       - in: query
    *         name: lng
    *         schema:
@@ -75,10 +93,22 @@ export class ProductController {
    *           minimum: -180
    *           maximum: 180
    *           example: 2.3522
-   *         description: Longitude de l'utilisateur pour le calcul de distance
+   *         description: Longitude de l'utilisateur pour le calcul de distance (ignoré en mode suggestions)
+   *       - in: query
+   *         name: farmId
+   *         schema:
+   *           type: string
+   *           example: "507f1f77bcf86cd799439011"
+   *         description: Filtrer par ID de ferme spécifique (ignoré en mode suggestions)
+   *       - in: query
+   *         name: seasonal
+   *         schema:
+   *           type: boolean
+   *           default: false
+   *         description: Uniquement les produits de saison actuelle (ignoré en mode suggestions)
    *     responses:
    *       200:
-   *         description: Produits récupérés avec succès
+   *         description: Produits ou suggestions récupérés avec succès
    *         content:
    *           application/json:
    *             schema:
@@ -91,21 +121,28 @@ export class ProductController {
    *                   type: string
    *                   example: "Produits récupérés avec succès"
    *                 data:
-   *                   type: object
-   *                   properties:
-   *                     items:
-   *                       type: array
+   *                   oneOf:
+   *                     - type: object
+   *                       description: Mode recherche normale
+   *                       properties:
+   *                         items:
+   *                           type: array
+   *                           items:
+   *                             $ref: '#/components/schemas/ProductWithDistance'
+   *                         totalItems:
+   *                           type: integer
+   *                           example: 25
+   *                         totalPages:
+   *                           type: integer
+   *                           example: 3
+   *                         currentPage:
+   *                           type: integer
+   *                           example: 1
+   *                     - type: array
+   *                       description: Mode suggestions
    *                       items:
-   *                         $ref: '#/components/schemas/ProductWithDistance'
-   *                     totalItems:
-   *                       type: integer
-   *                       example: 25
-   *                     totalPages:
-   *                       type: integer
-   *                       example: 3
-   *                     currentPage:
-   *                       type: integer
-   *                       example: 1
+   *                         type: string
+   *                       example: ["tomate", "tomate cerise", "tomate cœur de bœuf"]
    *       400:
    *         $ref: '#/components/responses/BadRequest'
    *       500:
@@ -115,6 +152,45 @@ export class ProductController {
     async (req: Request, res: Response): Promise<void | Response<any>> => {
       const query = req.query as ProductSearchQuery;
 
+      // Vérifier si le mode suggestions est activé
+      const isSuggestionsMode = query.suggestions === 'true';
+
+      if (isSuggestionsMode) {
+        // Mode suggestions : retourner uniquement des suggestions de produits
+        const searchTerm = query.product?.trim();
+
+        if (!searchTerm || searchTerm.length < 1) {
+          return response.badRequest(
+            req,
+            res,
+            'Le terme de recherche est requis pour les suggestions',
+          );
+        }
+
+        if (searchTerm.length > 50) {
+          return response.badRequest(req, res, 'Le terme de recherche est trop long');
+        }
+
+        const suggestionLimit = Math.min(query.limit ? parseInt(query.limit, 10) : 5, 20);
+
+        try {
+          const suggestions = await this.productService.getProductSuggestions(
+            searchTerm,
+            suggestionLimit,
+          );
+
+          return response.success(req, res, suggestions, 'Suggestions récupérées avec succès');
+        } catch (error) {
+          return response.serverError(
+            req,
+            res,
+            'Erreur lors de la récupération des suggestions',
+            error as Error,
+          );
+        }
+      }
+
+      // Mode recherche normale
       // Validation et conversion des paramètres
       const limit = query.limit ? parseInt(query.limit, 10) : 10;
       const page = query.page ? parseInt(query.page, 10) : 1;
@@ -122,6 +198,8 @@ export class ProductController {
       const productName = query.product?.trim();
       const userLat = query.lat ? parseFloat(query.lat) : null;
       const userLng = query.lng ? parseFloat(query.lng) : null;
+      const farmId = query.farmId?.trim();
+      const seasonal = query.seasonal === 'true';
 
       // Validation des paramètres
       if (limit < 1 || limit > 100) {
@@ -141,21 +219,25 @@ export class ProductController {
       }
 
       try {
-        const result = await this.productService.searchProducts({
+        const result = await this.productService.searchProductsSimplified({
           limit,
           page,
           category,
           productName,
           userLocation: userLat && userLng ? { latitude: userLat, longitude: userLng } : null,
+          farmId,
+          seasonal,
         });
 
-        return response.paginated(
+        return response.success(
           req,
           res,
-          result.products,
-          result.total,
-          result.totalPages,
-          result.currentPage,
+          {
+            items: result.items,
+            totalItems: result.totalItems,
+            totalPages: result.totalPages,
+            currentPage: result.currentPage,
+          },
           'Produits récupérés avec succès',
         );
       } catch (error) {
@@ -284,14 +366,140 @@ export class ProductController {
   );
 
   /**
+   * Obtenir les recherches tendances et statistiques
+   * @swagger
+   * /api/products/trends:
+   *   get:
+   *     tags:
+   *       - Products
+   *     summary: Obtenir les tendances de recherche
+   *     description: |
+   *       Retourne les recherches les plus populaires avec leur croissance,
+   *       ainsi que des statistiques sur l'utilisation de la recherche.
+   *     parameters:
+   *       - in: query
+   *         name: limit
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           maximum: 50
+   *           default: 10
+   *         description: Nombre de tendances à retourner
+   *       - in: query
+   *         name: days
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           maximum: 365
+   *           default: 30
+   *         description: Période d'analyse en jours
+   *       - in: query
+   *         name: stats
+   *         schema:
+   *           type: boolean
+   *           default: false
+   *         description: Inclure les statistiques détaillées
+   *     responses:
+   *       200:
+   *         description: Tendances récupérées avec succès
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *                 message:
+   *                   type: string
+   *                   example: "Tendances récupérées avec succès"
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     trending:
+   *                       type: array
+   *                       items:
+   *                         type: object
+   *                         properties:
+   *                           term:
+   *                             type: string
+   *                             example: "tomate"
+   *                           count:
+   *                             type: integer
+   *                             example: 45
+   *                           growth:
+   *                             type: number
+   *                             example: 23.5
+   *                     stats:
+   *                       type: object
+   *                       properties:
+   *                         totalSearches:
+   *                           type: integer
+   *                           example: 1250
+   *                         uniqueTerms:
+   *                           type: integer
+   *                           example: 89
+   *                         avgResponseTime:
+   *                           type: integer
+   *                           example: 120
+   *                         topCategories:
+   *                           type: array
+   *                           items:
+   *                             type: object
+   *                             properties:
+   *                               category:
+   *                                 type: string
+   *                               count:
+   *                                 type: integer
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
+  getTrends = asyncHandler(async (req: Request, res: Response): Promise<void | Response<any>> => {
+    try {
+      const { limit = '10', days = '30', stats = 'false' } = req.query;
+
+      const trendsLimit = Math.min(parseInt(limit as string) || 10, 50);
+      const statsDays = Math.min(parseInt(days as string) || 30, 365);
+      const includeStats = stats === 'true';
+
+      const [trending, searchStats] = await Promise.all([
+        this.productService.getTrendingSearches(trendsLimit),
+        includeStats ? this.productService.getSearchStats(statsDays) : null,
+      ]);
+
+      const responseData: any = { trending };
+
+      if (includeStats && searchStats) {
+        responseData.stats = searchStats;
+      }
+
+      return response.success(req, res, responseData, 'Tendances récupérées avec succès');
+    } catch (error) {
+      return response.serverError(
+        req,
+        res,
+        'Erreur lors de la récupération des tendances',
+        error as Error,
+      );
+    }
+  });
+
+  /**
    * Obtenir des suggestions de produits basées sur la saisie utilisateur
+   * @deprecated Utilisez plutôt /api/products/search?suggestions=true&product=votre_terme
    * @swagger
    * /api/products/suggestions:
    *   get:
    *     tags:
    *       - Products
-   *     summary: Obtenir des suggestions de produits
-   *     description: Retourne des suggestions de produits basées sur un terme de recherche partiel
+   *     summary: [OBSOLÈTE] Obtenir des suggestions de produits
+   *     deprecated: true
+   *     description: |
+   *       **CET ENDPOINT EST OBSOLÈTE**
+   *
+   *       Utilisez plutôt `/api/products/search?suggestions=true&product=votre_terme`
+   *
+   *       Retourne des suggestions de produits basées sur un terme de recherche partiel
    *     parameters:
    *       - in: query
    *         name: q
