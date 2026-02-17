@@ -1,23 +1,24 @@
 import Redis from 'ioredis';
 
-// Configuration Redis
+// Configuration Redis avec options compatibles ioredis v5
 const redis = new Redis({
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),
   password: process.env.REDIS_PASSWORD,
-  retryDelayOnFailover: 100,
+  retryDelayOnRetry: 100,
   maxRetriesPerRequest: 3,
   lazyConnect: true,
   keepAlive: 30000,
   family: 4,
   keyPrefix: 'aze_farm:',
+  connectTimeout: 10000,
+  commandTimeout: 5000,
+  enableReadyCheck: true,
+  maxLoadingTimeout: 0,
+  enableOfflineQueue: false,
 });
 
 // Interfaces pour le cache
-interface CacheOptions {
-  ttl?: number; // Time to live en secondes
-}
-
 interface CachedSuggestions {
   suggestions: string[];
   timestamp: number;
