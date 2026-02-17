@@ -1,0 +1,109 @@
+# Farm Management API Paths
+
+/farms/{id}:
+  get:
+    tags:
+      - Farms
+    summary: Obtenir les détails d'une ferme
+    description: Récupère les informations complètes d'une ferme incluant l'adresse, les catégories de produits et les produits
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: mongoId
+        description: ID de la ferme
+      - in: query
+        name: category
+        required: false
+        schema:
+          type: string
+          minLength: 1
+          maxLength: 50
+        description: Filtrer les produits par catégorie (optionnel)
+    responses:
+      '200':
+        description: Ferme récupérée avec succès
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: "Ferme récupérée avec succès"
+                data:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "507f1f77bcf86cd799439011"
+                    name:
+                      type: string
+                      example: "Ferme du Soleil"
+                    description:
+                      type: string
+                      example: "Ferme familiale spécialisée dans les légumes biologiques"
+                    address:
+                      type: string
+                      example: "123 Route de la Ferme, 69000 Lyon"
+                    geoLocation:
+                      type: object
+                      properties:
+                        latitude:
+                          type: number
+                          example: 45.764043
+                        longitude:
+                          type: number
+                          example: 4.835659
+                    images:
+                      type: array
+                      items:
+                        type: string
+                      example: ["https://example.com/farm1.jpg", "https://example.com/farm2.jpg"]
+                    rating:
+                      type: object
+                      properties:
+                        average:
+                          type: number
+                          example: 4.5
+                        count:
+                          type: integer
+                          example: 12
+                    categories:
+                      type: array
+                      items:
+                        type: string
+                      example: ["légumes", "fruits", "herbes aromatiques"]
+                    products:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                          name:
+                            type: string
+                          price:
+                            type: number
+                          unit:
+                            type: string
+                          stock:
+                            type: integer
+                          image:
+                            type: string
+                          category:
+                            type: string
+                          createdAt:
+                            type: string
+                            format: date-time
+      '400':
+        $ref: '#/components/responses/BadRequest'
+      '404':
+        $ref: '#/components/responses/NotFound'
+      '500':
+        $ref: '#/components/responses/InternalServerError'

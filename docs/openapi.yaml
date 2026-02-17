@@ -1,5 +1,12 @@
 components:
   parameters:
+    farmId:
+      description: ID de la ferme
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
     limit:
       description: Nombre maximum de résultats
       in: query
@@ -55,6 +62,63 @@ components:
         success:
           example: false
           type: boolean
+      type: object
+    Farm:
+      properties:
+        address:
+          type: string
+        categories:
+          items:
+            type: string
+          type: array
+        description:
+          type: string
+        geoLocation:
+          properties:
+            latitude:
+              type: number
+            longitude:
+              type: number
+          type: object
+        id:
+          type: string
+        images:
+          items:
+            type: string
+          type: array
+        name:
+          type: string
+        products:
+          items:
+            $ref: '#/components/schemas/FarmProduct'
+          type: array
+        rating:
+          properties:
+            average:
+              type: number
+            count:
+              type: integer
+          type: object
+      type: object
+    FarmProduct:
+      properties:
+        category:
+          type: string
+        createdAt:
+          format: date-time
+          type: string
+        id:
+          type: string
+        image:
+          type: string
+        name:
+          type: string
+        price:
+          type: number
+        stock:
+          type: integer
+        unit:
+          type: string
       type: object
     Product:
       properties:
@@ -451,6 +515,28 @@ paths:
       summary: Get /csrf-token
       tags:
       - System
+  /farms/{id}:
+    get:
+      description: Endpoint get pour /farms/{id}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                  success:
+                    type: boolean
+                type: object
+          description: Succès
+        '400':
+          description: Requête invalide
+        '500':
+          description: Erreur serveur
+      summary: Get /farms/{id}
+      tags:
+      - Farms
   /health:
     get:
       description: Endpoint get pour /health
@@ -596,6 +682,28 @@ paths:
         '500':
           description: Erreur serveur
       summary: Get /products/search
+      tags:
+      - Products
+  /products/suggestions:
+    get:
+      description: Endpoint get pour /products/suggestions
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                  success:
+                    type: boolean
+                type: object
+          description: Succès
+        '400':
+          description: Requête invalide
+        '500':
+          description: Erreur serveur
+      summary: Get /products/suggestions
       tags:
       - Products
   /products/{id}:
@@ -825,6 +933,8 @@ servers:
 tags:
 - description: Product search and management with geolocation
   name: Products
+- description: Farm management and product listings
+  name: Farms
 - description: User authentication and account management
   name: Authentication
 - description: User profile management

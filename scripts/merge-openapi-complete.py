@@ -25,6 +25,7 @@ def extract_paths_from_yaml():
         'docs/paths/products.yaml', 
         'docs/paths/users.yaml',
         'docs/paths/oauth.yaml',
+        'docs/paths/farms.yaml',
         'docs/paths/system.yaml'
     ]
     
@@ -56,6 +57,8 @@ def extract_paths_from_yaml():
                     tag = 'Products'
                 elif path.startswith('/users'):
                     tag = 'Users'
+                elif path.startswith('/farms'):
+                    tag = 'Farms'
                 elif path.startswith('/oauth'):
                     tag = 'OAuth'
                 elif path in ['/_csp-reports', '/csrf-token', '/health']:
@@ -125,6 +128,7 @@ def create_complete_openapi():
     # Tags
     tags = [
         {"name": "Products", "description": "Product search and management with geolocation"},
+        {"name": "Farms", "description": "Farm management and product listings"},
         {"name": "Authentication", "description": "User authentication and account management"},
         {"name": "Users", "description": "User profile management"},
         {"name": "OAuth", "description": "Third-party authentication (Google, Apple, etc.)"},
@@ -145,6 +149,48 @@ def create_complete_openapi():
                 "role": {"type": "string", "enum": ["user", "admin", "moderator"]},
                 "createdAt": {"type": "string", "format": "date-time"},
                 "updatedAt": {"type": "string", "format": "date-time"}
+            }
+        },
+        "Farm": {
+            "type": "object",
+            "properties": {
+                "id": {"type": "string"},
+                "name": {"type": "string"},
+                "description": {"type": "string"},
+                "address": {"type": "string"},
+                "geoLocation": {
+                    "type": "object",
+                    "properties": {
+                        "latitude": {"type": "number"},
+                        "longitude": {"type": "number"}
+                    }
+                },
+                "images": {"type": "array", "items": {"type": "string"}},
+                "rating": {
+                    "type": "object",
+                    "properties": {
+                        "average": {"type": "number"},
+                        "count": {"type": "integer"}
+                    }
+                },
+                "categories": {"type": "array", "items": {"type": "string"}},
+                "products": {
+                    "type": "array",
+                    "items": {"$ref": "#/components/schemas/FarmProduct"}
+                }
+            }
+        },
+        "FarmProduct": {
+            "type": "object",
+            "properties": {
+                "id": {"type": "string"},
+                "name": {"type": "string"},
+                "price": {"type": "number"},
+                "unit": {"type": "string"},
+                "stock": {"type": "integer"},
+                "image": {"type": "string"},
+                "category": {"type": "string"},
+                "createdAt": {"type": "string", "format": "date-time"}
             }
         },
         "Product": {
@@ -217,6 +263,13 @@ def create_complete_openapi():
             "required": True,
             "schema": {"type": "string"},
             "description": "ID du produit"
+        },
+        "farmId": {
+            "name": "id",
+            "in": "path",
+            "required": True,
+            "schema": {"type": "string"},
+            "description": "ID de la ferme"
         }
     }
     
