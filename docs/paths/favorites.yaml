@@ -1,0 +1,423 @@
+# Favorites API Paths
+
+/favorites:
+  post:
+    tags:
+      - Favorites
+    summary: Ajouter un produit en favori
+    description: Ajoute un produit aux favoris de l'utilisateur
+    security:
+      - bearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - productId
+            properties:
+              productId:
+                type: string
+                format: mongoId
+                description: ID du produit à ajouter en favori
+                example: '507f1f77bcf86cd799439011'
+    responses:
+      '201':
+        description: Produit ajouté aux favoris avec succès
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: 'Produit ajouté aux favoris avec succès'
+                data:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: '507f1f77bcf86cd799439013'
+                    userId:
+                      type: string
+                      example: '507f1f77bcf86cd799439012'
+                    productId:
+                      type: string
+                      example: '507f1f77bcf86cd799439011'
+                    product:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          example: '507f1f77bcf86cd799439011'
+                        name:
+                          type: string
+                          example: 'Tomates Bio'
+                        price:
+                          type: number
+                          example: 4.50
+                        unit:
+                          type: string
+                          example: 'kg'
+                        image:
+                          type: string
+                          example: 'https://example.com/tomates.jpg'
+                        farm:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              example: '507f1f77bcf86cd799439014'
+                            name:
+                              type: string
+                              example: 'Ferme du Soleil'
+                    createdAt:
+                      type: string
+                      format: date-time
+                      example: '2024-01-15T10:30:00.000Z'
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '409':
+        description: Conflit - Produit déjà en favori
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: 'Produit déjà en favori'
+      '500':
+        $ref: '../components/responses.yaml#/ServerError'
+
+  get:
+    tags:
+      - Favorites
+    summary: Voir tous ses favoris
+    description: Récupère tous les favoris de l'utilisateur avec pagination
+    security:
+      - bearerAuth: []
+    parameters:
+      - in: query
+        name: page
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        description: Page actuelle
+      - in: query
+        name: limit
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 10
+        description: Nombre de favoris par page
+    responses:
+      '200':
+        description: Favoris récupérés avec succès
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: 'Favoris récupérés avec succès'
+                data:
+                  type: object
+                  properties:
+                    favorites:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            example: '507f1f77bcf86cd799439013'
+                          userId:
+                            type: string
+                            example: '507f1f77bcf86cd799439012'
+                          productId:
+                            type: string
+                            example: '507f1f77bcf86cd799439011'
+                          product:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                                example: '507f1f77bcf86cd799439011'
+                              name:
+                                type: string
+                                example: 'Tomates Bio'
+                              price:
+                                type: number
+                                example: 4.50
+                              unit:
+                                type: string
+                                example: 'kg'
+                              image:
+                                type: string
+                                example: 'https://example.com/tomates.jpg'
+                              farm:
+                                type: object
+                                properties:
+                                  id:
+                                    type: string
+                                    example: '507f1f77bcf86cd799439014'
+                                  name:
+                                    type: string
+                                    example: 'Ferme du Soleil'
+                          createdAt:
+                            type: string
+                            format: date-time
+                            example: '2024-01-15T10:30:00.000Z'
+                    total:
+                      type: integer
+                      example: 15
+                    totalPages:
+                      type: integer
+                      example: 2
+                    currentPage:
+                      type: integer
+                      example: 1
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '500':
+        $ref: '../components/responses.yaml#/ServerError'
+
+/favorites/toggle:
+  post:
+    tags:
+      - Favorites
+    summary: Basculer le statut de favori
+    description: Ajoute ou supprime un produit des favoris selon son état actuel
+    security:
+      - bearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - productId
+            properties:
+              productId:
+                type: string
+                format: mongoId
+                description: ID du produit à basculer
+                example: '507f1f77bcf86cd799439011'
+    responses:
+      '200':
+        description: Statut du favori basculé avec succès
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: 'Produit ajouté aux favoris'
+                data:
+                  type: object
+                  properties:
+                    isAdded:
+                      type: boolean
+                      example: true
+                      description: true si ajouté, false si supprimé
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '500':
+        $ref: '../components/responses.yaml#/ServerError'
+
+/favorites/count:
+  get:
+    tags:
+      - Favorites
+    summary: Compter ses favoris
+    description: Récupère le nombre total de favoris de l'utilisateur
+    security:
+      - bearerAuth: []
+    responses:
+      '200':
+        description: Nombre de favoris récupéré avec succès
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: 'Nombre de favoris récupéré avec succès'
+                data:
+                  type: object
+                  properties:
+                    count:
+                      type: integer
+                      example: 15
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '500':
+        $ref: '../components/responses.yaml#/ServerError'
+
+/favorites/ids:
+  get:
+    tags:
+      - Favorites
+    summary: Récupérer les IDs des favoris
+    description: Récupère uniquement les IDs des produits favoris de l'utilisateur
+    security:
+      - bearerAuth: []
+    responses:
+      '200':
+        description: IDs des favoris récupérés avec succès
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: 'IDs des favoris récupérés avec succès'
+                data:
+                  type: object
+                  properties:
+                    favoriteIds:
+                      type: array
+                      items:
+                        type: string
+                        format: mongoId
+                      example: [
+                        '507f1f77bcf86cd799439011',
+                        '507f1f77bcf86cd799439015',
+                        '507f1f77bcf86cd799439016'
+                      ]
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '500':
+        $ref: '../components/responses.yaml#/ServerError'
+
+/favorites/{productId}:
+  delete:
+    tags:
+      - Favorites
+    summary: Supprimer un produit des favoris
+    description: Supprime un produit des favoris de l'utilisateur
+    security:
+      - bearerAuth: []
+    parameters:
+      - in: path
+        name: productId
+        required: true
+        schema:
+          type: string
+          format: mongoId
+        description: ID du produit à supprimer
+    responses:
+      '200':
+        description: Produit retiré des favoris avec succès
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: 'Produit retiré des favoris avec succès'
+                data:
+                  type: object
+                  nullable: true
+                  example: null
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        description: Aucun favori trouvé pour ce produit
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: 'Aucun favori trouvé pour ce produit'
+      '500':
+        $ref: '../components/responses.yaml#/ServerError'
+
+/favorites/check/{productId}:
+  get:
+    tags:
+      - Favorites
+    summary: Vérifier si un produit est en favori
+    description: Vérifie si un produit est dans les favoris de l'utilisateur
+    security:
+      - bearerAuth: []
+    parameters:
+      - in: path
+        name: productId
+        required: true
+        schema:
+          type: string
+          format: mongoId
+        description: ID du produit à vérifier
+    responses:
+      '200':
+        description: Vérification terminée avec succès
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: 'Vérification terminée avec succès'
+                data:
+                  type: object
+                  properties:
+                    isFavorite:
+                      type: boolean
+                      example: true
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '500':
+        $ref: '../components/responses.yaml#/ServerError'

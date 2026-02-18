@@ -5,3 +5,7 @@
   $ref: './items/items.yaml#/items/{id}'
 /health:
   $ref: './health/health.yaml'
+/farms:
+  $ref: './farms.yaml'
+/favorites:
+  $ref: './favorites.yaml'

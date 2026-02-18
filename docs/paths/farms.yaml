@@ -50,6 +50,449 @@
                       example: 'Ferme familiale spécialisée dans les légumes biologiques'
                     address:
                       type: string
+                      example: '123 Route de la Ferme, 31200 Toulouse'
+                    geoLocation:
+                      type: object
+                      properties:
+                        latitude:
+                          type: number
+                          example: 43.604652
+                        longitude:
+                          type: number
+                          example: 1.444209
+                    images:
+                      type: array
+                      items:
+                        type: string
+                      example: ['https://example.com/farm1.jpg']
+                    rating:
+                      type: object
+                      properties:
+                        average:
+                          type: number
+                          example: 4.2
+                        count:
+                          type: integer
+                          example: 25
+                    categories:
+                      type: array
+                      items:
+                        type: string
+                      example: ['légumes', 'fruits', 'herbes aromatiques']
+                    products:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            example: '507f1f77bcf86cd799439012'
+                          name:
+                            type: string
+                            example: 'Tomates Bio'
+                          price:
+                            type: number
+                            example: 4.50
+                          unit:
+                            type: string
+                            example: 'kg'
+                          stock:
+                            type: integer
+                            example: 100
+                          image:
+                            type: string
+                            example: 'https://example.com/tomates.jpg'
+                          category:
+                            type: string
+                            example: 'légumes'
+                          createdAt:
+                            type: string
+                            format: date-time
+                            example: '2024-01-15T10:30:00.000Z'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '500':
+        $ref: '../components/responses.yaml#/ServerError'
+
+/farms/{id}/rating:
+  post:
+    tags:
+      - Farm Ratings
+    summary: Noter une ferme
+    description: Ajoute une note à une ferme ou modifie la note existante de l'utilisateur
+    security:
+      - bearerAuth: []
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: mongoId
+        description: ID de la ferme à noter
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - score
+            properties:
+              score:
+                type: integer
+                minimum: 1
+                maximum: 5
+                description: Note de 1 à 5
+                example: 5
+              comment:
+                type: string
+                maxLength: 500
+                description: Commentaire optionnel
+                example: 'Excellente ferme bio avec des produits de qualité !'
+    responses:
+      '201':
+        description: Note enregistrée avec succès
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: 'Note enregistrée avec succès'
+                data:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: '507f1f77bcf86cd799439013'
+                    score:
+                      type: integer
+                      example: 5
+                    comment:
+                      type: string
+                      example: 'Excellente ferme bio !'
+                    user:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          example: '507f1f77bcf86cd799439012'
+                        fullname:
+                          type: string
+                          example: 'Jean Dupont'
+                    createdAt:
+                      type: string
+                      format: date-time
+                      example: '2024-01-15T10:30:00.000Z'
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '500':
+        $ref: '../components/responses.yaml#/ServerError'
+
+  delete:
+    tags:
+      - Farm Ratings
+    summary: Supprimer sa note
+    description: Supprime la note de l'utilisateur pour une ferme
+    security:
+      - bearerAuth: []
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: mongoId
+        description: ID de la ferme
+    responses:
+      '200':
+        description: Note supprimée avec succès
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: 'Note supprimée avec succès'
+                data:
+                  type: object
+                  nullable: true
+                  example: null
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '500':
+        $ref: '../components/responses.yaml#/ServerError'
+
+/farms/{id}/ratings:
+  get:
+    tags:
+      - Farm Ratings
+    summary: Voir toutes les notes d'une ferme
+    description: Récupère toutes les notes d'une ferme avec pagination
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: mongoId
+        description: ID de la ferme
+      - in: query
+        name: page
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        description: Page actuelle
+      - in: query
+        name: limit
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 10
+        description: Nombre de notes par page
+    responses:
+      '200':
+        description: Notes récupérées avec succès
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: 'Notes récupérées avec succès'
+                data:
+                  type: object
+                  properties:
+                    ratings:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            example: '507f1f77bcf86cd799439013'
+                          score:
+                            type: integer
+                            example: 5
+                          comment:
+                            type: string
+                            example: 'Excellente ferme bio !'
+                          user:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                                example: '507f1f77bcf86cd799439012'
+                              fullname:
+                                type: string
+                                example: 'Jean Dupont'
+                          createdAt:
+                            type: string
+                            format: date-time
+                            example: '2024-01-15T10:30:00.000Z'
+                    total:
+                      type: integer
+                      example: 25
+                    totalPages:
+                      type: integer
+                      example: 3
+                    currentPage:
+                      type: integer
+                      example: 1
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '500':
+        $ref: '../components/responses.yaml#/ServerError'
+
+/farms/{id}/my-rating:
+  get:
+    tags:
+      - Farm Ratings
+    summary: Voir sa note pour une ferme
+    description: Récupère la note de l'utilisateur connecté pour une ferme
+    security:
+      - bearerAuth: []
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: mongoId
+        description: ID de la ferme
+    responses:
+      '200':
+        description: Note utilisateur récupérée avec succès
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: 'Note utilisateur récupérée avec succès'
+                data:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: '507f1f77bcf86cd799439013'
+                    score:
+                      type: integer
+                      example: 5
+                    comment:
+                      type: string
+                      example: 'Excellente ferme bio !'
+                    user:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          example: '507f1f77bcf86cd799439012'
+                        fullname:
+                          type: string
+                          example: 'Jean Dupont'
+                    createdAt:
+                      type: string
+                      format: date-time
+                      example: '2024-01-15T10:30:00.000Z'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '500':
+        $ref: '../components/responses.yaml#/ServerError'
+
+/farms/{id}/rating-stats:
+  get:
+    tags:
+      - Farm Ratings
+    summary: Statistiques de notation d'une ferme
+    description: Récupère les statistiques détaillées des notes d'une ferme
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: mongoId
+        description: ID de la ferme
+    responses:
+      '200':
+        description: Statistiques récupérées avec succès
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: 'Statistiques récupérées avec succès'
+                data:
+                  type: object
+                  properties:
+                    average:
+                      type: number
+                      example: 4.2
+                    count:
+                      type: integer
+                      example: 25
+                    distribution:
+                      type: object
+                      properties:
+                        '1':
+                          type: integer
+                          example: 1
+                        '2':
+                          type: integer
+                          example: 2
+                        '3':
+                          type: integer
+                          example: 5
+                        '4':
+                          type: integer
+                          example: 8
+                        '5':
+                          type: integer
+                          example: 9
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '500':
+        $ref: '../components/responses.yaml#/ServerError'
+
+/farms/{id}/can-rate:
+  get:
+    tags:
+      - Farm Ratings
+    summary: Vérifier si on peut noter une ferme
+    description: Vérifie si l'utilisateur peut encore noter cette ferme
+    security:
+      - bearerAuth: []
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: mongoId
+        description: ID de la ferme
+    responses:
+      '200':
+        description: Vérification terminée avec succès
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: 'Vérification terminée avec succès'
+                data:
+                  type: object
+                  properties:
+                    canRate:
+                      type: boolean
+                      example: true
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '500':
+        $ref: '../components/responses.yaml#/ServerError'
+                    address:
+                      type: string
                       example: '123 Route de la Ferme, 69000 Lyon'
                     geoLocation:
                       type: object
