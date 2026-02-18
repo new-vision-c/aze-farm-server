@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { body } from 'express-validator';
 
-import { LocationController } from '@/controllers/location.controller';
+import { LocationController } from '@/controllers/users/location.controller';
 import { isAuthenticated } from '@/middlewares/auth';
 import { validateRequest } from '@/middlewares/validator.middleware';
 

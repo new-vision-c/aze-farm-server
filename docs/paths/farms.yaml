@@ -35,22 +35,22 @@
                   example: true
                 message:
                   type: string
-                  example: "Ferme récupérée avec succès"
+                  example: 'Ferme récupérée avec succès'
                 data:
                   type: object
                   properties:
                     id:
                       type: string
-                      example: "507f1f77bcf86cd799439011"
+                      example: '507f1f77bcf86cd799439011'
                     name:
                       type: string
-                      example: "Ferme du Soleil"
+                      example: 'Ferme du Soleil'
                     description:
                       type: string
-                      example: "Ferme familiale spécialisée dans les légumes biologiques"
+                      example: 'Ferme familiale spécialisée dans les légumes biologiques'
                     address:
                       type: string
-                      example: "123 Route de la Ferme, 69000 Lyon"
+                      example: '123 Route de la Ferme, 69000 Lyon'
                     geoLocation:
                       type: object
                       properties:
@@ -64,7 +64,7 @@
                       type: array
                       items:
                         type: string
-                      example: ["https://example.com/farm1.jpg", "https://example.com/farm2.jpg"]
+                      example: ['https://example.com/farm1.jpg', 'https://example.com/farm2.jpg']
                     rating:
                       type: object
                       properties:
@@ -78,7 +78,7 @@
                       type: array
                       items:
                         type: string
-                      example: ["légumes", "fruits", "herbes aromatiques"]
+                      example: ['légumes', 'fruits', 'herbes aromatiques']
                     products:
                       type: array
                       items:

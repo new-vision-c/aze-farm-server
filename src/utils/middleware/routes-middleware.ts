@@ -4,14 +4,15 @@ import { envs } from '@/config/env/env';
 import CSP from '@/router/_config/CSP/csp.router';
 import CSRF from '@/router/_config/CSRF-token/csrf.router';
 import health from '@/router/_config/healtcheck/health.router';
-import locationRouter from '@/router/location.router';
 import auth from '@/router/users/auth.router';
+import locationRouter from '@/router/users/location.router';
 import oauth from '@/router/users/oauth.router';
 import users from '@/router/users/users.router';
 
 import exampleRouter from '../../router/example.router';
 import farmRouter from '../../router/farm.router';
 import productRouter from '../../router/product.router';
+import ratingRouter from '../../router/rating.router';
 import { rateLimitingSubRoute } from './securityConfig';
 
 const api_version = envs.API_PREFIX || '/api/v1';
@@ -37,6 +38,7 @@ const setupRoutes = (app: Express): void => {
   api.use('/products', rateLimitingSubRoute, productRouter);
   api.use('/users', rateLimitingSubRoute, users);
   api.use('/location', rateLimitingSubRoute, locationRouter);
+  api.use('/', rateLimitingSubRoute, ratingRouter);
 
   app.use(api_version, api);
 };

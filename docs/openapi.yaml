@@ -160,9 +160,9 @@ components:
           type: string
         role:
           enum:
-          - user
-          - admin
-          - moderator
+            - user
+            - admin
+            - moderator
           type: string
         updatedAt:
           format: date-time
@@ -214,7 +214,7 @@ paths:
           description: Erreur serveur
       summary: Post /_csp-reports
       tags:
-      - System
+        - System
   /auth/change-password:
     post:
       description: Endpoint post pour /auth/change-password
@@ -244,10 +244,10 @@ paths:
         '500':
           description: Erreur serveur
       security:
-      - bearerAuth: []
+        - bearerAuth: []
       summary: Post /auth/change-password
       tags:
-      - Authentication
+        - Authentication
   /auth/forgot-password:
     post:
       description: Endpoint post pour /auth/forgot-password
@@ -278,7 +278,7 @@ paths:
           description: Erreur serveur
       summary: Post /auth/forgot-password
       tags:
-      - Authentication
+        - Authentication
   /auth/login:
     post:
       description: Endpoint post pour /auth/login
@@ -309,7 +309,7 @@ paths:
           description: Erreur serveur
       summary: Post /auth/login
       tags:
-      - Authentication
+        - Authentication
   /auth/logout:
     post:
       description: Endpoint post pour /auth/logout
@@ -339,10 +339,10 @@ paths:
         '500':
           description: Erreur serveur
       security:
-      - bearerAuth: []
+        - bearerAuth: []
       summary: Post /auth/logout
       tags:
-      - Authentication
+        - Authentication
   /auth/me/profile:
     get:
       description: Endpoint get pour /auth/me/profile
@@ -363,10 +363,10 @@ paths:
         '500':
           description: Erreur serveur
       security:
-      - bearerAuth: []
+        - bearerAuth: []
       summary: Get /auth/me/profile
       tags:
-      - Authentication
+        - Authentication
   /auth/register:
     post:
       description: Endpoint post pour /auth/register
@@ -397,7 +397,7 @@ paths:
           description: Erreur serveur
       summary: Post /auth/register
       tags:
-      - Authentication
+        - Authentication
   /auth/resend-otp:
     post:
       description: Endpoint post pour /auth/resend-otp
@@ -427,10 +427,10 @@ paths:
         '500':
           description: Erreur serveur
       security:
-      - bearerAuth: []
+        - bearerAuth: []
       summary: Post /auth/resend-otp
       tags:
-      - Authentication
+        - Authentication
   /auth/reset-password/{resetToken}:
     post:
       description: Endpoint post pour /auth/reset-password/{resetToken}
@@ -461,7 +461,7 @@ paths:
           description: Erreur serveur
       summary: Post /auth/reset-password/{resetToken}
       tags:
-      - Authentication
+        - Authentication
   /auth/verify-otp:
     post:
       description: Endpoint post pour /auth/verify-otp
@@ -492,7 +492,7 @@ paths:
           description: Erreur serveur
       summary: Post /auth/verify-otp
       tags:
-      - Authentication
+        - Authentication
   /csrf-token:
     get:
       description: Endpoint get pour /csrf-token
@@ -514,7 +514,7 @@ paths:
           description: Erreur serveur
       summary: Get /csrf-token
       tags:
-      - System
+        - System
   /farms/{id}:
     get:
       description: Endpoint get pour /farms/{id}
@@ -536,7 +536,7 @@ paths:
           description: Erreur serveur
       summary: Get /farms/{id}
       tags:
-      - Farms
+        - Farms
   /health:
     get:
       description: Endpoint get pour /health
@@ -558,7 +558,7 @@ paths:
           description: Erreur serveur
       summary: Get /health
       tags:
-      - System
+        - System
   /oauth/token:
     post:
       description: Endpoint post pour /oauth/token
@@ -588,10 +588,10 @@ paths:
         '500':
           description: Erreur serveur
       security:
-      - bearerAuth: []
+        - bearerAuth: []
       summary: Post /oauth/token
       tags:
-      - OAuth
+        - OAuth
   /oauth/{provider}:
     get:
       description: Endpoint get pour /oauth/{provider}
@@ -612,10 +612,10 @@ paths:
         '500':
           description: Erreur serveur
       security:
-      - bearerAuth: []
+        - bearerAuth: []
       summary: Get /oauth/{provider}
       tags:
-      - OAuth
+        - OAuth
   /oauth/{provider}/callback:
     get:
       description: Endpoint get pour /oauth/{provider}/callback
@@ -636,10 +636,10 @@ paths:
         '500':
           description: Erreur serveur
       security:
-      - bearerAuth: []
+        - bearerAuth: []
       summary: Get /oauth/{provider}/callback
       tags:
-      - OAuth
+        - OAuth
   /products/categories:
     get:
       description: Endpoint get pour /products/categories
@@ -661,7 +661,7 @@ paths:
           description: Erreur serveur
       summary: Get /products/categories
       tags:
-      - Products
+        - Products
   /products/search:
     get:
       description: Endpoint get pour /products/search
@@ -683,7 +683,7 @@ paths:
           description: Erreur serveur
       summary: Get /products/search
       tags:
-      - Products
+        - Products
   /products/suggestions:
     get:
       description: Endpoint get pour /products/suggestions
@@ -705,7 +705,7 @@ paths:
           description: Erreur serveur
       summary: Get /products/suggestions
       tags:
-      - Products
+        - Products
   /products/{id}:
     get:
       description: Endpoint get pour /products/{id}
@@ -727,7 +727,7 @@ paths:
           description: Erreur serveur
       summary: Get /products/{id}
       tags:
-      - Products
+        - Products
   /users:
     get:
       description: Endpoint get pour /users
@@ -748,10 +748,10 @@ paths:
         '500':
           description: Erreur serveur
       security:
-      - bearerAuth: []
+        - bearerAuth: []
       summary: Get /users
       tags:
-      - Users
+        - Users
   /users/export:
     get:
       description: Endpoint get pour /users/export
@@ -772,10 +772,10 @@ paths:
         '500':
           description: Erreur serveur
       security:
-      - bearerAuth: []
+        - bearerAuth: []
       summary: Get /users/export
       tags:
-      - Users
+        - Users
   /users/profile:
     put:
       description: Endpoint put pour /users/profile
@@ -805,10 +805,10 @@ paths:
         '500':
           description: Erreur serveur
       security:
-      - bearerAuth: []
+        - bearerAuth: []
       summary: Put /users/profile
       tags:
-      - Users
+        - Users
   /users/search:
     get:
       description: Endpoint get pour /users/search
@@ -829,10 +829,10 @@ paths:
         '500':
           description: Erreur serveur
       security:
-      - bearerAuth: []
+        - bearerAuth: []
       summary: Get /users/search
       tags:
-      - Users
+        - Users
   /users/{userId}:
     get:
       description: Endpoint get pour /users/{userId}
@@ -853,10 +853,10 @@ paths:
         '500':
           description: Erreur serveur
       security:
-      - bearerAuth: []
+        - bearerAuth: []
       summary: Get /users/{userId}
       tags:
-      - Users
+        - Users
   /users/{userId}/restore:
     post:
       description: Endpoint post pour /users/{userId}/restore
@@ -886,10 +886,10 @@ paths:
         '500':
           description: Erreur serveur
       security:
-      - bearerAuth: []
+        - bearerAuth: []
       summary: Post /users/{userId}/restore
       tags:
-      - Users
+        - Users
   /users/{userId}/role:
     put:
       description: Endpoint put pour /users/{userId}/role
@@ -919,27 +919,27 @@ paths:
         '500':
           description: Erreur serveur
       security:
-      - bearerAuth: []
+        - bearerAuth: []
       summary: Put /users/{userId}/role
       tags:
-      - Users
+        - Users
 servers:
-- description: Environnement de développement local
-  url: http://localhost:3000
-- description: Environnement de staging
-  url: https://api.staging.azefarm.com
-- description: Production
-  url: https://api.azefarm.com
+  - description: Environnement de développement local
+    url: http://localhost:3000
+  - description: Environnement de staging
+    url: https://api.staging.azefarm.com
+  - description: Production
+    url: https://api.azefarm.com
 tags:
-- description: Product search and management with geolocation
-  name: Products
-- description: Farm management and product listings
-  name: Farms
-- description: User authentication and account management
-  name: Authentication
-- description: User profile management
-  name: Users
-- description: Third-party authentication (Google, Apple, etc.)
-  name: OAuth
-- description: System endpoints
-  name: System
+  - description: Product search and management with geolocation
+    name: Products
+  - description: Farm management and product listings
+    name: Farms
+  - description: User authentication and account management
+    name: Authentication
+  - description: User profile management
+    name: Users
+  - description: Third-party authentication (Google, Apple, etc.)
+    name: OAuth
+  - description: System endpoints
+    name: System

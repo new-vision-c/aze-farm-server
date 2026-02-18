@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { param, query } from 'express-validator';
 
-import { FarmController } from '../controllers/farm.controller';
+import { FarmController } from '../controllers/farm/get/farm.controller';
 import { validateRequest } from '../middlewares/validator.middleware';
 
 const router = Router();

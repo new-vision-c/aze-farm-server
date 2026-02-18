@@ -12,7 +12,7 @@
       Récupère une liste paginée de tous les utilisateurs enregistrés.
       Permet le filtrage, la recherche et le tri.
       Résultats limités à 100 utilisateurs par page maximum.
-      
+
       **Cas d'usage :**
       - Afficher la liste des utilisateurs disponibles
       - Rechercher un utilisateur spécifique
