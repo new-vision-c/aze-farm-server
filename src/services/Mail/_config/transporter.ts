@@ -16,7 +16,7 @@ const transporter: Transporter<SMTPTransport.SentMessageInfo> = nodemailer.creat
   connectionTimeout: envs.SMTP_CONNECTION_TIMEOUT || 10000, // 10 secondes
   socketTimeout: envs.SMTP_SOCKET_TIMEOUT || 60000, // 60 secondes
   greetingTimeout: envs.SMTP_GREET_TIMEOUT || 10000, // 10 secondes
-  
+
   // Pool de connexions pour meilleure performance
   pool: {
     maxConnections: envs.SMTP_POOL_SIZE || 5,
@@ -24,7 +24,7 @@ const transporter: Transporter<SMTPTransport.SentMessageInfo> = nodemailer.creat
     rateDelta: 1000, // Réinitialiser la limite de débit après 1 seconde
     rateLimit: envs.SMTP_RATE_LIMIT || 5, // Nombre de messages par rateDelta
   },
-  
+
   // Logging optionnel pour debug
   logger: process.env.NODE_ENV === 'development',
   debug: process.env.NODE_ENV === 'development',

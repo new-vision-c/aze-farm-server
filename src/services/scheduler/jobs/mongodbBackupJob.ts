@@ -117,7 +117,7 @@ export class MongodbBackupJob {
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
       const errorStack = error instanceof Error ? error.stack : 'No stack trace';
-      
+
       log.error('Erreur lors de la sauvegarde MongoDB:', {
         message: errorMsg,
         stack: errorStack,
@@ -129,7 +129,7 @@ export class MongodbBackupJob {
       if (this.notificationService) {
         try {
           await this.notificationService.sendBackupError(
-            new Error(`MongoDB Backup Failed: ${errorMsg}`)
+            new Error(`MongoDB Backup Failed: ${errorMsg}`),
           );
         } catch (notifError) {
           const notifMsg = notifError instanceof Error ? notifError.message : String(notifError);
@@ -165,52 +165,54 @@ export class MongodbBackupJob {
       };
 
       const client = new MongoClient(backupConfig.mongo.uri, mongoOptions);
-      
+
       try {
         await client.connect();
         const db = client.db(backupConfig.mongo.dbName);
 
         log.debug('Connexion à MongoDB établie');
 
-      // Si des collections spécifiques sont configurées, les sauvegarder individuellement
-      if (backupConfig.mongo.collections.length > 0) {
-        for (const collectionName of backupConfig.mongo.collections) {
-          const collection = db.collection(collectionName);
-          const documents = await collection.find({}).toArray();
+        // Si des collections spécifiques sont configurées, les sauvegarder individuellement
+        if (backupConfig.mongo.collections.length > 0) {
+          for (const collectionName of backupConfig.mongo.collections) {
+            const collection = db.collection(collectionName);
+            const documents = await collection.find({}).toArray();
 
-          const collectionPath = path.join(outputDir, backupConfig.mongo.dbName, collectionName);
-          await fs.ensureDir(collectionPath);
+            const collectionPath = path.join(outputDir, backupConfig.mongo.dbName, collectionName);
+            await fs.ensureDir(collectionPath);
 
-          // Sauvegarder les documents dans un fichier JSON
-          const filePath = path.join(collectionPath, 'documents.json');
-          await fs.writeJson(filePath, documents, { spaces: 2 });
+            // Sauvegarder les documents dans un fichier JSON
+            const filePath = path.join(collectionPath, 'documents.json');
+            await fs.writeJson(filePath, documents, { spaces: 2 });
 
-          log.debug(`Collection ${collectionName} sauvegardée: ${documents.length} documents`);
+            log.debug(`Collection ${collectionName} sauvegardée: ${documents.length} documents`);
+          }
+        } else {
+          // Sauvegarder toutes les collections
+          const collections = await db.listCollections().toArray();
+
+          for (const collectionInfo of collections) {
+            const collectionName = collectionInfo.name;
+            const collection = db.collection(collectionName);
+            const documents = await collection.find({}).toArray();
+
+            const collectionPath = path.join(outputDir, backupConfig.mongo.dbName, collectionName);
+            await fs.ensureDir(collectionPath);
+
+            // Sauvegarder les documents dans un fichier JSON
+            const filePath = path.join(collectionPath, 'documents.json');
+            await fs.writeJson(filePath, documents, { spaces: 2 });
+
+            log.debug(`Collection ${collectionName} sauvegardée: ${documents.length} documents`);
+          }
         }
-      } else {
-        // Sauvegarder toutes les collections
-        const collections = await db.listCollections().toArray();
 
-        for (const collectionInfo of collections) {
-          const collectionName = collectionInfo.name;
-          const collection = db.collection(collectionName);
-          const documents = await collection.find({}).toArray();
-
-          const collectionPath = path.join(outputDir, backupConfig.mongo.dbName, collectionName);
-          await fs.ensureDir(collectionPath);
-
-          // Sauvegarder les documents dans un fichier JSON
-          const filePath = path.join(collectionPath, 'documents.json');
-          await fs.writeJson(filePath, documents, { spaces: 2 });
-
-          log.debug(`Collection ${collectionName} sauvegardée: ${documents.length} documents`);
-        }
-      }
-
-      await client.close();
-      log.debug('Sauvegarde MongoDB terminée avec succès');
+        await client.close();
+        log.debug('Sauvegarde MongoDB terminée avec succès');
       } catch (connectionError) {
-        throw new Error(`Erreur de connexion MongoDB: ${connectionError instanceof Error ? connectionError.message : String(connectionError)}`);
+        throw new Error(
+          `Erreur de connexion MongoDB: ${connectionError instanceof Error ? connectionError.message : String(connectionError)}`,
+        );
       } finally {
         try {
           await client.close();

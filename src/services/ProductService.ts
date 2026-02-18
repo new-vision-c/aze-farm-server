@@ -2,6 +2,7 @@ import type { PrismaClient } from '@prisma/client';
 
 import prisma from '../config/prisma/prisma';
 import CacheService from './CacheService';
+import FavoriteService from './FavoriteService';
 import { SearchAnalyticsService } from './SearchAnalyticsService';
 
 // Interface pour les coordonnées géographiques
@@ -98,11 +99,13 @@ export class ProductService {
   private prisma: PrismaClient;
   private analyticsService: SearchAnalyticsService;
   private cacheService: CacheService;
+  private favoriteService: any;
 
   constructor() {
     this.prisma = prisma;
     this.analyticsService = new SearchAnalyticsService();
     this.cacheService = new CacheService();
+    this.favoriteService = FavoriteService;
   }
 
   /**
@@ -278,6 +281,30 @@ export class ProductService {
       images: product.images,
       farm: product.farm as any,
     }));
+
+    // Gérer les favoris si demandé
+    if (favorites && userId) {
+      try {
+        const favoriteIds = await this.favoriteService.getUserFavoriteIds(userId);
+
+        // Mettre en avant les produits favoris
+        productsWithDistance.sort((a, b) => {
+          const aIsFavorite = favoriteIds.includes(a.id);
+          const bIsFavorite = favoriteIds.includes(b.id);
+
+          if (aIsFavorite && !bIsFavorite) return -1; // A est favori, B non -> A en premier
+          if (!aIsFavorite && bIsFavorite) return 1; // A non favori, B favori -> B en premier
+          return 0; // Même statut de favori, garder l'ordre existant
+        });
+
+        console.log(
+          `❤️ Tri favoris appliqué pour l'utilisateur ${userId}: ${favoriteIds.length} favoris`,
+        );
+      } catch (error) {
+        console.error('❌ Erreur lors de la récupération des favoris:', error);
+        // Continuer sans le tri des favoris en cas d'erreur
+      }
+    }
 
     if (userLocation) {
       productsWithDistance = productsWithDistance.map((product) => {

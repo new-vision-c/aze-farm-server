@@ -11,6 +11,7 @@ import users from '@/router/users/users.router';
 
 import exampleRouter from '../../router/example.router';
 import farmRouter from '../../router/farm.router';
+import favoriteRouter from '../../router/favorite.router';
 import productRouter from '../../router/product.router';
 import ratingRouter from '../../router/rating.router';
 import { rateLimitingSubRoute } from './securityConfig';
@@ -39,6 +40,7 @@ const setupRoutes = (app: Express): void => {
   api.use('/users', rateLimitingSubRoute, users);
   api.use('/location', rateLimitingSubRoute, locationRouter);
   api.use('/', rateLimitingSubRoute, ratingRouter);
+  api.use('/', rateLimitingSubRoute, favoriteRouter);
 
   app.use(api_version, api);
 };

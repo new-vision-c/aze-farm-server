@@ -1,10 +1,10 @@
-import type { ScheduledTask } from 'node-cron';
 import axios from 'axios';
 import { MongoClient } from 'mongodb';
+import type { ScheduledTask } from 'node-cron';
 
-import log from '@/services/logging/logger';
-import send_mail from '@/services/Mail/send-mail';
 import { envs } from '@/config/env/env';
+import send_mail from '@/services/Mail/send-mail';
+import log from '@/services/logging/logger';
 
 import { scheduler } from '..';
 import { schedulerConfig } from '../_config';
@@ -138,8 +138,8 @@ export class HealthCheckJob {
                 error: 'Connection timeout',
                 responseTime: Date.now() - startTime,
               }),
-            timeoutMs
-          )
+            timeoutMs,
+          ),
         ),
       ]);
     } catch (error) {
@@ -228,7 +228,9 @@ export class HealthCheckJob {
   private async checkSMTP(): Promise<HealthCheckResult> {
     const startTime = Date.now();
     try {
-      const transporter = await import('@/services/Mail/_config/transporter').then((m) => m.default);
+      const transporter = await import('@/services/Mail/_config/transporter').then(
+        (m) => m.default,
+      );
 
       // Verify connection
       await transporter.verify();
@@ -253,7 +255,9 @@ export class HealthCheckJob {
   private async sendHealthCheckEmail(results: HealthCheckResult[]): Promise<void> {
     try {
       const failedServices = results.filter((r) => r.status === 'unhealthy');
-      const healthySummary = results.map((r) => `${r.service}: ${r.status} (${r.responseTime}ms)`).join('\n');
+      const healthySummary = results
+        .map((r) => `${r.service}: ${r.status} (${r.responseTime}ms)`)
+        .join('\n');
 
       await send_mail(this.healthCheckEmail, 'Health Check Alert', 'health_check_alert', {
         date: new Date().toLocaleDateString('fr-FR'),

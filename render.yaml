@@ -123,9 +123,9 @@ services:
 
       # Service Mail (Gmail SMTP)
       - key: SMTP_USER
-        value: "cesaristos85@gmail.com"
+        value: 'cesaristos85@gmail.com'
       - key: SMTP_PASS
-        value: "ybfm tkhc pyaa bmuy"
+        value: 'ybfm tkhc pyaa bmuy'
 
       # Configuration MinIO (à configurer avec un service cloud si nécessaire)
       # Désactivé pour Render - utiliser Cloudinary ou S3 en production
