@@ -47,15 +47,15 @@ model users {
   latitude  Float?
 
   // Relations
-  farm             Farm?
-  orders           Order[]
-  cart             Cart?
-  favorites        Favorite[]
-  farmRatings      FarmRating[]
-  messagesSent     Message[]       @relation("SentMessages")
-  messagesReceived Message[]       @relation("ReceivedMessages")
-  notifications    Notification[]
-  payments         MobilePayment[]
+  farm                  Farm?
+  orders                Order[]
+  cart                  Cart?
+  favorites             Favorite[]
+  farmRatings           FarmRating[]
+  messagesSent          Message[]       @relation("SentMessages")
+  notifications         Notification[]
+  payments              MobilePayment[]
+  consumerConversations Conversation[]  @relation("ConsumerConversations")
 
   // --- Indexes ---
   @@index([email, is_verified])
@@ -206,6 +206,23 @@ enum NotificationRelatedType {
   MESSAGE
 }
 
+// =====================================================================================================
+// ÉNUMÉRATIONS - CONVERSATIONS
+// =====================================================================================================
+enum ConversationStatus {
+  ACTIVE
+  ARCHIVED
+  BLOCKED
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+  AUDIO
+  VIDEO
+}
+
 // ==================== MODELS ====================
 
 model Farm {
@@ -227,6 +244,8 @@ model Farm {
   orders        Order[]
   deliveryZones DeliveryZone[]
   ratings       FarmRating[]
+  conversations Conversation[] @relation("FarmConversations")
+  messages      Message[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -455,21 +474,49 @@ model MobilePayment {
   @@map("mobile_payments")
 }
 
+// =====================================================================================================
+// CONVERSATION MODEL (Consumer-Farm)
+// =====================================================================================================
+model Conversation {
+  id            String             @id @default(auto()) @map("_id") @db.ObjectId
+  consumerId    String             @db.ObjectId
+  farmId        String             @db.ObjectId // Obligatoire, la ferme est le participant
+  status        ConversationStatus @default(ACTIVE) // ACTIVE, ARCHIVED, BLOCKED
+  lastMessageAt DateTime? // Dernier message timestamp
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  // Relations
+  consumer users     @relation("ConsumerConversations", fields: [consumerId], references: [user_id])
+  farm     Farm      @relation("FarmConversations", fields: [farmId], references: [id])
+  messages Message[] @relation("Messages")
+
+  @@unique([consumerId, farmId]) // Une seule conversation par consumer-ferme
+  // Indexes pour optimiser les performances
+  @@index([consumerId, status])
+  @@index([farmId, status])
+  @@index([lastMessageAt])
+  @@map("conversations")
+}
+
 model Message {
-  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  id          String      @id @default(auto()) @map("_id") @db.ObjectId
   content     String
   attachments String[] // URLs images/documents
-  isRead      Boolean   @default(false)
-  sentAt      DateTime  @default(now())
+  messageType MessageType @default(TEXT) // TEXT, IMAGE, FILE, AUDIO, VIDEO
+  isRead      Boolean     @default(false)
+  sentAt      DateTime    @default(now())
   readAt      DateTime?
 
   // Relations
-  senderId   String  @db.ObjectId
-  sender     users   @relation("SentMessages", fields: [senderId], references: [user_id])
-  receiverId String  @db.ObjectId
-  receiver   users   @relation("ReceivedMessages", fields: [receiverId], references: [user_id])
-  orderId    String? @db.ObjectId // Optionnel, pour contexte commande
-  order      Order?  @relation(fields: [orderId], references: [id])
+  conversationId String       @db.ObjectId
+  conversation   Conversation @relation("Messages", fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String       @db.ObjectId
+  sender         users        @relation("SentMessages", fields: [senderId], references: [user_id])
+  orderId        String?      @db.ObjectId // Optionnel, pour contexte commande
+  order          Order?       @relation(fields: [orderId], references: [id])
+  farmId         String?      @db.ObjectId // Optionnel, pour contexte ferme
+  farm           Farm?        @relation(fields: [farmId], references: [id])
 
   @@map("messages")
 }
