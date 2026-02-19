@@ -1,0 +1,777 @@
+{
+  "info": {
+    "_postman_id": "conversation-api-collection",
+    "name": "🗣️ Aze Farm - Conversation API Tests",
+    "description": "Collection complète pour tester le module conversation avec sécurité, i18n et gestion des données non structurées",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000/api",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "YOUR_JWT_TOKEN_HERE",
+      "type": "string",
+      "description": "Token JWT d'authentification - Remplacer par votre token valide"
+    },
+    {
+      "key": "conversation_id",
+      "value": "",
+      "type": "string",
+      "description": "ID de conversation généré lors du premier test"
+    },
+    {
+      "key": "message_id",
+      "value": "",
+      "type": "string",
+      "description": "ID de message généré lors des tests"
+    },
+    {
+      "key": "farm_id",
+      "value": "YOUR_FARM_ID",
+      "type": "string",
+      "description": "ID de ferme pour créer une conversation"
+    }
+  ],
+  "item": [
+    {
+      "name": "🏠 Conversations",
+      "item": [
+        {
+          "name": "📝 Créer ou récupérer une conversation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"farmId\": \"{{farm_id}}\",\n    \"orderId\": null\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/conversations/create-or-get",
+              "host": ["{{base_url}}"],
+              "path": ["conversations", "create-or-get"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Stocker l'ID de conversation pour les tests suivants",
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.conversation && response.data.conversation.id) {",
+                  "        pm.collectionVariables.set('conversation_id', response.data.conversation.id);",
+                  "        console.log('Conversation ID sauvegardé:', response.data.conversation.id);",
+                  "    }",
+                  "}",
+                  "",
+                  "pm.test('Status code is 201', () => {",
+                  "    pm.expect(pm.response.code).to.eql(201);",
+                  "});",
+                  "",
+                  "pm.test('Response has conversation data', () => {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.data).to.have.property('conversation');",
+                  "    pm.expect(response.data.conversation).to.have.property('id');",
+                  "    pm.expect(response.data.conversation).to.have.property('consumerId');",
+                  "    pm.expect(response.data.conversation).to.have.property('farmId');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "📋 Lister les conversations de l'utilisateur",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/conversations",
+              "host": ["{{base_url}}"],
+              "path": ["conversations"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.expect(pm.response.code).to.eql(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has conversations array', () => {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.data).to.have.property('conversations');",
+                  "    pm.expect(Array.isArray(response.data.conversations)).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test('Each conversation has required fields', () => {",
+                  "    const response = pm.response.json();",
+                  "    response.data.conversations.forEach(conv => {",
+                  "        pm.expect(conv).to.have.property('id');",
+                  "        pm.expect(conv).to.have.property('consumerId');",
+                  "        pm.expect(conv).to.have.property('farmId');",
+                  "        pm.expect(conv).to.have.property('status');",
+                  "    });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "💬 Messages",
+      "item": [
+        {
+          "name": "📤 Envoyer un message texte (sécurisé)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"conversationId\": \"{{conversation_id}}\",\n    \"content\": \"Bonjour ! Je suis intéressé par vos produits. <script>alert('XSS test')</script>\",\n    \"messageType\": \"TEXT\",\n    \"attachments\": [],\n    \"orderId\": null\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/conversations/messages/send",
+              "host": ["{{base_url}}"],
+              "path": ["conversations", "messages", "send"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Stocker l'ID du message pour les tests suivants",
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.message && response.data.message.id) {",
+                  "        pm.collectionVariables.set('message_id', response.data.message.id);",
+                  "        console.log('Message ID sauvegardé:', response.data.message.id);",
+                  "    }",
+                  "}",
+                  "",
+                  "pm.test('Status code is 201', () => {",
+                  "    pm.expect(pm.response.code).to.eql(201);",
+                  "});",
+                  "",
+                  "pm.test('XSS protection - script tags removed', () => {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.message) {",
+                  "        const content = response.data.message.content;",
+                  "        pm.expect(content).to.not.include('<script>');",
+                  "        pm.expect(content).to.not.include('alert');",
+                  "        console.log('XSS protection test passed - content sanitized:', content);",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('Response has message data', () => {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.data).to.have.property('message');",
+                  "    pm.expect(response.data.message).to.have.property('id');",
+                  "    pm.expect(response.data.message).to.have.property('content');",
+                  "    pm.expect(response.data.message).to.have.property('senderId');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "📤 Envoyer un message avec pièce jointe",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"conversationId\": \"{{conversation_id}}\",\n    \"content\": \"Voici une image de test\",\n    \"messageType\": \"IMAGE\",\n    \"attachments\": [\"https://example.com/test-image.jpg\"],\n    \"orderId\": null\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/conversations/messages/send",
+              "host": ["{{base_url}}"],
+              "path": ["conversations", "messages", "send"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', () => {",
+                  "    pm.expect(pm.response.code).to.eql(201);",
+                  "});",
+                  "",
+                  "pm.test('Message with attachments created', () => {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.data).to.have.property('message');",
+                  "    pm.expect(response.data.message).to.have.property('attachments');",
+                  "    pm.expect(Array.isArray(response.data.message.attachments)).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "📥 Lister les messages d'une conversation",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/conversations/{{conversation_id}}/messages?page=1&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["conversations", "{{conversation_id}}", "messages"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.expect(pm.response.code).to.eql(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has messages array', () => {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.data).to.have.property('messages');",
+                  "    pm.expect(Array.isArray(response.data.messages)).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test('Each message has required fields', () => {",
+                  "    const response = pm.response.json();",
+                  "    response.data.messages.forEach(msg => {",
+                  "        pm.expect(msg).to.have.property('id');",
+                  "        pm.expect(msg).to.have.property('content');",
+                  "        pm.expect(msg).to.have.property('senderId');",
+                  "        pm.expect(msg).to.have.property('messageType');",
+                  "    });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "✅ Marquer un message comme lu",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{base_url}}/conversations/messages/{{message_id}}/read",
+              "host": ["{{base_url}}"],
+              "path": ["conversations", "messages", "{{message_id}}", "read"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.expect(pm.response.code).to.eql(200);",
+                  "});",
+                  "",
+                  "pm.test('Message marked as read', () => {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.data).to.have.property('message');",
+                  "    pm.expect(response.data.message).to.have.property('isRead');",
+                  "    pm.expect(response.data.message.isRead).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "🗑️ Supprimer un message",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/conversations/messages/{{message_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["conversations", "messages", "{{message_id}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.expect(pm.response.code).to.eql(200);",
+                  "});",
+                  "",
+                  "pm.test('Message deleted successfully', () => {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.data).to.have.property('message');",
+                  "    pm.expect(response.data.message).to.have.property('deleted');",
+                  "    pm.expect(response.data.message.deleted).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "📊 Compter les messages non lus",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/conversations/messages/unread-count",
+              "host": ["{{base_url}}"],
+              "path": ["conversations", "messages", "unread-count"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.expect(pm.response.code).to.eql(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has unread count', () => {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.data).to.have.property('unreadCount');",
+                  "    pm.expect(typeof response.data.unreadCount).to.eql('number');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "📁 Fichiers & Données non structurées",
+      "item": [
+        {
+          "name": "🔗 Générer URL présignée pour upload",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"filename\": \"test-image.jpg\",\n    \"conversationId\": \"{{conversation_id}}\",\n    \"expiresIn\": 3600\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/conversations/upload-url",
+              "host": ["{{base_url}}"],
+              "path": ["conversations", "upload-url"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.expect(pm.response.code).to.eql(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has presigned URL', () => {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.data).to.have.property('url');",
+                  "    pm.expect(response.data).to.have.property('fields');",
+                  "    pm.expect(typeof response.data.url).to.eql('string');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "📤 Upload fichier (multipart/form-data)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "conversationId",
+                  "value": "{{conversation_id}}",
+                  "type": "text"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "/path/to/your/test-image.jpg",
+                  "description": "Remplacer par le chemin d'un fichier de test"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/conversations/upload",
+              "host": ["{{base_url}}"],
+              "path": ["conversations", "upload"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', () => {",
+                  "    pm.expect(pm.response.code).to.eql(201);",
+                  "});",
+                  "",
+                  "pm.test('File uploaded successfully', () => {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.data).to.have.property('file');",
+                  "    pm.expect(response.data.file).to.have.property('url');",
+                  "    pm.expect(response.data.file).to.have.property('type');",
+                  "    pm.expect(response.data.file).to.have.property('size');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "🗑️ Supprimer un fichier",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"publicId\": \"conversation_{{conversation_id}}_test-image.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/conversations/files",
+              "host": ["{{base_url}}"],
+              "path": ["conversations", "files"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.expect(pm.response.code).to.eql(200);",
+                  "});",
+                  "",
+                  "pm.test('File deleted successfully', () => {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.data).to.have.property('deleted');",
+                  "    pm.expect(response.data.deleted).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "🔒 Tests de sécurité",
+      "item": [
+        {
+          "name": "🚨 Test XSS - Script injection",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"conversationId\": \"{{conversation_id}}\",\n    \"content\": \"<script>alert('XSS Attack')</script><img src=x onerror=alert('XSS')><iframe src=javascript:alert('XSS')>\",\n    \"messageType\": \"TEXT\",\n    \"attachments\": [],\n    \"orderId\": null\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/conversations/messages/send",
+              "host": ["{{base_url}}"],
+              "path": ["conversations", "messages", "send"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', () => {",
+                  "    pm.expect(pm.response.code).to.eql(201);",
+                  "});",
+                  "",
+                  "pm.test('XSS protection - all dangerous tags removed', () => {",
+                  "    const response = pm.response.json();",
+                  "    const content = response.data.message.content;",
+                  "    ",
+                  "    // Vérifier que les tags dangereux sont supprimés",
+                  "    pm.expect(content).to.not.include('<script>');",
+                  "    pm.expect(content).to.not.include('</script>');",
+                  "    pm.expect(content).to.not.include('onerror');",
+                  "    pm.expect(content).to.not.include('iframe');",
+                  "    pm.expect(content).to.not.include('javascript:');",
+                  "    ",
+                  "    console.log('XSS Protection Test - Content sanitized:', content);",
+                  "});",
+                  "",
+                  "pm.test('Content is safe HTML', () => {",
+                  "    const response = pm.response.json();",
+                  "    const content = response.data.message.content;",
+                  "    ",
+                  "    // Le contenu doit être sécurisé mais lisible",
+                  "    pm.expect(content.length).to.be.greaterThan(0);",
+                  "    pm.expect(typeof content).to.eql('string');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "🚫 Test validation - Accès non autorisé",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/conversations/invalid-conversation-id/messages",
+              "host": ["{{base_url}}"],
+              "path": ["conversations", "invalid-conversation-id", "messages"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404 or 403', () => {",
+                  "    pm.expect([404, 403]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "pm.test('Error response has proper structure', () => {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response).to.have.property('success');",
+                  "    pm.expect(response.success).to.be.false;",
+                  "    pm.expect(response).to.have.property('message');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "📏 Test validation - Message trop long",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"conversationId\": \"{{conversation_id}}\",\n    \"content\": \"Ce message est beaucoup trop long et devrait être tronqué par le système de sécurité. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur. Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur.\",\n    \"messageType\": \"TEXT\",\n    \"attachments\": [],\n    \"orderId\": null\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/conversations/messages/send",
+              "host": ["{{base_url}}"],
+              "path": ["conversations", "messages", "send"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', () => {",
+                  "    pm.expect(pm.response.code).to.eql(201);",
+                  "});",
+                  "",
+                  "pm.test('Message length validation', () => {",
+                  "    const response = pm.response.json();",
+                  "    const content = response.data.message.content;",
+                  "    ",
+                  "    // Le message doit être tronqué à 2000 caractères",
+                  "    pm.expect(content.length).to.be.lte(2000);",
+                  "    pm.expect(content).to.include('[message tronqué]');",
+                  "    ",
+                  "    console.log('Message truncated to:', content.length, 'characters');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "🌐 Tests d'internationalisation",
+      "item": [
+        {
+          "name": "🇫🇷 Test avec langue française",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr-FR"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"conversationId\": \"{{conversation_id}}\",\n    \"content\": \"Bonjour, je voudrais plus d'informations sur vos produits.\",\n    \"messageType\": \"TEXT\",\n    \"attachments\": [],\n    \"orderId\": null\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/conversations/messages/send",
+              "host": ["{{base_url}}"],
+              "path": ["conversations", "messages", "send"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', () => {",
+                  "    pm.expect(pm.response.code).to.eql(201);",
+                  "});",
+                  "",
+                  "pm.test('French response message', () => {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.message).to.include('envoyé');",
+                  "    console.log('French message:', response.message);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "🇬🇧 Test avec langue anglaise",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en-US"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"content\": \"Hello, I would like more information about your products.\",\n    \"conversationId\": \"{{conversation_id}}\",\n    \"messageType\": \"TEXT\",\n    \"attachments\": [],\n    \"orderId\": null\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/conversations/messages/send",
+              "host": ["{{base_url}}"],
+              "path": ["conversations", "messages", "send"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', () => {",
+                  "    pm.expect(pm.response.code).to.eql(201);",
+                  "});",
+                  "",
+                  "pm.test('English response message', () => {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.message).to.include('sent');",
+                  "    console.log('English message:', response.message);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -12,4 +12,8 @@ export const {
   markMessageAsRead,
   deleteMessage,
   getUnreadCount,
+  generatePresignedUploadUrl,
+  uploadFileToConversation,
+  sendMessageWithFile,
+  deleteConversationFile,
 } = conversation_controller;

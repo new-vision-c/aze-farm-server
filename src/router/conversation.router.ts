@@ -1,19 +1,58 @@
 import { Router } from 'express';
 import { body, param, query } from 'express-validator';
+import multer, { type FileFilterCallback } from 'multer';
 
 import {
   createOrGetConversation,
+  deleteConversationFile,
   deleteMessage,
+  generatePresignedUploadUrl,
   getConversationMessages,
   getUnreadCount,
   getUserConversations,
   markMessageAsRead,
   sendMessage,
+  sendMessageWithFile,
+  uploadFileToConversation,
 } from '@/controllers/conversation';
 import { isAuthenticated } from '@/middlewares/auth';
 import { validateRequest } from '@/middlewares/validator.middleware';
+import type { AuthenticatedRequest } from '@/types/express';
 
 const router = Router();
+
+// Configuration Multer pour l'upload de fichiers
+const _upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 50 * 1024 * 1024, // 50MB max
+  },
+  fileFilter: (req: AuthenticatedRequest, file: Express.Multer.File, cb: FileFilterCallback) => {
+    // Types MIME autorisés
+    const allowedMimes = [
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+      'audio/mpeg',
+      'audio/wav',
+      'audio/ogg',
+      'audio/mp4',
+      'video/mp4',
+      'video/webm',
+      'video/quicktime',
+      'application/pdf',
+      'text/plain',
+      'text/csv',
+    ];
+
+    if (allowedMimes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Type de fichier non autorisé'));
+    }
+  },
+});
 
 // Middleware d'authentification pour toutes les routes
 router.use(isAuthenticated);
@@ -147,6 +186,91 @@ router.delete(
   [param('messageId').isMongoId().withMessage("L'ID du message est invalide")],
   validateRequest,
   deleteMessage,
+);
+
+/**
+ * @route   POST /api/conversations/upload-url
+ * @desc    Générer une URL présignée pour l'upload de fichiers
+ * @access  Private
+ */
+router.post(
+  '/upload-url',
+  [
+    body('filename')
+      .notEmpty()
+      .withMessage('Le nom du fichier est requis')
+      .isLength({ min: 1, max: 255 })
+      .withMessage('Le nom du fichier doit contenir entre 1 et 255 caractères'),
+    body('conversationId')
+      .notEmpty()
+      .withMessage("L'ID de la conversation est requis")
+      .isMongoId()
+      .withMessage("L'ID de la conversation est invalide"),
+    body('expiresIn')
+      .optional()
+      .isInt({ min: 60, max: 3600 })
+      .withMessage("La durée d'expiration doit être entre 60 et 3600 secondes"),
+  ],
+  validateRequest,
+  generatePresignedUploadUrl,
+);
+
+/**
+ * @route   POST /api/conversations/upload
+ * @desc    Upload direct de fichiers dans une conversation
+ * @access  Private
+ */
+router.post(
+  '/upload',
+  _upload.single('file'),
+  [
+    body('conversationId')
+      .notEmpty()
+      .withMessage("L'ID de la conversation est requis")
+      .isMongoId()
+      .withMessage("L'ID de la conversation est invalide"),
+  ],
+  validateRequest,
+  uploadFileToConversation,
+);
+
+/**
+ * @route   POST /api/conversations/:conversationId/messages-with-file
+ * @desc    Envoyer un message avec fichier (style WhatsApp)
+ * @access  Private
+ */
+router.post(
+  '/:conversationId/messages-with-file',
+  _upload.single('file'),
+  [
+    param('conversationId').isMongoId().withMessage("L'ID de la conversation est invalide"),
+    body('content')
+      .optional()
+      .isString()
+      .withMessage('Le contenu doit être une chaîne de caractères')
+      .isLength({ max: 2000 })
+      .withMessage('Le contenu ne peut pas dépasser 2000 caractères'),
+  ],
+  validateRequest,
+  sendMessageWithFile,
+);
+
+/**
+ * @route   DELETE /api/conversations/files
+ * @desc    Supprimer un fichier d'une conversation
+ * @access  Private
+ */
+router.delete(
+  '/files',
+  [
+    body('publicId')
+      .notEmpty()
+      .withMessage("L'identifiant public du fichier est requis")
+      .isString()
+      .withMessage("L'identifiant public doit être une chaîne de caractères"),
+  ],
+  validateRequest,
+  deleteConversationFile,
 );
 
 export default router;

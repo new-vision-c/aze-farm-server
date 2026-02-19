@@ -4,6 +4,7 @@ import { envs } from '@/config/env/env';
 import CSP from '@/router/_config/CSP/csp.router';
 import CSRF from '@/router/_config/CSRF-token/csrf.router';
 import health from '@/router/_config/healtcheck/health.router';
+import conversationRouter from '@/router/conversation.router';
 import auth from '@/router/users/auth.router';
 import locationRouter from '@/router/users/location.router';
 import oauth from '@/router/users/oauth.router';
@@ -35,6 +36,7 @@ const setupRoutes = (app: Express): void => {
   api.use('/auth', rateLimitingSubRoute, auth);
   api.use('/auth/oauth', rateLimitingSubRoute, oauth);
   api.use('/example', rateLimitingSubRoute, exampleRouter);
+  api.use('/conversations', rateLimitingSubRoute, conversationRouter);
   api.use('/farms', rateLimitingSubRoute, farmRouter);
   api.use('/products', rateLimitingSubRoute, productRouter);
   api.use('/users', rateLimitingSubRoute, users);
