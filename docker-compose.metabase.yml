@@ -1,0 +1,175 @@
+# =====================================================================================================
+# DOCKER COMPOSE METABASE - Business Intelligence Stack
+# =====================================================================================================
+# Fichier dédié à Metabase et sa base PostgreSQL
+# S'inspire de l'architecture monitoring existante (Prometheus/Grafana/Loki)
+# =====================================================================================================
+
+services:
+  # ----------------------------------------------------------------------------------------------------
+  # METABASE - Plateforme Business Intelligence
+  # ----------------------------------------------------------------------------------------------------
+  metabase:
+    image: metabase/metabase:latest
+    container_name: ${METABASE_NAME:-metabase_bi}
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # Configuration base de données PostgreSQL
+      MB_DB_TYPE: postgres
+      MB_DB_DBNAME: ${METABASE_DB_NAME:-metabase}
+      MB_DB_PORT: ${METABASE_DB_PORT:-5432}
+      MB_DB_USER: ${METABASE_DB_USER:-metabase}
+      MB_DB_PASS: ${METABASE_DB_PASSWORD}
+      MB_DB_HOST: ${METABASE_DB_HOST:-postgres-metabase}
+      
+      # Configuration site Metabase
+      MB_SITE_URL: ${METABASE_SITE_URL:-http://localhost:3002}
+      MB_SITE_NAME: ${METABASE_SITE_NAME:-Aze Farm Analytics}
+      
+      # Configuration sécurité
+      MB_ADMIN_EMAIL: ${METABASE_ADMIN_EMAIL:-admin@azefarm.com}
+      MB_ADMIN_PASSWORD: ${METABASE_ADMIN_PASSWORD}
+      
+      # Configuration application
+      MB_JETTY_HOST: 0.0.0.0
+      MB_JETTY_PORT: 3000
+      
+      # Configuration emails (optionnel)
+      MB_EMAIL_FROM_ADDRESS: ${METABASE_EMAIL_FROM:-noreply@azefarm.com}
+      MB_EMAIL_SMTP_HOST: ${SMTP_HOST:-mailhog}
+      MB_EMAIL_SMTP_PORT: ${SMTP_PORT:-1025}
+      
+      # Configuration MongoDB pour connexion source de données
+      # Ces variables seront utilisées lors de la configuration de la source de données
+      MONGO_HOST: ${MONGO_HOST:-mongo}
+      MONGO_PORT: ${MONGO_PORT:-27017}
+      MONGO_DB: ${MONGO_DB:-appDB}
+      MONGO_USER: ${MONGO_USER:-admin}
+      MONGO_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_REPLICA_SET: ${MONGO_REPLICA_SET:-rs0}
+      MONGO_AUTH_SOURCE: ${MONGO_AUTH_SOURCE:-admin}
+    
+    ports:
+      - '${METABASE_PORT:-3002}:3000'
+    
+    networks:
+      - backend_network
+    
+    depends_on:
+      postgres-metabase:
+        condition: service_healthy
+    
+    volumes:
+      - metabase_data:/metabase-data
+    
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/api/health']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    
+    labels:
+      - 'prometheus.scrape=true'
+      - 'prometheus.port=3000'
+      - 'prometheus.path=/api/health'
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.metabase.rule=Host(`metabase.localhost`)'
+      - 'traefik.http.services.metabase.loadbalancer.server.port=3000'
+
+  # ----------------------------------------------------------------------------------------------------
+  # POSTGRES METABASE - Base de données dédiée pour Metabase
+  # ----------------------------------------------------------------------------------------------------
+  postgres-metabase:
+    image: postgres:15-alpine
+    container_name: ${METABASE_POSTGRES_NAME:-postgres_metabase}
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_DB: ${METABASE_DB_NAME:-metabase}
+      POSTGRES_USER: ${METABASE_DB_USER:-metabase}
+      POSTGRES_PASSWORD: ${METABASE_DB_PASSWORD}
+      POSTGRES_INITDB_ARGS: '--encoding=UTF-8 --lc-collate=C --lc-ctype=C'
+      
+      # Configuration optimisée pour Metabase
+      POSTGRES_SHARED_PRELOAD_LIBRARIES: pg_stat_statements
+      POSTGRES_TRACK_ACTIVITY_QUERY_SIZE: 2048
+      POSTGRES_MAX_CONNECTIONS: 200
+    
+    volumes:
+      - metabase_postgres_data:/var/lib/postgresql/data
+      - ./scripts/metabase-init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    
+    networks:
+      - backend_network
+    
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${METABASE_DB_USER:-metabase} -d ${METABASE_DB_NAME:-metabase}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    
+    labels:
+      - 'prometheus.scrape=true'
+      - 'prometheus.port=5432'
+      - 'backup.enabled=true'
+      - 'backup.schedule=0 2 * * *'
+      - 'backup.retention=7d'
+
+# =====================================================================================================
+# VOLUMES PERSISTANTS
+# =====================================================================================================
+volumes:
+  # Volume pour les données Metabase (configurations, dashboards, etc.)
+  metabase_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${METABASE_DATA_PATH:-./data/metabase}
+  
+  # Volume pour la base PostgreSQL Metabase
+  metabase_postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${METABASE_POSTGRES_DATA_PATH:-./data/metabase-postgres}
+
+# =====================================================================================================
+# RÉSEAUX
+# =====================================================================================================
+networks:
+  backend_network:
+    external: true
+    name: ${BACKEND_NETWORK_NAME:-backend_network}
+
+# =====================================================================================================
+# NOTES DE CONFIGURATION
+# =====================================================================================================
+# 
+# 1. Variables d'environnement requises dans .env :
+#    - METABASE_DB_PASSWORD: Mot de passe PostgreSQL Metabase
+#    - METABASE_ADMIN_PASSWORD: Mot de passe admin Metabase
+#
+# 2. Prérequis :
+#    - Le réseau backend_network doit exister
+#    - MongoDB doit être accessible avec les identifiants fournis
+#
+# 3. Première utilisation :
+#    - docker-compose -f docker-compose.metabase.yml up -d
+#    - Accéder à http://localhost:3002
+#    - Suivre l'assistant de configuration initiale
+#
+# 4. Connexion MongoDB :
+#    - Type: MongoDB
+#    - Host: mongo (ou ${MONGO_HOST})
+#    - Port: 27017 (ou ${MONGO_PORT})
+#    - Database: appDB (ou ${MONGO_DB})
+#    - Username: admin (ou ${MONGO_USER})
+#    - Password: ${MONGO_PASSWORD}
+#    - Authentication Database: admin (ou ${MONGO_AUTH_SOURCE})
+#    - Replica Set: rs0 (ou ${MONGO_REPLICA_SET})
+#
+# =====================================================================================================
