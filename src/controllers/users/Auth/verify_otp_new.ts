@@ -48,13 +48,13 @@ const verifyOtp = asyncHandler(
         return response.badRequest(req, res, result.message);
       }
 
-      // Générer les tokens avec le système existant
+      // Générer les tokens et mettre les cookies SEULEMENT si succès réel
       const accessToken = result.token; // Token déjà généré par le service
       const refreshToken = userToken.refreshToken(result.user);
 
       // Set cookies
       res.setHeader('authorization', `Bearer ${accessToken}`);
-      setSafeCookie(res, envs.JWT_SECRET, refreshToken, {
+      setSafeCookie(res, 'refresh_token', refreshToken, {
         secure: envs.COOKIE_SECURE as boolean,
         httpOnly: envs.JWT_COOKIE_SECURITY as boolean,
         sameSite: envs.COOKIE_SAME_SITE as 'strict' | 'lax' | 'none',

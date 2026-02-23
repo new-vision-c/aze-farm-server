@@ -39,7 +39,7 @@ const login = asyncHandler(async (req: Request, res: Response): Promise<void | R
     await prisma.$transaction(async (_tx) => {
       // Set cookies
       res.setHeader('authorization', `Bearer ${accessToken}`);
-      setSafeCookie(res, envs.JWT_SECRET, refreshToken, {
+      setSafeCookie(res, 'refresh_token', refreshToken, {
         secure: envs.COOKIE_SECURE as boolean,
         httpOnly: envs.JWT_COOKIE_SECURITY as boolean,
         sameSite: envs.COOKIE_SAME_SITE as 'strict' | 'lax' | 'none',
