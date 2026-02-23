@@ -48,6 +48,11 @@ export const fr = {
   'validation.errors.invalid_page': 'Le numéro de page doit être un entier positif',
   'validation.errors.invalid_limit': 'La limite doit être un entier entre 1 et 50',
 
+  // Notifications
+  'notification.new_message': 'Nouveau message de {{senderName}}',
+  'notification.message_preview': '{{preview}}',
+  'notification.send_failed': "Erreur lors de l'envoi de la notification push",
+
   // Messages système
   'conversation.system.new_message': 'Nouveau message',
   'conversation.system.messages_unread': '{{count}} message(s) non lu(s)',

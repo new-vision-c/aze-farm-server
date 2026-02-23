@@ -38,6 +38,11 @@ export const en = {
   'message.errors.delete_failed': 'Error deleting message',
   'message.errors.unread_count_failed': 'Error retrieving unread messages count',
 
+  // Notifications
+  'notification.new_message': 'New message from {{senderName}}',
+  'notification.message_preview': '{{preview}}',
+  'notification.send_failed': 'Error sending push notification',
+
   // System messages
   'conversation.system.new_message': 'New message',
   'conversation.system.messages_unread': '{{count}} unread message(s)',

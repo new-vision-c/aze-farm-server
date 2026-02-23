@@ -1,9 +1,13 @@
 import type { Request, Response } from 'express';
 
 import prisma from '@/config/prisma/prisma';
+import { NotificationService } from '@/services/notification/NotificationService';
 import { asyncHandler, response } from '@/utils/responses/helpers';
 
 import { ConversationSecurityService, conversationI18n } from '../services';
+
+// Instance du service de notification
+const notificationService = new NotificationService(prisma);
 
 //& Envoyer un message dans une conversation
 const sendMessage = asyncHandler(
@@ -98,8 +102,25 @@ const sendMessage = asyncHandler(
       const recipientId =
         conversation.consumerId === userId ? conversation.farmId : conversation.consumerId;
 
-      // TODO: Intégrer NotificationService avec payload sécurisé
-      console.log(`Notification sécurisée préparée pour l'utilisateur ${recipientId}`);
+      // Envoyer la notification push via le NotificationService
+      const senderName = message.sender.fullname || "Quelqu'un";
+      const messagePreview =
+        sanitizedContent.length > 50 ? `${sanitizedContent.substring(0, 50)}...` : sanitizedContent;
+
+      // Envoyer la notification (async - ne bloque pas la réponse)
+      notificationService
+        .sendMessageNotification(
+          recipientId,
+          senderName,
+          messagePreview,
+          conversationId,
+          // Note: Le playerId devrait être récupéré depuis le profil utilisateur
+          // Pour l'instant, on envoie sans playerId (la notification sera enregistrée en DB)
+          undefined,
+        )
+        .catch((error) => {
+          console.error("Erreur lors de l'envoi de la notification push:", error);
+        });
 
       return response.created(
         req,
