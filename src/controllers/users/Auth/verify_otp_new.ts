@@ -1,9 +1,13 @@
 import type { Request, Response } from 'express';
 
+import { envs } from '@/config/env/env';
 import prisma from '@/config/prisma/prisma';
 import { AuthService } from '@/services/AuthService';
 import { I18nService } from '@/services/I18nService';
+import userToken from '@/services/jwt/functions-jwt';
+import log from '@/services/logging/logger';
 import { asyncHandler, response } from '@/utils/responses/helpers';
+import setSafeCookie from '@/utils/setSafeCookie';
 
 //& Vérification OTP (Étape 2)
 const verifyOtp = asyncHandler(
@@ -44,13 +48,29 @@ const verifyOtp = asyncHandler(
         return response.badRequest(req, res, result.message);
       }
 
+      // Générer les tokens avec le système existant
+      const accessToken = result.token; // Token déjà généré par le service
+      const refreshToken = userToken.refreshToken(result.user);
+
+      // Set cookies
+      res.setHeader('authorization', `Bearer ${accessToken}`);
+      setSafeCookie(res, envs.JWT_SECRET, refreshToken, {
+        secure: envs.COOKIE_SECURE as boolean,
+        httpOnly: envs.JWT_COOKIE_SECURITY as boolean,
+        sameSite: envs.COOKIE_SAME_SITE as 'strict' | 'lax' | 'none',
+      });
+      log.info('Set authorization header and refresh token cookie for OTP verification', {
+        email: result.user.email,
+      });
+
       return response.success(
         req,
         res,
         {
           step: result.step,
           user: result.user,
-          token: result.token,
+          token: accessToken,
+          refreshToken,
           registrationCompleted: result.registrationCompleted,
           nextAction: result.nextAction,
           message: result.message,
