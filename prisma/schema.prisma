@@ -206,8 +206,30 @@ enum NotificationRelatedType {
   MESSAGE
 }
 
+enum VendorType {
+  AGRICULTEUR
+  REVENDEUR
+  COOPERATIVE
+}
+
+// Type d'objet pour les horaires (Flow 4 & 7)
+type OpeningHours {
+  day       Int // 0 = Dimanche, 1 = Lundi, etc.
+  openTime  String // format "HH:mm"
+  closeTime String // format "HH:mm"
+  isClosed  Boolean
+}
+
 // =====================================================================================================
-// ÉNUMÉRATIONS - CONVERSATIONS
+// ÉNUMÉRATIONS - RETRAIT ET PAIEMENTS
+// =====================================================================================================
+enum WithdrawalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
 // =====================================================================================================
 enum ConversationStatus {
   ACTIVE
@@ -233,25 +255,37 @@ model Farm {
   geoLocation GeoPoint?
   siret       String?   @unique
   images      String[] // URLs des images
-  isActive    Boolean   @default(true)
-  ratingAvg   Float     @default(0)
-  ratingCount Int       @default(0)
+
+  // --- Nouveaux champs Vendeur ---
+  vendorType   VendorType     @default(AGRICULTEUR)
+  isOpen       Boolean        @default(true)
+  openingHours OpeningHours[]
+
+  // --- Infos de retrait / Paiement ---
+  payoutMethod MobilePaymentMethod @default(ORANGE_MONEY)
+  payoutNumber String?
+  payoutName   String?
+
+  isActive    Boolean @default(true)
+  ratingAvg   Float   @default(0)
+  ratingCount Int     @default(0)
 
   // Relations
-  farmerId      String         @unique @db.ObjectId
-  farmer        users          @relation(fields: [farmerId], references: [user_id])
-  products      Product[]
-  orders        Order[]
-  deliveryZones DeliveryZone[]
-  ratings       FarmRating[]
-  conversations Conversation[] @relation("FarmConversations")
-  messages      Message[]
+  farmerId           String              @unique @db.ObjectId
+  farmer             users               @relation(fields: [farmerId], references: [user_id])
+  products           Product[]
+  orders             Order[]
+  deliveryZones      DeliveryZone[]
+  ratings            FarmRating[]
+  conversations      Conversation[]      @relation("FarmConversations")
+  messages           Message[]
+  withdrawalRequests WithdrawalRequest[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // --- Indexes ---
-  @@index([isActive])
+  @@index([isActive, isOpen])
   @@index([ratingAvg])
   @@map("farms")
 }
@@ -262,14 +296,18 @@ type GeoPoint {
 }
 
 model Product {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
   name        String
   description String
   price       Float // Decimal géré comme Float dans MongoDB
   unit        String // "kg", "unité", "botte", etc.
-  stock       Int      @default(0)
+  stock       Int    @default(0)
   category    String // Enum géré côté application ou String[]
-  isAvailable Boolean  @default(true)
+
+  // --- États spécifiques ---
+  isAvailable       Boolean @default(true)
+  lowStockThreshold Int     @default(5)
+
   seasonality Int[] // [6, 7, 8] pour juin-août
   images      String[] // URLs
 
@@ -284,10 +322,8 @@ model Product {
   updatedAt DateTime @updatedAt
 
   // --- Indexes ---
-  @@index([farmId])
+  @@index([farmId, isAvailable])
   @@index([category])
-  @@index([isAvailable])
-  @@index([price])
   @@map("products")
 }
 
@@ -540,6 +576,25 @@ model Notification {
 
   @@index([userId, isRead]) // Pour requête "mes notifications non lues"
   @@map("notifications")
+}
+
+// =====================================================================================================
+// WITHDRAWAL REQUEST MODEL (Demandes de retrait pour les fermes)
+// =====================================================================================================
+model WithdrawalRequest {
+  id          String              @id @default(auto()) @map("_id") @db.ObjectId
+  amount      Float
+  status      WithdrawalStatus    @default(PENDING)
+  method      MobilePaymentMethod
+  phoneNumber String
+
+  farmId String @db.ObjectId
+  farm   Farm   @relation(fields: [farmId], references: [id])
+
+  createdAt   DateTime  @default(now())
+  processedAt DateTime?
+
+  @@map("withdrawal_requests")
 }
 
 // =====================================================================================================

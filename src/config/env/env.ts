@@ -216,4 +216,28 @@ export const envs = {
     .asString(),
 
   // ============================================
+  // Monebil Payment Configuration
+  // ============================================
+
+  // Mode de paiement: demo | test | production
+  PAYMENT_MODE: env.get('PAYMENT_MODE').default('demo').asString(),
+
+  // Clés API Monebil
+  MONEBIL_API_KEY: env.get('MONEBIL_API_KEY').default('demo_api_key').asString(),
+  MONEBIL_SECRET_KEY: env.get('MONEBIL_SECRET_KEY').default('demo_secret_key').asString(),
+  MONEBIL_BASE_URL: env.get('MONEBIL_BASE_URL').default('https://api.monebil.cm').asString(),
+
+  // Configuration des timeouts et retries
+  MONEBIL_TIMEOUT: env.get('MONEBIL_TIMEOUT').default('30000').asInt(),
+  MONEBIL_RETRY_ATTEMPTS: env.get('MONEBIL_RETRY_ATTEMPTS').default('3').asInt(),
+
+  // ============================================
+  // OneSignal Push Notification Configuration
+  // ============================================
+
+  // Clés API OneSignal
+  ONESIGNAL_APP_ID: env.get('ONESIGNAL_APP_ID').default('').asString(),
+  ONESIGNAL_REST_API_KEY: env.get('ONESIGNAL_REST_API_KEY').default('').asString(),
+
+  // ============================================
 };

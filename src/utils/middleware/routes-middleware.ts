@@ -1,3 +1,4 @@
+import { PrismaClient } from '@prisma/client';
 import { type Express, Router } from 'express';
 
 import { envs } from '@/config/env/env';
@@ -13,11 +14,15 @@ import users from '@/router/users/users.router';
 import exampleRouter from '../../router/example.router';
 import farmRouter from '../../router/farm.router';
 import favoriteRouter from '../../router/favorite.router';
+import notificationRouter from '../../router/notification.router';
+import paymentRouter from '../../router/payment.router';
 import productRouter from '../../router/product.router';
 import ratingRouter from '../../router/rating.router';
 import { rateLimitingSubRoute } from './securityConfig';
 
 const api_version = envs.API_PREFIX || '/api/v1';
+
+const prisma = new PrismaClient();
 
 const api = Router();
 
@@ -43,6 +48,9 @@ const setupRoutes = (app: Express): void => {
   api.use('/location', rateLimitingSubRoute, locationRouter);
   api.use('/', rateLimitingSubRoute, ratingRouter);
   api.use('/', rateLimitingSubRoute, favoriteRouter);
+
+  api.use('/payments', rateLimitingSubRoute, paymentRouter);
+  api.use('/notifications', rateLimitingSubRoute, notificationRouter(prisma));
 
   app.use(api_version, api);
 };
