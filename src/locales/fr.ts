@@ -21,6 +21,8 @@ export const fr = {
     verification_success: 'Compte vérifié avec succès',
     user_already_verified: 'Utilisateur déjà vérifié',
     already_verified: 'Votre compte est déjà vérifié. Vous pouvez vous connecter directement.',
+    already_verified_use_login:
+      'Votre compte est déjà vérifié. Veuillez utiliser la page de connexion normale.',
     otp_invalid: 'Code OTP invalide',
     otp_expired: 'Le code OTP a expiré',
     user_not_authenticated: 'Utilisateur non authentifié',

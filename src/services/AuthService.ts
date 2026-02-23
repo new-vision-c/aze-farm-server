@@ -23,6 +23,7 @@ export interface AuthResponse {
   otpCode?: string;
   registrationCompleted?: boolean;
   nextAction?: string;
+  requiresLogin?: boolean;
 }
 
 export class AuthService {
@@ -209,35 +210,13 @@ export class AuthService {
 
       // Vérifier si l'utilisateur est déjà vérifié
       if (user.is_verified && user.is_active) {
-        // Générer un nouveau token de login si déjà vérifié
-        const loginToken = jwt.sign(
-          {
-            userId: user.user_id,
-            email: user.email,
-            fullname: user.fullname,
-            role: user.role,
-            step: 'authenticated',
-            type: 'login',
-          },
-          process.env.JWT_SECRET || 'your-secret-key',
-          { expiresIn: '7d' },
-        );
-
+        // L'utilisateur est déjà vérifié, il doit utiliser la page login normale
+        // pour des raisons de sécurité (éviter la génération de tokens avec un sessionToken volé)
         return {
-          success: true,
-          step: 2,
-          user: {
-            user_id: user.user_id,
-            email: user.email,
-            fullname: user.fullname,
-            role: user.role,
-            is_verified: true,
-            is_active: true,
-          },
-          token: loginToken,
-          message: this.i18nService.translate('auth.already_verified', language),
-          registrationCompleted: true,
-          nextAction: 'redirect_to_dashboard',
+          success: false,
+          step: 1,
+          message: this.i18nService.translate('auth.already_verified_use_login', language),
+          requiresLogin: true,
         };
       }
 
