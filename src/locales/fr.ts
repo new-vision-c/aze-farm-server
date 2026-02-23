@@ -20,6 +20,7 @@ export const fr = {
     access_denied: 'Accès refusé',
     verification_success: 'Compte vérifié avec succès',
     user_already_verified: 'Utilisateur déjà vérifié',
+    already_verified: 'Votre compte est déjà vérifié. Vous pouvez vous connecter directement.',
     otp_invalid: 'Code OTP invalide',
     otp_expired: 'Le code OTP a expiré',
     user_not_authenticated: 'Utilisateur non authentifié',
