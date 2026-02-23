@@ -45,7 +45,7 @@ export class AuthService {
       const { fullname, email, password } = data;
 
       // Vérifier si l'email existe déjà
-      const existingUser = await this.prisma.users.findFirst({
+      const existingUser = await this.prisma.users.findUnique({
         where: { email, is_deleted: false },
       });
 

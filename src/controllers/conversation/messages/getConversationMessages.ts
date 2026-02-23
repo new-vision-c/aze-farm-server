@@ -7,7 +7,7 @@ import { asyncHandler, response } from '@/utils/responses/helpers';
 const getConversationMessages = asyncHandler(
   async (req: Request, res: Response): Promise<void | Response<any>> => {
     try {
-      const userId = (req as any).user?.id;
+      const userId = (req as any).user?.userId;
       const { conversationId } = req.params;
       const { page = 1, limit = 20 } = req.query;
       const skip = (Number(page) - 1) * Number(limit);

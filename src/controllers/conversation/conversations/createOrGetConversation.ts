@@ -9,7 +9,7 @@ import { conversationI18n } from '../services';
 const createOrGetConversation = asyncHandler(
   async (req: Request, res: Response): Promise<void | Response<any>> => {
     try {
-      const userId = (req as any).user?.id;
+      const userId = (req as any).user?.userId;
       const { farmId, initialMessage, orderId } = req.body;
 
       if (!userId || !farmId) {
@@ -23,15 +23,6 @@ const createOrGetConversation = asyncHandler(
       // Vérifier que la ferme existe
       const farm = await prisma.farm.findUnique({
         where: { id: farmId },
-        include: {
-          farmer: {
-            select: {
-              user_id: true,
-              fullname: true,
-              avatar_url: true,
-            },
-          },
-        },
       });
 
       if (!farm) {

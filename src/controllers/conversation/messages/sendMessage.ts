@@ -9,10 +9,10 @@ import { ConversationSecurityService, conversationI18n } from '../services';
 const sendMessage = asyncHandler(
   async (req: Request, res: Response): Promise<void | Response<any>> => {
     try {
-      const userId = (req as any).user?.id;
+      const userId = (req as any).user?.userId;
       const { conversationId, content, messageType = 'TEXT', attachments, orderId } = req.body;
 
-      if (!userId || !conversationId || !content) {
+      if (!userId || !conversationId || !content?.trim()) {
         return response.badRequest(
           req,
           res,

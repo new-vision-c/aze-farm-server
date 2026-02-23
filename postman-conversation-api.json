@@ -538,6 +538,126 @@
               }
             }
           ]
+        },
+        {
+          "name": "📤 Envoyer un message avec fichier (multipart/form-data)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "conversationId",
+                  "value": "{{conversation_id}}",
+                  "type": "text"
+                },
+                {
+                  "key": "content",
+                  "value": "Voici une photo de mes produits",
+                  "type": "text"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "/path/to/your/test-image.jpg",
+                  "description": "Remplacer par le chemin d'un fichier de test"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/conversations/{{conversation_id}}/messages-with-file",
+              "host": ["{{base_url}}"],
+              "path": ["conversations", "{{conversation_id}}", "messages-with-file"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', () => {",
+                  "    pm.expect(pm.response.code).to.eql(201);",
+                  "});",
+                  "",
+                  "pm.test('Message with file created successfully', () => {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.data).to.have.property('message');",
+                  "    pm.expect(response.data.message).to.have.property('content');",
+                  "    pm.expect(response.data.message).to.have.property('messageType');",
+                  "    pm.expect(response.data.message).to.have.property('attachments');",
+                  "    pm.expect(Array.isArray(response.data.message.attachments)).to.be.true;",
+                  "    pm.expect(response.data.message.attachments[0]).to.be.a('string');",
+                  "});",
+                  "",
+                  "pm.test('File data is included', () => {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.data).to.have.property('file');",
+                  "    pm.expect(response.data.file).to.have.property('url');",
+                  "    pm.expect(response.data.file).to.have.property('type');",
+                  "    pm.expect(response.data.file).to.have.property('size');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "📤 Upload direct de fichier",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "conversationId",
+                  "value": "{{conversation_id}}",
+                  "type": "text"
+                },
+                {
+                  "key": "content",
+                  "value": "Fichier partagé",
+                  "type": "text"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "/path/to/your/test-document.pdf",
+                  "description": "Remplacer par le chemin d'un fichier de test"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/conversations/upload",
+              "host": ["{{base_url}}"],
+              "path": ["conversations", "upload"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', () => {",
+                  "    pm.expect(pm.response.code).to.eql(201);",
+                  "});",
+                  "",
+                  "pm.test('File uploaded and message created', () => {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.data).to.have.property('message');",
+                  "    pm.expect(response.data.message).to.have.property('content');",
+                  "    pm.expect(response.data.message.content).to.include('📎');",
+                  "    pm.expect(response.data).to.have.property('file');",
+                  "    pm.expect(response.data.file).to.have.property('url');",
+                  "    pm.expect(response.data.file).to.have.property('type');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         }
       ]
     },

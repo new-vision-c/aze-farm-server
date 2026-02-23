@@ -7,7 +7,7 @@ import { asyncHandler, response } from '@/utils/responses/helpers';
 const deleteMessage = asyncHandler(
   async (req: Request, res: Response): Promise<void | Response<any>> => {
     try {
-      const userId = (req as any).user?.id;
+      const userId = (req as any).user?.userId;
       const { messageId } = req.params;
 
       if (!userId || !messageId) {

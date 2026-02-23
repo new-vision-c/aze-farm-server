@@ -75,7 +75,13 @@ router.post(
       .trim()
       .isLength({ min: 1, max: 1000 })
       .withMessage('Le message doit contenir entre 1 et 1000 caractères'),
-    body('orderId').optional().isMongoId().withMessage("L'ID de la commande est invalide"),
+    body('orderId')
+      .optional()
+      .custom((value) => {
+        if (value === null || value === undefined) return true;
+        return /^[0-9a-fA-F]{24}$/.test(value);
+      })
+      .withMessage("L'ID de la commande est invalide"),
   ],
   validateRequest,
   createOrGetConversation,
@@ -158,7 +164,13 @@ router.post(
       .optional()
       .isURL()
       .withMessage('Chaque pièce jointe doit être une URL valide'),
-    body('orderId').optional().isMongoId().withMessage("L'ID de la commande est invalide"),
+    body('orderId')
+      .optional()
+      .custom((value) => {
+        if (value === null || value === undefined) return true;
+        return /^[0-9a-fA-F]{24}$/.test(value);
+      })
+      .withMessage("L'ID de la commande est invalide"),
   ],
   validateRequest,
   sendMessage,

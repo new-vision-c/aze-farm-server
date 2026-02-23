@@ -7,7 +7,7 @@ import { asyncHandler, response } from '@/utils/responses/helpers';
 const getUserConversations = asyncHandler(
   async (req: Request, res: Response): Promise<void | Response<any>> => {
     try {
-      const userId = (req as any).user?.id;
+      const userId = (req as any).user?.userId;
       const { page = 1, limit = 10 } = req.query;
       const skip = (Number(page) - 1) * Number(limit);
 
@@ -35,13 +35,6 @@ const getUserConversations = asyncHandler(
                 name: true,
                 images: true,
                 description: true,
-                farmer: {
-                  select: {
-                    user_id: true,
-                    fullname: true,
-                    avatar_url: true,
-                  },
-                },
               },
             },
             messages: {
