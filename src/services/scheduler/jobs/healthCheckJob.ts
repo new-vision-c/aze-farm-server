@@ -1,3 +1,4 @@
+/* eslint-disable no-promise-executor-return */
 import axios from 'axios';
 import { MongoClient } from 'mongodb';
 import type { ScheduledTask } from 'node-cron';
@@ -102,7 +103,9 @@ export class HealthCheckJob {
     const startTime = Date.now();
     try {
       const net = await import('net');
-      const redisHost = envs.REDIS_HOST || 'localhost';
+      // En développement, utiliser localhost par défaut si pas configuré
+      const redisHost =
+        process.env.NODE_ENV === 'development' ? envs.REDIS_HOST || 'localhost' : envs.REDIS_HOST;
       const redisPort = envs.REDIS_PORT || 6379;
       const timeoutMs = 5000;
 
@@ -157,7 +160,11 @@ export class HealthCheckJob {
   private async checkAPIServer(): Promise<HealthCheckResult> {
     const startTime = Date.now();
     try {
-      const apiUrl = envs.HEALTH_CHECK_API_URL || 'https://aze-farm-api.onrender.com';
+      // En développement, utiliser l'URL locale, sinon celle configurée
+      const apiUrl =
+        process.env.NODE_ENV === 'development'
+          ? `http://localhost:${envs.PORT}${envs.API_PREFIX}/healthcheck`
+          : envs.HEALTH_CHECK_API_URL;
       const response = await axios.get(apiUrl, {
         timeout: 5000,
       });
@@ -297,7 +304,7 @@ export class HealthCheckJob {
   // Start the health check job
   start(): void {
     if (this.task) {
-      this.task.stop();
+      void this.task.stop();
     }
 
     const { schedule, options } = schedulerConfig.healthCheck;
@@ -308,7 +315,7 @@ export class HealthCheckJob {
   // Stop the health check job
   stop(): void {
     if (this.task) {
-      this.task.stop();
+      void this.task.stop();
       this.task = null;
     }
     log.info('********************HealthCheckJob stopped********************');

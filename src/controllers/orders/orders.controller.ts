@@ -4,6 +4,10 @@ import type { Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 
 import prisma from '@/config/prisma/prisma';
+import { DeliveryFeeService, type DeliveryInfo } from '@/services/delivery/DeliveryFeeService';
+import logger from '@/services/logging/logger';
+import type { MobilePaymentProvider } from '@/services/payment/MobilePaymentService';
+import { MobilePaymentService } from '@/services/payment/MobilePaymentService';
 import type { AuthenticatedRequest } from '@/types/express';
 import { asyncHandler, response } from '@/utils/responses/helpers';
 
@@ -86,6 +90,19 @@ const createOrdersFromCart = asyncHandler(
     for (const [_farmId, farmData] of Object.entries(itemsByFarm)) {
       const { farm, items, totalAmount } = farmData;
 
+      // Calculer les frais de livraison (sans poids pour l'instant)
+      const totalWeight = 0; // TODO: Ajouter le poids au modèle Product
+
+      const deliveryInfo: DeliveryInfo = {
+        farmAddress: farm.address,
+        deliveryAddress: deliveryAddress,
+        deliveryType: deliveryType,
+        totalWeight,
+        itemsCount: items.length,
+      };
+
+      const deliveryFee = DeliveryFeeService.calculateDeliveryFee(deliveryInfo);
+
       // Créer la commande
       const order = await prisma.order.create({
         data: {
@@ -118,7 +135,7 @@ const createOrdersFromCart = asyncHandler(
               type: deliveryType || 'DELIVERY',
               status: 'PENDING',
               pickupAddress: deliveryAddress,
-              deliveryFee: 0, // À calculer selon la zone
+              deliveryFee: deliveryFee,
             },
           },
           payment: {
@@ -173,6 +190,69 @@ const createOrdersFromCart = asyncHandler(
       createdOrders.push(order);
     }
 
+    // Initier les paiements pour toutes les commandes
+    const paymentResults = [];
+    for (const order of createdOrders) {
+      try {
+        const paymentRequest = {
+          amount: order.totalAmount,
+          phoneNumber: phoneNumber.replace(/\s+/g, '').replace(/[+\-()]/g, ''),
+          provider: paymentMethod as MobilePaymentProvider,
+          transactionRef: order.payment?.transactionRef || order.orderNumber,
+          description: `Paiement commande ${order.orderNumber}`,
+          callbackUrl: `${process.env.APP_URL}/api/v1/payments/callback/${order.id}`,
+        };
+
+        // Valider le numéro de téléphone
+        if (
+          !MobilePaymentService.validatePhoneNumber(
+            paymentRequest.phoneNumber,
+            paymentRequest.provider,
+          )
+        ) {
+          logger.warn('Numéro de téléphone invalide pour le paiement', {
+            phoneNumber: paymentRequest.phoneNumber,
+            provider: paymentRequest.provider,
+            orderId: order.id,
+          });
+          paymentResults.push({
+            orderId: order.id,
+            success: false,
+            message: 'Numéro de téléphone invalide pour ce provider',
+          });
+          continue;
+        }
+
+        const paymentResult = await MobilePaymentService.initiatePayment(paymentRequest);
+
+        if (paymentResult.success) {
+          // Mettre à jour le paiement en base de données
+          await prisma.mobilePayment.update({
+            where: { orderId: order.id },
+            data: {
+              status: paymentResult.status as any,
+              providerRef: paymentResult.transactionId,
+            },
+          });
+        }
+
+        paymentResults.push({
+          orderId: order.id,
+          ...paymentResult,
+        });
+      } catch (error) {
+        logger.error("Erreur lors de l'initiation du paiement pour la commande", {
+          error: error instanceof Error ? error.message : String(error),
+          orderId: order.id,
+        });
+        paymentResults.push({
+          orderId: order.id,
+          success: false,
+          message: "Erreur lors de l'initiation du paiement",
+        });
+      }
+    }
+
     // Vider le panier
     await prisma.cartItem.deleteMany({
       where: { cartId: cart.id },
@@ -193,8 +273,9 @@ const createOrdersFromCart = asyncHandler(
         orders: createdOrders,
         totalOrders: createdOrders.length,
         globalTotal: createdOrders.reduce((sum, o) => sum + o.totalAmount, 0),
+        payments: paymentResults,
       },
-      'Commandes créées avec succès',
+      'Commandes créées et paiements initiés avec succès',
     );
   },
 );

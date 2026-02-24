@@ -1,0 +1,881 @@
+{
+  "info": {
+    "_postman_id": "aze-farm-ecommerce-flow",
+    "name": "🛒 Aze Farm - Flow E-commerce Complet",
+    "description": "Collection complète pour tester le flow: Panier → Commande → Paiement → Livraison",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "YOUR_JWT_TOKEN_HERE",
+      "type": "string",
+      "description": "Token JWT - Connectez-vous d'abord via /auth/login"
+    },
+    {
+      "key": "cart_item_id",
+      "value": "",
+      "type": "string",
+      "description": "ID de l'item dans le panier (auto-généré)"
+    },
+    {
+      "key": "order_id",
+      "value": "",
+      "type": "string",
+      "description": "ID de la commande créée (auto-généré)"
+    },
+    {
+      "key": "order_number",
+      "value": "",
+      "type": "string",
+      "description": "Numéro de commande (ex: CMD-2024-000001)"
+    },
+    {
+      "key": "farm_id",
+      "value": "FARM_ID_HERE",
+      "type": "string",
+      "description": "ID d'une ferme existante avec des produits"
+    },
+    {
+      "key": "product_id_1",
+      "value": "PRODUCT_ID_1",
+      "type": "string",
+      "description": "ID premier produit à ajouter"
+    },
+    {
+      "key": "product_id_2",
+      "value": "PRODUCT_ID_2",
+      "type": "string",
+      "description": "ID second produit (optionnel, pour test multi-fermes)"
+    },
+    {
+      "key": "delivery_token",
+      "value": "",
+      "type": "string",
+      "description": "Token de confirmation livraison (6 caractères)"
+    },
+    {
+      "key": "payment_id",
+      "value": "",
+      "type": "string",
+      "description": "ID du paiement mobile créé"
+    },
+    {
+      "key": "payment_provider_ref",
+      "value": "",
+      "type": "string",
+      "description": "Token provider du paiement (OM_TOKEN_xxx, MTN_REF_xxx, etc.)"
+    }
+  ],
+  "item": [
+    {
+      "name": "🔐 AUTH - Prérequis",
+      "item": [
+        {
+          "name": "Login Client",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"client@test.com\",\n  \"password\": \"password123\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const jsonData = pm.response.json();",
+                  "if (jsonData.accessToken) {",
+                  "  pm.collectionVariables.set('jwt_token', jsonData.accessToken);",
+                  "  console.log('✅ Token JWT enregistré');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login Agriculteur",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"farmer@test.com\",\n  \"password\": \"password123\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🛒 PANIER - Gestion du Cart",
+      "item": [
+        {
+          "name": "1. Récupérer/Créer mon panier",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/cart"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Panier retourné', () => {",
+                  "  pm.expect(json).to.have.property('id');",
+                  "  pm.expect(json).to.have.property('items');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Ajouter un produit au panier",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/cart/items",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{product_id_1}}\",\n  \"quantity\": 3,\n  \"notes\": \"Bio si possible\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "if (json.id) {",
+                  "  pm.collectionVariables.set('cart_item_id', json.id);",
+                  "  console.log('✅ Item ID:', json.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3. Ajouter un second produit (multi-fermes)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/cart/items",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{product_id_2}}\",\n  \"quantity\": 2\n}"
+            }
+          }
+        },
+        {
+          "name": "4. Voir le panier complet",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/cart"
+          }
+        },
+        {
+          "name": "5. Modifier quantité d'un item",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/cart/items/{{cart_item_id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 5\n}"
+            }
+          }
+        },
+        {
+          "name": "6. Supprimer un item",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/cart/items/{{cart_item_id}}"
+          }
+        },
+        {
+          "name": "7. Vider le panier",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/cart"
+          }
+        },
+        {
+          "name": "8. Recalculer le panier",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/cart/recalculate"
+          }
+        }
+      ]
+    },
+    {
+      "name": "📦 COMMANDES - Création & Gestion",
+      "item": [
+        {
+          "name": "1. Créer commande (Paiement Orange Money)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/orders",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deliveryAddress\": \"Yaoundé, Mvan, Carrefour Jouvence\",\n  \"deliveryType\": \"DELIVERY\",\n  \"paymentMethod\": \"ORANGE_MONEY\",\n  \"phoneNumber\": \"691234567\",\n  \"deliveryNotes\": \"Sonner à l'interphone, 3ème étage\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "if (json.orders && json.orders[0]) {",
+                  "  pm.collectionVariables.set('order_id', json.orders[0].id);",
+                  "  pm.collectionVariables.set('order_number', json.orders[0].orderNumber);",
+                  "  if (json.payment) {",
+                  "    pm.collectionVariables.set('payment_id', json.payment.id);",
+                  "    pm.collectionVariables.set('payment_provider_ref', json.payment.providerRef);",
+                  "    console.log('💳 Paiement créé avec providerRef:', json.payment.providerRef);",
+                  "  }",
+                  "  console.log('✅ Commande créée:', json.orders[0].orderNumber);",
+                  "  console.log('💰 Frais livraison:', json.orders[0].delivery?.deliveryFee);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Créer commande avec PICKUP",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/orders",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deliveryAddress\": \"Ferme XYZ, Yaoundé\",\n  \"deliveryType\": \"PICKUP\",\n  \"paymentMethod\": \"MTN_MONEY\",\n  \"phoneNumber\": \"678901234\"\n}"
+            }
+          }
+        },
+        {
+          "name": "3. Créer commande avec MARKET",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/orders",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deliveryAddress\": \"Marché Mfou\",\n  \"deliveryType\": \"MARKET\",\n  \"paymentMethod\": \"WAVE\",\n  \"phoneNumber\": \"651234567\"\n}"
+            }
+          }
+        },
+        {
+          "name": "4. Liste de mes commandes (Client)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/orders"
+          }
+        },
+        {
+          "name": "5. Détail d'une commande",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/orders/{{order_id}}"
+          }
+        },
+        {
+          "name": "6. Tracking/Timeline commande",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/orders/{{order_id}}/tracking"
+          }
+        },
+        {
+          "name": "7. Annuler une commande",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/orders/{{order_id}}"
+          }
+        },
+        {
+          "name": "8. Commandes de ma ferme (Agriculteur)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/orders/farm/orders"
+          }
+        },
+        {
+          "name": "9. Mise à jour statut commande (Agriculteur)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/orders/{{order_id}}/status",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PREPARING\",\n  \"notes\": \"Commande en cours de préparation\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "💳 PAIEMENT - Mobile Money",
+      "item": [
+        {
+          "name": "Webhook Orange Money (Simulation)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/payments/webhook/orange-money",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pay_token\": \"{{payment_provider_ref}}\",\n  \"status\": \"success\",\n  \"order_id\": \"{{order_id}}\",\n  \"amount\": 15000\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Webhook traité', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Webhook MTN Money (Simulation)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/payments/webhook/mtn-money",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalId\": \"{{payment_provider_ref}}\",\n  \"status\": \"successful\",\n  \"amount\": 15000\n}"
+            }
+          }
+        },
+        {
+          "name": "Webhook Wave (Simulation)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/payments/webhook/wave",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"{{payment_provider_ref}}\",\n  \"status\": \"completed\",\n  \"amount\": 15000,\n  \"client_reference\": \"{{order_id}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Callback Paiement (Redirection)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/payments/callback/{{order_id}}?status=success&transaction_id=TXN_12345"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🚚 LIVRAISON - Confirmation",
+      "item": [
+        {
+          "name": "1. Générer token/QR confirmation (Agriculteur)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/orders/{{order_id}}/delivery/confirm",
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "if (json.data && json.data.confirmationToken) {",
+                  "  pm.collectionVariables.set('delivery_token', json.data.confirmationToken);",
+                  "  console.log('✅ Token généré:', json.data.confirmationToken);",
+                  "  console.log('📱 QR Data:', json.data.qrData);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Confirmer réception (Client avec token)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/orders/{{order_id}}/delivery/receive",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"confirmationToken\": \"{{delivery_token}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Livraison confirmée', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.data.status).to.equal('DELIVERED');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3. Confirmation échouée (token invalide)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/orders/{{order_id}}/delivery/receive",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"confirmationToken\": \"INVALID\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Token invalide rejeté', () => {",
+                  "  pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "⚠️ CAS D'ERREUR - Tests de validation",
+      "item": [
+        {
+          "name": "Panier vide - Création commande impossible",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/orders",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deliveryAddress\": \"Yaoundé\",\n  \"deliveryType\": \"DELIVERY\",\n  \"paymentMethod\": \"ORANGE_MONEY\",\n  \"phoneNumber\": \"691234567\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Panier vide rejeté', () => {",
+                  "  pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Stock insuffisant",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/cart/items",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{product_id_1}}\",\n  \"quantity\": 999999\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Stock insuffisant rejeté', () => {",
+                  "  pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Numéro téléphone invalide",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/orders",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deliveryAddress\": \"Yaoundé\",\n  \"deliveryType\": \"DELIVERY\",\n  \"paymentMethod\": \"ORANGE_MONEY\",\n  \"phoneNumber\": \"123456789\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Numéro invalide rejeté', () => {",
+                  "  pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Adresse livraison manquante",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/orders",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deliveryType\": \"DELIVERY\",\n  \"paymentMethod\": \"ORANGE_MONEY\",\n  \"phoneNumber\": \"691234567\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Adresse manquante rejetée', () => {",
+                  "  pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Type livraison invalide",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/orders",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deliveryAddress\": \"Yaoundé\",\n  \"deliveryType\": \"INVALID_TYPE\",\n  \"paymentMethod\": \"ORANGE_MONEY\",\n  \"phoneNumber\": \"691234567\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Type invalide rejeté', () => {",
+                  "  pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Annulation commande déjà confirmée",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/orders/{{order_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Si commande déjà confirmée, doit retourner erreur",
+                  "pm.test('Statut approprié', () => {",
+                  "  pm.expect([200, 400, 409]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Accès non autorisé (sans token)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/orders"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Non authentifié = 401', () => {",
+                  "  pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "🔄 FLOW COMPLET - Scénario End-to-End",
+      "item": [
+        {
+          "name": "SCÉNARIO 1: Client achète et reçu livraison",
+          "item": [
+            {
+              "name": "Étape 1: Login",
+              "request": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": "{{base_url}}/auth/login",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"client@test.com\",\n  \"password\": \"password123\"\n}"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const json = pm.response.json(); if(json.accessToken) pm.collectionVariables.set('jwt_token', json.accessToken);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Étape 2: Vider panier existant",
+              "request": {
+                "method": "DELETE",
+                "url": "{{base_url}}/cart"
+              }
+            },
+            {
+              "name": "Étape 3: Ajouter produits",
+              "request": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": "{{base_url}}/cart/items",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"productId\": \"{{product_id_1}}\",\n  \"quantity\": 2\n}"
+                }
+              }
+            },
+            {
+              "name": "Étape 4: Créer commande",
+              "request": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": "{{base_url}}/orders",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"deliveryAddress\": \"Yaoundé, Mvan\",\n  \"deliveryType\": \"DELIVERY\",\n  \"paymentMethod\": \"ORANGE_MONEY\",\n  \"phoneNumber\": \"691234567\"\n}"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const json = pm.response.json();",
+                      "if(json.orders && json.orders[0]) {",
+                      "  pm.collectionVariables.set('order_id', json.orders[0].id);",
+                      "  pm.collectionVariables.set('order_number', json.orders[0].orderNumber);",
+                      "  if (json.payment) {",
+                      "    pm.collectionVariables.set('payment_provider_ref', json.payment.providerRef);",
+                      "  }",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Étape 5: Simuler paiement réussi",
+              "request": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": "{{base_url}}/payments/webhook/orange-money",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"pay_token\": \"{{payment_provider_ref}}\",\n  \"status\": \"success\",\n  \"order_id\": \"{{order_id}}\"\n}"
+                }
+              }
+            },
+            {
+              "name": "Étape 6: Vérifier commande confirmée",
+              "request": {
+                "method": "GET",
+                "url": "{{base_url}}/orders/{{order_id}}"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const json = pm.response.json();",
+                      "pm.test('Commande confirmée', () => {",
+                      "  pm.expect(json.status).to.equal('CONFIRMED');",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Étape 7: Login Agriculteur",
+              "request": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": "{{base_url}}/auth/login",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"farmer@test.com\",\n  \"password\": \"password123\"\n}"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const json = pm.response.json(); if(json.accessToken) pm.collectionVariables.set('jwt_token', json.accessToken);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Étape 8: Marquer en préparation",
+              "request": {
+                "method": "PATCH",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": "{{base_url}}/orders/{{order_id}}/status",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"PREPARING\"\n}"
+                }
+              }
+            },
+            {
+              "name": "Étape 9: Marquer prête",
+              "request": {
+                "method": "PATCH",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": "{{base_url}}/orders/{{order_id}}/status",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"READY\"\n}"
+                }
+              }
+            },
+            {
+              "name": "Étape 10: Générer token livraison",
+              "request": {
+                "method": "POST",
+                "url": "{{base_url}}/orders/{{order_id}}/delivery/confirm"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const json = pm.response.json();",
+                      "if(json.data && json.data.confirmationToken) {",
+                      "  pm.collectionVariables.set('delivery_token', json.data.confirmationToken);",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Étape 11: Login Client",
+              "request": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": "{{base_url}}/auth/login",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"client@test.com\",\n  \"password\": \"password123\"\n}"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const json = pm.response.json(); if(json.accessToken) pm.collectionVariables.set('jwt_token', json.accessToken);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Étape 12: Confirmer réception",
+              "request": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": "{{base_url}}/orders/{{order_id}}/delivery/receive",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"confirmationToken\": \"{{delivery_token}}\"\n}"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('✅ SCÉNARIO COMPLET RÉUSSI', () => {",
+                      "  pm.response.to.have.status(200);",
+                      "  const json = pm.response.json();",
+                      "  pm.expect(json.data.status).to.equal('DELIVERED');",
+                      "  console.log('🎉 Commande', json.data.orderNumber, 'livrée avec succès!');",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
