@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 
 import log from '@/services/logging/logger';
+import type { AuthenticatedRequest } from '@/types/express';
 
 import { sendResponse } from './response';
 
@@ -80,18 +81,20 @@ export const response = {
  * Safe async controller wrapper with error handling
  */
 export const asyncHandler = (
-  fn: (req: Request, res: Response) => Promise<void | Response<any>>,
+  fn:
+    | ((req: Request, res: Response) => Promise<void | Response<any>>)
+    | ((req: AuthenticatedRequest, res: Response) => Promise<void | Response<any>>),
 ) => {
-  return async (req: Request, res: Response) => {
+  return async (req: Request | AuthenticatedRequest, res: Response) => {
     try {
-      await fn(req, res);
+      await fn(req as any, res);
     } catch (error) {
       log.error('Unhandled error in controller', {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
         path: req.originalUrl,
         method: req.method,
-        body: req.body,
+        body: (req as any).body,
         params: req.params,
         query: req.query,
       });

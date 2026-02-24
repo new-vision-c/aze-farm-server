@@ -5,7 +5,9 @@ import { envs } from '@/config/env/env';
 import CSP from '@/router/_config/CSP/csp.router';
 import CSRF from '@/router/_config/CSRF-token/csrf.router';
 import health from '@/router/_config/healtcheck/health.router';
+import cartRouter from '@/router/cart.router';
 import conversationRouter from '@/router/conversation.router';
+import ordersRouter from '@/router/orders.router';
 import auth from '@/router/users/auth.router';
 import locationRouter from '@/router/users/location.router';
 import oauth from '@/router/users/oauth.router';
@@ -51,6 +53,7 @@ const setupRoutes = (app: Express): void => {
 
   api.use('/payments', rateLimitingSubRoute, paymentRouter);
   api.use('/cart', rateLimitingSubRoute, cartRouter);
+  api.use('/orders', rateLimitingSubRoute, ordersRouter);
   api.use('/notifications', rateLimitingSubRoute, notificationRouter(prisma));
 
   app.use(api_version, api);
