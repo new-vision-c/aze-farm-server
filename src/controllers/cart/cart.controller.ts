@@ -1,13 +1,14 @@
 import { addDays } from 'date-fns';
-import type { Request, Response } from 'express';
+import type { Response } from 'express';
 
 import prisma from '@/config/prisma/prisma';
+import type { AuthenticatedRequest } from '@/types/express';
 import { asyncHandler, response } from '@/utils/responses/helpers';
 
 //& Récupérer ou créer le panier de l'utilisateur
 const getOrCreateCart = asyncHandler(
-  async (req: Request, res: Response): Promise<void | Response<any>> => {
-    const userId = req.users?.user_id;
+  async (req: AuthenticatedRequest, res: Response): Promise<void | Response<any>> => {
+    const userId = req.user?.user_id;
 
     if (!userId) {
       return response.unauthorized(req, res, 'Utilisateur non authentifié');
@@ -66,7 +67,7 @@ const getOrCreateCart = asyncHandler(
 
 //& Ajouter un item au panier
 const addItemToCart = asyncHandler(
-  async (req: Request, res: Response): Promise<void | Response<any>> => {
+  async (req: AuthenticatedRequest, res: Response): Promise<void | Response<any>> => {
     const userId = req.user?.user_id;
     const { productId, quantity, notes } = req.body;
 
@@ -115,7 +116,6 @@ const addItemToCart = asyncHandler(
       },
     });
 
-    let cartItem;
     const unitPrice = product.price;
 
     if (existingItem) {
@@ -125,7 +125,7 @@ const addItemToCart = asyncHandler(
         return response.badRequest(req, res, 'Stock insuffisant pour cette quantité');
       }
 
-      cartItem = await prisma.cartItem.update({
+      const _cartItem = await prisma.cartItem.update({
         where: { id: existingItem.id },
         data: {
           quantity: newQuantity,
@@ -135,7 +135,8 @@ const addItemToCart = asyncHandler(
         include: { product: { include: { farm: { select: { id: true, name: true } } } } },
       });
     } else {
-      cartItem = await prisma.cartItem.create({
+      // Variable utilisée pour créer un nouvel item
+      const _cartItem = await prisma.cartItem.create({
         data: {
           cartId: cart.id,
           productId,
@@ -176,7 +177,7 @@ const addItemToCart = asyncHandler(
 
 //& Mettre à jour la quantité d'un item
 const updateCartItem = asyncHandler(
-  async (req: Request, res: Response): Promise<void | Response<any>> => {
+  async (req: AuthenticatedRequest, res: Response): Promise<void | Response<any>> => {
     const userId = req.user?.user_id;
     const { itemId } = req.params;
     const { quantity, notes } = req.body;
@@ -253,7 +254,7 @@ const updateCartItem = asyncHandler(
 
 //& Supprimer un item du panier
 const removeCartItem = asyncHandler(
-  async (req: Request, res: Response): Promise<void | Response<any>> => {
+  async (req: AuthenticatedRequest, res: Response): Promise<void | Response<any>> => {
     const userId = req.user?.user_id;
     const { itemId } = req.params;
 
@@ -309,7 +310,7 @@ const removeCartItem = asyncHandler(
 
 //& Vider le panier
 const clearCart = asyncHandler(
-  async (req: Request, res: Response): Promise<void | Response<any>> => {
+  async (req: AuthenticatedRequest, res: Response): Promise<void | Response<any>> => {
     const userId = req.user?.user_id;
 
     if (!userId) {

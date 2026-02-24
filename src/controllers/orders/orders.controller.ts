@@ -82,7 +82,7 @@ const createOrdersFromCart = asyncHandler(
     const createdOrders = [];
     const transactionRef = `TXN-${uuidv4().split('-')[0].toUpperCase()}`;
 
-    for (const [farmId, farmData] of Object.entries(itemsByFarm)) {
+    for (const [_farmId, farmData] of Object.entries(itemsByFarm)) {
       const { farm, items, totalAmount } = farmData;
 
       // Créer la commande
@@ -155,17 +155,19 @@ const createOrdersFromCart = asyncHandler(
         },
       });
 
-      // Mettre à jour le stock des produits
-      for (const item of items) {
-        await prisma.product.update({
-          where: { id: item.productId },
-          data: {
-            stock: {
-              decrement: item.quantity,
+      // Mettre à jour le stock des produits en parallèle
+      await Promise.all(
+        items.map((item) =>
+          prisma.product.update({
+            where: { id: item.productId },
+            data: {
+              stock: {
+                decrement: item.quantity,
+              },
             },
-          },
-        });
-      }
+          }),
+        ),
+      );
 
       createdOrders.push(order);
     }
@@ -410,17 +412,19 @@ const cancelOrder = asyncHandler(
       },
     });
 
-    // Remettre le stock
-    for (const item of order.items) {
-      await prisma.product.update({
-        where: { id: item.productId },
-        data: {
-          stock: {
-            increment: item.quantity,
+    // Remettre le stock en parallèle
+    await Promise.all(
+      order.items.map((item) =>
+        prisma.product.update({
+          where: { id: item.productId },
+          data: {
+            stock: {
+              increment: item.quantity,
+            },
           },
-        },
-      });
-    }
+        }),
+      ),
+    );
 
     return response.success(req, res, updatedOrder, 'Commande annulée avec succès');
   },
