@@ -369,7 +369,6 @@ model Cart {
   // Relations
   userId String     @unique @db.ObjectId
   user   users      @relation(fields: [userId], references: [user_id])
-  farmId String?    @db.ObjectId // Nullable jusqu'au premier ajout
   items  CartItem[]
 
   createdAt DateTime @default(now())

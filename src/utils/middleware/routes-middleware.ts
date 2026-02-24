@@ -50,6 +50,7 @@ const setupRoutes = (app: Express): void => {
   api.use('/', rateLimitingSubRoute, favoriteRouter);
 
   api.use('/payments', rateLimitingSubRoute, paymentRouter);
+  api.use('/cart', rateLimitingSubRoute, cartRouter);
   api.use('/notifications', rateLimitingSubRoute, notificationRouter(prisma));
 
   app.use(api_version, api);
