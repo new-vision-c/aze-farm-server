@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 import { format } from 'date-fns';
 import type { Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
