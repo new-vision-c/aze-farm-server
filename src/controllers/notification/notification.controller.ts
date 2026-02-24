@@ -1,7 +1,8 @@
+import type { NotificationType } from '@prisma/client';
 import type { Request, Response } from 'express';
 
 import logger from '@/services/logging/logger';
-import { NotificationService, NotificationType } from '@/services/notification/NotificationService';
+import { NotificationService } from '@/services/notification/NotificationService';
 import { oneSignalService } from '@/services/notification/OneSignalService';
 import type { AuthenticatedRequest } from '@/types/express';
 
@@ -271,7 +272,7 @@ export class NotificationController {
    */
   sendNotification = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { userId, title, message, type, data } = req.body;
+      const { userId, title, message, type } = req.body;
       const playerId = this.subscriptions.get(userId);
 
       const success = await this.notificationService.sendNotification({
@@ -279,7 +280,6 @@ export class NotificationController {
         title,
         message,
         type: type as NotificationType,
-        data,
         playerId,
       });
 
