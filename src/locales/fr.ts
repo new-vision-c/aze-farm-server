@@ -270,4 +270,49 @@ export const fr = {
     farmers_only: 'Accès réservé aux agriculteurs',
     not_ready_for_delivery: 'Commande non trouvée ou non prête pour livraison',
   },
+
+  // Messages pour le panier
+  cart: {
+    retrieved: 'Panier récupéré avec succès',
+    item_added: 'Item ajouté au panier avec succès',
+    item_updated: 'Item mis à jour avec succès',
+    item_removed: 'Item supprimé du panier avec succès',
+    cleared: 'Panier vidé avec succès',
+    not_found: 'Panier non trouvé',
+    item_not_found: 'Item non trouvé dans le panier',
+    product_not_found: 'Produit non trouvé',
+    product_unavailable: 'Produit indisponible ou stock insuffisant',
+    stock_insufficient: 'Stock insuffisant pour cette quantité',
+    invalid_quantity: 'Quantité invalide',
+    product_quantity_required: 'Produit et quantité valide requis',
+  },
+
+  // Messages pour les fermes
+  farms: {
+    retrieved: 'Ferme récupérée avec succès',
+    not_found: 'Ferme non trouvée',
+    id_required: 'ID de la ferme requis',
+    retrieval_error: 'Erreur lors de la récupération de la ferme',
+  },
+
+  // Messages pour les notes
+  ratings: {
+    saved: 'Note enregistrée avec succès',
+    deleted: 'Note supprimée avec succès',
+    retrieved: 'Notes récupérées avec succès',
+    user_rating_retrieved: 'Note utilisateur récupérée avec succès',
+    stats_retrieved: 'Statistiques récupérées avec succès',
+    check_completed: 'Vérification terminée avec succès',
+    auth_required: 'Authentification requise',
+    farm_id_required: 'ID de la ferme requis',
+    score_range: 'La note doit être comprise entre 1 et 5',
+    page_positive: 'La page doit être supérieure à 0',
+    limit_range: 'La limite doit être entre 1 et 50',
+    save_error: 'Erreur lors de la notation de la ferme',
+    delete_error: 'Erreur lors de la suppression de la note',
+    retrieve_error: 'Erreur lors de la récupération des notes',
+    user_rating_error: 'Erreur lors de la récupération de la note utilisateur',
+    stats_error: 'Erreur lors de la récupération des statistiques',
+    check_error: 'Erreur lors de la vérification',
+  },
 };

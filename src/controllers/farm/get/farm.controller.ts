@@ -1,7 +1,11 @@
 import type { Request, Response } from 'express';
 
 import prisma from '@/config/prisma/prisma';
+import { I18nService } from '@/services/I18nService';
 import { asyncHandler, response } from '@/utils/responses/helpers';
+
+// Instance du service i18n
+const i18n = new I18nService();
 
 export class FarmController {
   /**
@@ -10,6 +14,7 @@ export class FarmController {
   getFarmById = asyncHandler(async (req: Request, res: Response): Promise<void | Response<any>> => {
     const { id } = req.params;
     const { category } = req.query;
+    const lang = i18n.detectLanguage(req.headers['accept-language']);
 
     console.log('🔍 DEBUG getFarmById - Requête reçue:', {
       id,
@@ -19,7 +24,7 @@ export class FarmController {
     });
 
     if (!id) {
-      return response.badRequest(req, res, 'ID de la ferme requis');
+      return response.badRequest(req, res, i18n.translate('farms.id_required', lang));
     }
 
     try {
@@ -37,7 +42,7 @@ export class FarmController {
       });
 
       if (!farm) {
-        return response.notFound(req, res, 'Ferme non trouvée');
+        return response.notFound(req, res, i18n.translate('farms.not_found', lang));
       }
 
       // Construire le filtre où pour les produits
@@ -138,12 +143,12 @@ export class FarmController {
         productsCount: formattedFarm.products.length,
       });
 
-      return response.success(req, res, formattedFarm, 'Ferme récupérée avec succès');
+      return response.success(req, res, formattedFarm, i18n.translate('farms.retrieved', lang));
     } catch (error) {
       return response.serverError(
         req,
         res,
-        'Erreur lors de la récupération de la ferme',
+        i18n.translate('farms.retrieval_error', lang),
         error as Error,
       );
     }

@@ -2,16 +2,21 @@ import { addDays } from 'date-fns';
 import type { Response } from 'express';
 
 import prisma from '@/config/prisma/prisma';
+import { I18nService } from '@/services/I18nService';
 import type { AuthenticatedRequest } from '@/types/express';
 import { asyncHandler, response } from '@/utils/responses/helpers';
+
+// Instance du service i18n
+const i18n = new I18nService();
 
 //& Récupérer ou créer le panier de l'utilisateur
 const getOrCreateCart = asyncHandler(
   async (req: AuthenticatedRequest, res: Response): Promise<void | Response<any>> => {
     const userId = req.user?.user_id;
+    const lang = i18n.detectLanguage(req.headers['accept-language']);
 
     if (!userId) {
-      return response.unauthorized(req, res, 'Utilisateur non authentifié');
+      return response.unauthorized(req, res, i18n.translate('auth.user_not_authenticated', lang));
     }
 
     let cart = await prisma.cart.findUnique({
@@ -61,7 +66,7 @@ const getOrCreateCart = asyncHandler(
       });
     }
 
-    return response.success(req, res, cart, 'Panier récupéré avec succès');
+    return response.success(req, res, cart, i18n.translate('cart.retrieved', lang));
   },
 );
 
@@ -70,13 +75,14 @@ const addItemToCart = asyncHandler(
   async (req: AuthenticatedRequest, res: Response): Promise<void | Response<any>> => {
     const userId = req.user?.user_id;
     const { productId, quantity, notes } = req.body;
+    const lang = i18n.detectLanguage(req.headers['accept-language']);
 
     if (!userId) {
-      return response.unauthorized(req, res, 'Utilisateur non authentifié');
+      return response.unauthorized(req, res, i18n.translate('auth.user_not_authenticated', lang));
     }
 
     if (!productId || !quantity || quantity < 1) {
-      return response.badRequest(req, res, 'Produit et quantité valide requis');
+      return response.badRequest(req, res, i18n.translate('cart.product_quantity_required', lang));
     }
 
     const product = await prisma.product.findUnique({
@@ -85,11 +91,11 @@ const addItemToCart = asyncHandler(
     });
 
     if (!product) {
-      return response.notFound(req, res, 'Produit non trouvé');
+      return response.notFound(req, res, i18n.translate('cart.product_not_found', lang));
     }
 
     if (!product.isAvailable || product.stock < quantity) {
-      return response.badRequest(req, res, 'Produit indisponible ou stock insuffisant');
+      return response.badRequest(req, res, i18n.translate('cart.product_unavailable', lang));
     }
 
     let cart = await prisma.cart.findUnique({
@@ -122,7 +128,7 @@ const addItemToCart = asyncHandler(
       const newQuantity = existingItem.quantity + quantity;
 
       if (product.stock < newQuantity) {
-        return response.badRequest(req, res, 'Stock insuffisant pour cette quantité');
+        return response.badRequest(req, res, i18n.translate('cart.stock_insufficient', lang));
       }
 
       const _cartItem = await prisma.cartItem.update({
@@ -171,7 +177,7 @@ const addItemToCart = asyncHandler(
       },
     });
 
-    return response.success(req, res, updatedCart, 'Item ajouté au panier avec succès');
+    return response.success(req, res, updatedCart, i18n.translate('cart.item_added', lang));
   },
 );
 
@@ -181,13 +187,14 @@ const updateCartItem = asyncHandler(
     const userId = req.user?.user_id;
     const { itemId } = req.params;
     const { quantity, notes } = req.body;
+    const lang = i18n.detectLanguage(req.headers['accept-language']);
 
     if (!userId) {
-      return response.unauthorized(req, res, 'Utilisateur non authentifié');
+      return response.unauthorized(req, res, i18n.translate('auth.user_not_authenticated', lang));
     }
 
     if (quantity === undefined || quantity < 0) {
-      return response.badRequest(req, res, 'Quantité invalide');
+      return response.badRequest(req, res, i18n.translate('cart.invalid_quantity', lang));
     }
 
     const cart = await prisma.cart.findUnique({
@@ -204,7 +211,7 @@ const updateCartItem = asyncHandler(
     });
 
     if (!cartItem) {
-      return response.notFound(req, res, 'Item non trouvé dans le panier');
+      return response.notFound(req, res, i18n.translate('cart.item_not_found', lang));
     }
 
     if (quantity === 0) {
@@ -213,7 +220,7 @@ const updateCartItem = asyncHandler(
       });
     } else {
       if (cartItem.product.stock < quantity) {
-        return response.badRequest(req, res, 'Stock insuffisant');
+        return response.badRequest(req, res, i18n.translate('cart.stock_insufficient', lang));
       }
 
       await prisma.cartItem.update({
@@ -248,7 +255,7 @@ const updateCartItem = asyncHandler(
       },
     });
 
-    return response.success(req, res, updatedCart, 'Item mis à jour avec succès');
+    return response.success(req, res, updatedCart, i18n.translate('cart.item_updated', lang));
   },
 );
 
@@ -257,9 +264,10 @@ const removeCartItem = asyncHandler(
   async (req: AuthenticatedRequest, res: Response): Promise<void | Response<any>> => {
     const userId = req.user?.user_id;
     const { itemId } = req.params;
+    const lang = i18n.detectLanguage(req.headers['accept-language']);
 
     if (!userId) {
-      return response.unauthorized(req, res, 'Utilisateur non authentifié');
+      return response.unauthorized(req, res, i18n.translate('auth.user_not_authenticated', lang));
     }
 
     const cart = await prisma.cart.findUnique({
@@ -267,7 +275,7 @@ const removeCartItem = asyncHandler(
     });
 
     if (!cart) {
-      return response.notFound(req, res, 'Panier non trouvé');
+      return response.notFound(req, res, i18n.translate('cart.not_found', lang));
     }
 
     const cartItem = await prisma.cartItem.findFirst({
@@ -275,7 +283,7 @@ const removeCartItem = asyncHandler(
     });
 
     if (!cartItem) {
-      return response.notFound(req, res, 'Item non trouvé dans le panier');
+      return response.notFound(req, res, i18n.translate('cart.item_not_found', lang));
     }
 
     await prisma.cartItem.delete({
@@ -304,7 +312,7 @@ const removeCartItem = asyncHandler(
       },
     });
 
-    return response.success(req, res, updatedCart, 'Item supprimé du panier avec succès');
+    return response.success(req, res, updatedCart, i18n.translate('cart.item_removed', lang));
   },
 );
 
@@ -312,9 +320,10 @@ const removeCartItem = asyncHandler(
 const clearCart = asyncHandler(
   async (req: AuthenticatedRequest, res: Response): Promise<void | Response<any>> => {
     const userId = req.user?.user_id;
+    const lang = i18n.detectLanguage(req.headers['accept-language']);
 
     if (!userId) {
-      return response.unauthorized(req, res, 'Utilisateur non authentifié');
+      return response.unauthorized(req, res, i18n.translate('auth.user_not_authenticated', lang));
     }
 
     const cart = await prisma.cart.findUnique({
@@ -322,7 +331,7 @@ const clearCart = asyncHandler(
     });
 
     if (!cart) {
-      return response.notFound(req, res, 'Panier non trouvé');
+      return response.notFound(req, res, i18n.translate('cart.not_found', lang));
     }
 
     await prisma.cartItem.deleteMany({
@@ -357,7 +366,7 @@ const clearCart = asyncHandler(
       },
     });
 
-    return response.success(req, res, updatedCart, 'Panier vidé avec succès');
+    return response.success(req, res, updatedCart, i18n.translate('cart.cleared', lang));
   },
 );
 

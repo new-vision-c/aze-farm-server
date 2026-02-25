@@ -267,4 +267,49 @@ export const en = {
     farmers_only: 'Access restricted to farmers',
     not_ready_for_delivery: 'Order not found or not ready for delivery',
   },
+
+  // Cart messages
+  cart: {
+    retrieved: 'Cart retrieved successfully',
+    item_added: 'Item added to cart successfully',
+    item_updated: 'Item updated successfully',
+    item_removed: 'Item removed from cart successfully',
+    cleared: 'Cart cleared successfully',
+    not_found: 'Cart not found',
+    item_not_found: 'Item not found in cart',
+    product_not_found: 'Product not found',
+    product_unavailable: 'Product unavailable or insufficient stock',
+    stock_insufficient: 'Insufficient stock for this quantity',
+    invalid_quantity: 'Invalid quantity',
+    product_quantity_required: 'Valid product and quantity required',
+  },
+
+  // Farm messages
+  farms: {
+    retrieved: 'Farm retrieved successfully',
+    not_found: 'Farm not found',
+    id_required: 'Farm ID required',
+    retrieval_error: 'Error retrieving farm',
+  },
+
+  // Rating messages
+  ratings: {
+    saved: 'Rating saved successfully',
+    deleted: 'Rating deleted successfully',
+    retrieved: 'Ratings retrieved successfully',
+    user_rating_retrieved: 'User rating retrieved successfully',
+    stats_retrieved: 'Statistics retrieved successfully',
+    check_completed: 'Check completed successfully',
+    auth_required: 'Authentication required',
+    farm_id_required: 'Farm ID required',
+    score_range: 'Rating must be between 1 and 5',
+    page_positive: 'Page must be greater than 0',
+    limit_range: 'Limit must be between 1 and 50',
+    save_error: 'Error saving rating',
+    delete_error: 'Error deleting rating',
+    retrieve_error: 'Error retrieving ratings',
+    user_rating_error: 'Error retrieving user rating',
+    stats_error: 'Error retrieving statistics',
+    check_error: 'Error during verification',
+  },
 };

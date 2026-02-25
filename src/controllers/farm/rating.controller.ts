@@ -1,7 +1,11 @@
 import type { Request, Response } from 'express';
 
 import FarmRatingService from '@/services/FarmRatingService';
+import { I18nService } from '@/services/I18nService';
 import { asyncHandler, response } from '@/utils/responses/helpers';
+
+// Instance du service i18n
+const i18n = new I18nService();
 
 export class RatingController {
   /**
@@ -12,6 +16,7 @@ export class RatingController {
     const { farmId } = req.params;
     const { score, comment } = req.body;
     const userId = (req as any).user?.user_id;
+    const lang = i18n.detectLanguage(req.headers['accept-language']);
 
     console.log('🔍 RatingController.rateFarm - Requête reçue:', {
       farmId,
@@ -21,16 +26,16 @@ export class RatingController {
     });
 
     if (!userId) {
-      return response.unauthorized(req, res, 'Authentification requise');
+      return response.unauthorized(req, res, i18n.translate('ratings.auth_required', lang));
     }
 
     if (!farmId) {
-      return response.badRequest(req, res, 'ID de la ferme requis');
+      return response.badRequest(req, res, i18n.translate('ratings.farm_id_required', lang));
     }
 
     // Validation du score
     if (!score || score < 1 || score > 5) {
-      return response.badRequest(req, res, 'La note doit être comprise entre 1 et 5');
+      return response.badRequest(req, res, i18n.translate('ratings.score_range', lang));
     }
 
     try {
@@ -46,13 +51,13 @@ export class RatingController {
         score: rating.score,
       });
 
-      return response.success(req, res, rating, 'Note enregistrée avec succès');
+      return response.success(req, res, rating, i18n.translate('ratings.saved', lang));
     } catch (error) {
       console.error('Erreur lors de la notation de la ferme:', error);
       return response.serverError(
         req,
         res,
-        'Erreur lors de la notation de la ferme',
+        i18n.translate('ratings.save_error', lang),
         error as Error,
       );
     }
@@ -66,6 +71,7 @@ export class RatingController {
     async (req: Request, res: Response): Promise<void | Response<any>> => {
       const { farmId } = req.params;
       const userId = (req as any).user?.user_id;
+      const lang = i18n.detectLanguage(req.headers['accept-language']);
 
       console.log('🔍 RatingController.deleteRating - Requête reçue:', {
         farmId,
@@ -73,11 +79,11 @@ export class RatingController {
       });
 
       if (!userId) {
-        return response.unauthorized(req, res, 'Authentification requise');
+        return response.unauthorized(req, res, i18n.translate('ratings.auth_required', lang));
       }
 
       if (!farmId) {
-        return response.badRequest(req, res, 'ID de la ferme requis');
+        return response.badRequest(req, res, i18n.translate('ratings.farm_id_required', lang));
       }
 
       try {
@@ -88,13 +94,13 @@ export class RatingController {
           userId,
         });
 
-        return response.success(req, res, null, 'Note supprimée avec succès');
+        return response.success(req, res, null, i18n.translate('ratings.deleted', lang));
       } catch (error) {
         console.error('Erreur lors de la suppression de la note:', error);
         return response.serverError(
           req,
           res,
-          'Erreur lors de la suppression de la note',
+          i18n.translate('ratings.delete_error', lang),
           error as Error,
         );
       }
@@ -110,6 +116,7 @@ export class RatingController {
       const { farmId } = req.params;
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
+      const lang = i18n.detectLanguage(req.headers['accept-language']);
 
       console.log('🔍 RatingController.getFarmRatings - Requête reçue:', {
         farmId,
@@ -118,16 +125,16 @@ export class RatingController {
       });
 
       if (!farmId) {
-        return response.badRequest(req, res, 'ID de la ferme requis');
+        return response.badRequest(req, res, i18n.translate('ratings.farm_id_required', lang));
       }
 
       // Validation de la pagination
       if (page < 1) {
-        return response.badRequest(req, res, 'La page doit être supérieure à 0');
+        return response.badRequest(req, res, i18n.translate('ratings.page_positive', lang));
       }
 
       if (limit < 1 || limit > 50) {
-        return response.badRequest(req, res, 'La limite doit être entre 1 et 50');
+        return response.badRequest(req, res, i18n.translate('ratings.limit_range', lang));
       }
 
       try {
@@ -139,13 +146,13 @@ export class RatingController {
           currentPage: result.currentPage,
         });
 
-        return response.success(req, res, result, 'Notes récupérées avec succès');
+        return response.success(req, res, result, i18n.translate('ratings.retrieved', lang));
       } catch (error) {
         console.error('Erreur lors de la récupération des notes:', error);
         return response.serverError(
           req,
           res,
-          'Erreur lors de la récupération des notes',
+          i18n.translate('ratings.retrieve_error', lang),
           error as Error,
         );
       }
@@ -160,6 +167,7 @@ export class RatingController {
     async (req: Request, res: Response): Promise<void | Response<any>> => {
       const { farmId } = req.params;
       const userId = (req as any).user?.user_id;
+      const lang = i18n.detectLanguage(req.headers['accept-language']);
 
       console.log('🔍 RatingController.getUserRating - Requête reçue:', {
         farmId,
@@ -167,11 +175,11 @@ export class RatingController {
       });
 
       if (!userId) {
-        return response.unauthorized(req, res, 'Authentification requise');
+        return response.unauthorized(req, res, i18n.translate('ratings.auth_required', lang));
       }
 
       if (!farmId) {
-        return response.badRequest(req, res, 'ID de la ferme requis');
+        return response.badRequest(req, res, i18n.translate('ratings.farm_id_required', lang));
       }
 
       try {
@@ -183,13 +191,18 @@ export class RatingController {
           hasRating: !!rating,
         });
 
-        return response.success(req, res, rating, 'Note utilisateur récupérée avec succès');
+        return response.success(
+          req,
+          res,
+          rating,
+          i18n.translate('ratings.user_rating_retrieved', lang),
+        );
       } catch (error) {
         console.error('Erreur lors de la récupération de la note utilisateur:', error);
         return response.serverError(
           req,
           res,
-          'Erreur lors de la récupération de la note utilisateur',
+          i18n.translate('ratings.user_rating_error', lang),
           error as Error,
         );
       }
@@ -203,13 +216,14 @@ export class RatingController {
   getFarmRatingStats = asyncHandler(
     async (req: Request, res: Response): Promise<void | Response<any>> => {
       const { farmId } = req.params;
+      const lang = i18n.detectLanguage(req.headers['accept-language']);
 
       console.log('🔍 RatingController.getFarmRatingStats - Requête reçue:', {
         farmId,
       });
 
       if (!farmId) {
-        return response.badRequest(req, res, 'ID de la ferme requis');
+        return response.badRequest(req, res, i18n.translate('ratings.farm_id_required', lang));
       }
 
       try {
@@ -221,13 +235,13 @@ export class RatingController {
           count: stats.count,
         });
 
-        return response.success(req, res, stats, 'Statistiques récupérées avec succès');
+        return response.success(req, res, stats, i18n.translate('ratings.stats_retrieved', lang));
       } catch (error) {
         console.error('Erreur lors de la récupération des statistiques:', error);
         return response.serverError(
           req,
           res,
-          'Erreur lors de la récupération des statistiques',
+          i18n.translate('ratings.stats_error', lang),
           error as Error,
         );
       }
@@ -242,6 +256,7 @@ export class RatingController {
     async (req: Request, res: Response): Promise<void | Response<any>> => {
       const { farmId } = req.params;
       const userId = (req as any).user?.user_id;
+      const lang = i18n.detectLanguage(req.headers['accept-language']);
 
       console.log('🔍 RatingController.canUserRateFarm - Requête reçue:', {
         farmId,
@@ -249,11 +264,11 @@ export class RatingController {
       });
 
       if (!userId) {
-        return response.unauthorized(req, res, 'Authentification requise');
+        return response.unauthorized(req, res, i18n.translate('ratings.auth_required', lang));
       }
 
       if (!farmId) {
-        return response.badRequest(req, res, 'ID de la ferme requis');
+        return response.badRequest(req, res, i18n.translate('ratings.farm_id_required', lang));
       }
 
       try {
@@ -265,10 +280,20 @@ export class RatingController {
           canRate,
         });
 
-        return response.success(req, res, { canRate }, 'Vérification terminée avec succès');
+        return response.success(
+          req,
+          res,
+          { canRate },
+          i18n.translate('ratings.check_completed', lang),
+        );
       } catch (error) {
         console.error('Erreur lors de la vérification:', error);
-        return response.serverError(req, res, 'Erreur lors de la vérification', error as Error);
+        return response.serverError(
+          req,
+          res,
+          i18n.translate('ratings.check_error', lang),
+          error as Error,
+        );
       }
     },
   );
