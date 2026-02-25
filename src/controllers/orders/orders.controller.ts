@@ -4,12 +4,16 @@ import type { Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 
 import prisma from '@/config/prisma/prisma';
+import { I18nService } from '@/services/I18nService';
 import { DeliveryFeeService, type DeliveryInfo } from '@/services/delivery/DeliveryFeeService';
 import logger from '@/services/logging/logger';
 import type { MobilePaymentProvider } from '@/services/payment/MobilePaymentService';
 import { MobilePaymentService } from '@/services/payment/MobilePaymentService';
 import type { AuthenticatedRequest } from '@/types/express';
 import { asyncHandler, response } from '@/utils/responses/helpers';
+
+// Instance du service i18n
+const i18n = new I18nService();
 
 //& Générer un numéro de commande unique
 const generateOrderNumber = (): string => {
@@ -23,9 +27,10 @@ const createOrdersFromCart = asyncHandler(
   async (req: AuthenticatedRequest, res: Response): Promise<void | Response<any>> => {
     const userId = req.user?.user_id;
     const { deliveryAddress, deliveryType, paymentMethod, phoneNumber } = req.body;
+    const lang = i18n.detectLanguage(req.headers['accept-language']);
 
     if (!userId) {
-      return response.unauthorized(req, res, 'Utilisateur non authentifié');
+      return response.unauthorized(req, res, i18n.translate('auth.user_not_authenticated', lang));
     }
 
     // Récupérer le panier avec les items
@@ -51,7 +56,7 @@ const createOrdersFromCart = asyncHandler(
     });
 
     if (!cart || cart.items.length === 0) {
-      return response.badRequest(req, res, 'Panier vide');
+      return response.badRequest(req, res, i18n.translate('orders.cart_empty', lang));
     }
 
     // Vérifier le stock pour chaque produit
@@ -60,7 +65,10 @@ const createOrdersFromCart = asyncHandler(
         return response.badRequest(
           req,
           res,
-          `Stock insuffisant pour ${item.product.name} (disponible: ${item.product.stock})`,
+          i18n.translate('orders.stock_insufficient', lang, {
+            product: item.product.name,
+            stock: item.product.stock.toString(),
+          }),
         );
       }
     }
@@ -218,7 +226,7 @@ const createOrdersFromCart = asyncHandler(
           paymentResults.push({
             orderId: order.id,
             success: false,
-            message: 'Numéro de téléphone invalide pour ce provider',
+            message: i18n.translate('payments.phone_invalid_for_provider', lang),
           });
           continue;
         }
@@ -255,7 +263,7 @@ const createOrdersFromCart = asyncHandler(
         paymentResults.push({
           orderId: order.id,
           success: false,
-          message: "Erreur lors de l'initiation du paiement",
+          message: i18n.translate('payments.payment_init_error', lang),
         });
       }
     }
@@ -282,7 +290,7 @@ const createOrdersFromCart = asyncHandler(
         globalTotal: createdOrders.reduce((sum, o) => sum + o.totalAmount, 0),
         payments: paymentResults,
       },
-      'Commandes créées et paiements initiés avec succès',
+      i18n.translate('orders.created', lang),
     );
   },
 );
@@ -292,9 +300,10 @@ const getUserOrders = asyncHandler(
   async (req: AuthenticatedRequest, res: Response): Promise<void | Response<any>> => {
     const userId = req.user?.user_id;
     const { status, page = '1', limit = '10' } = req.query;
+    const lang = i18n.detectLanguage(req.headers['accept-language']);
 
     if (!userId) {
-      return response.unauthorized(req, res, 'Utilisateur non authentifié');
+      return response.unauthorized(req, res, i18n.translate('auth.user_not_authenticated', lang));
     }
 
     const pageNum = parseInt(page as string, 10);
@@ -361,7 +370,7 @@ const getUserOrders = asyncHandler(
           totalPages: Math.ceil(total / limitNum),
         },
       },
-      'Commandes récupérées avec succès',
+      i18n.translate('orders.retrieved', lang),
     );
   },
 );
@@ -371,9 +380,10 @@ const getOrderById = asyncHandler(
   async (req: AuthenticatedRequest, res: Response): Promise<void | Response<any>> => {
     const userId = req.user?.user_id;
     const { orderId } = req.params;
+    const lang = i18n.detectLanguage(req.headers['accept-language']);
 
     if (!userId) {
-      return response.unauthorized(req, res, 'Utilisateur non authentifié');
+      return response.unauthorized(req, res, i18n.translate('auth.user_not_authenticated', lang));
     }
 
     const order = await prisma.order.findFirst({
@@ -420,10 +430,10 @@ const getOrderById = asyncHandler(
     });
 
     if (!order) {
-      return response.notFound(req, res, 'Commande non trouvée');
+      return response.notFound(req, res, i18n.translate('orders.not_found', lang));
     }
 
-    return response.success(req, res, order, 'Commande récupérée avec succès');
+    return response.success(req, res, order, i18n.translate('orders.retrieved_single', lang));
   },
 );
 
@@ -433,9 +443,10 @@ const cancelOrder = asyncHandler(
     const userId = req.user?.user_id;
     const { orderId } = req.params;
     const { reason } = req.body;
+    const lang = i18n.detectLanguage(req.headers['accept-language']);
 
     if (!userId) {
-      return response.unauthorized(req, res, 'Utilisateur non authentifié');
+      return response.unauthorized(req, res, i18n.translate('auth.user_not_authenticated', lang));
     }
 
     const order = await prisma.order.findFirst({
@@ -450,21 +461,17 @@ const cancelOrder = asyncHandler(
     });
 
     if (!order) {
-      return response.notFound(req, res, 'Commande non trouvée');
+      return response.notFound(req, res, i18n.translate('orders.not_found', lang));
     }
 
     // Vérifier si la commande peut être annulée
     if (order.status === 'DELIVERED' || order.status === 'CANCELLED') {
-      return response.badRequest(req, res, 'Cette commande ne peut plus être annulée');
+      return response.badRequest(req, res, i18n.translate('orders.cannot_cancel', lang));
     }
 
     // Vérifier si le paiement n'est pas déjà complété
     if (order.payment?.status === 'COMPLETED') {
-      return response.badRequest(
-        req,
-        res,
-        'Commande déjà payée - contactez le support pour annulation',
-      );
+      return response.badRequest(req, res, i18n.translate('orders.already_paid', lang));
     }
 
     // Annuler la commande
@@ -515,7 +522,7 @@ const cancelOrder = asyncHandler(
       ),
     );
 
-    return response.success(req, res, updatedOrder, 'Commande annulée avec succès');
+    return response.success(req, res, updatedOrder, i18n.translate('orders.cancelled', lang));
   },
 );
 
@@ -524,9 +531,10 @@ const getFarmOrders = asyncHandler(
   async (req: AuthenticatedRequest, res: Response): Promise<void | Response<any>> => {
     const userId = req.user?.user_id;
     const { status, page = '1', limit = '10' } = req.query;
+    const lang = i18n.detectLanguage(req.headers['accept-language']);
 
     if (!userId) {
-      return response.unauthorized(req, res, 'Utilisateur non authentifié');
+      return response.unauthorized(req, res, i18n.translate('auth.user_not_authenticated', lang));
     }
 
     // Vérifier que l'utilisateur est un agriculteur
@@ -536,7 +544,7 @@ const getFarmOrders = asyncHandler(
     });
 
     if (!user?.farm) {
-      return response.forbidden(req, res, 'Accès réservé aux agriculteurs');
+      return response.forbidden(req, res, i18n.translate('orders.farmers_only', lang));
     }
 
     const pageNum = parseInt(page as string, 10);
@@ -591,7 +599,7 @@ const getFarmOrders = asyncHandler(
           totalPages: Math.ceil(total / limitNum),
         },
       },
-      'Commandes de la ferme récupérées avec succès',
+      i18n.translate('orders.farm_orders_retrieved', lang),
     );
   },
 );
@@ -602,9 +610,10 @@ const updateOrderStatus = asyncHandler(
     const userId = req.user?.user_id;
     const { orderId } = req.params;
     const { status, deliveryDate } = req.body;
+    const lang = i18n.detectLanguage(req.headers['accept-language']);
 
     if (!userId) {
-      return response.unauthorized(req, res, 'Utilisateur non authentifié');
+      return response.unauthorized(req, res, i18n.translate('auth.user_not_authenticated', lang));
     }
 
     // Vérifier que l'utilisateur est un agriculteur
@@ -614,7 +623,7 @@ const updateOrderStatus = asyncHandler(
     });
 
     if (!user?.farm) {
-      return response.forbidden(req, res, 'Accès réservé aux agriculteurs');
+      return response.forbidden(req, res, i18n.translate('orders.farmers_only', lang));
     }
 
     // Vérifier que la commande appartient à la ferme
@@ -657,7 +666,7 @@ const updateOrderStatus = asyncHandler(
       },
     });
 
-    return response.success(req, res, updatedOrder, 'Statut de la commande mis à jour avec succès');
+    return response.success(req, res, updatedOrder, i18n.translate('orders.status_updated', lang));
   },
 );
 
@@ -666,9 +675,10 @@ const getOrderTracking = asyncHandler(
   async (req: AuthenticatedRequest, res: Response): Promise<void | Response<any>> => {
     const userId = req.user?.user_id;
     const { orderId } = req.params;
+    const lang = i18n.detectLanguage(req.headers['accept-language']);
 
     if (!userId) {
-      return response.unauthorized(req, res, 'Utilisateur non authentifié');
+      return response.unauthorized(req, res, i18n.translate('auth.user_not_authenticated', lang));
     }
 
     const order = await prisma.order.findFirst({
@@ -741,7 +751,7 @@ const getOrderTracking = asyncHandler(
         delivery: order.delivery,
         items: order.items,
       },
-      'Tracking récupéré avec succès',
+      i18n.translate('orders.tracking_retrieved', lang),
     );
   },
 );
@@ -751,9 +761,10 @@ const generateDeliveryConfirmation = asyncHandler(
   async (req: AuthenticatedRequest, res: Response): Promise<void | Response<any>> => {
     const userId = req.user?.user_id;
     const { orderId } = req.params;
+    const lang = i18n.detectLanguage(req.headers['accept-language']);
 
     if (!userId) {
-      return response.unauthorized(req, res, 'Utilisateur non authentifié');
+      return response.unauthorized(req, res, i18n.translate('auth.user_not_authenticated', lang));
     }
 
     // Vérifier que l'utilisateur est un agriculteur
@@ -763,7 +774,7 @@ const generateDeliveryConfirmation = asyncHandler(
     });
 
     if (!user?.farm) {
-      return response.forbidden(req, res, 'Accès réservé aux agriculteurs');
+      return response.forbidden(req, res, i18n.translate('orders.farmers_only', lang));
     }
 
     const order = await prisma.order.findFirst({
@@ -776,7 +787,7 @@ const generateDeliveryConfirmation = asyncHandler(
     });
 
     if (!order) {
-      return response.notFound(req, res, 'Commande non trouvée ou non prête pour livraison');
+      return response.notFound(req, res, i18n.translate('orders.not_ready_for_delivery', lang));
     }
 
     // Générer un token de confirmation
@@ -809,7 +820,7 @@ const generateDeliveryConfirmation = asyncHandler(
         qrData,
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // Expire après 24h
       },
-      'Token de confirmation généré avec succès',
+      i18n.translate('orders.confirmation_generated', lang),
     );
   },
 );
@@ -820,9 +831,10 @@ const confirmDelivery = asyncHandler(
     const userId = req.user?.user_id;
     const { orderId } = req.params;
     const { token, qrData } = req.body;
+    const lang = i18n.detectLanguage(req.headers['accept-language']);
 
     if (!userId) {
-      return response.unauthorized(req, res, 'Utilisateur non authentifié');
+      return response.unauthorized(req, res, i18n.translate('auth.user_not_authenticated', lang));
     }
 
     const order = await prisma.order.findFirst({
@@ -834,11 +846,11 @@ const confirmDelivery = asyncHandler(
     });
 
     if (!order) {
-      return response.notFound(req, res, 'Commande non trouvée');
+      return response.notFound(req, res, i18n.translate('orders.not_found', lang));
     }
 
     if (order.status === 'DELIVERED') {
-      return response.badRequest(req, res, 'Commande déjà livrée');
+      return response.badRequest(req, res, i18n.translate('orders.already_delivered', lang));
     }
 
     // Vérifier le token ou les données QR
@@ -857,7 +869,7 @@ const confirmDelivery = asyncHandler(
     }
 
     if (!isValid) {
-      return response.badRequest(req, res, 'Token ou QR code invalide');
+      return response.badRequest(req, res, i18n.translate('orders.invalid_token', lang));
     }
 
     // Mettre à jour la commande et la livraison
@@ -897,7 +909,12 @@ const confirmDelivery = asyncHandler(
       }),
     ]);
 
-    return response.success(req, res, updatedOrder, 'Livraison confirmée avec succès');
+    return response.success(
+      req,
+      res,
+      updatedOrder,
+      i18n.translate('orders.delivery_confirmed', lang),
+    );
   },
 );
 
