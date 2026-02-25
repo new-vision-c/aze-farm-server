@@ -234,6 +234,13 @@ const createOrdersFromCart = asyncHandler(
               providerRef: paymentResult.transactionId,
             },
           });
+
+          // Mettre à jour l'objet payment dans createdOrders pour la réponse
+          order.payment = {
+            ...order.payment,
+            status: paymentResult.status as any,
+            providerRef: paymentResult.transactionId,
+          } as any;
         }
 
         paymentResults.push({
