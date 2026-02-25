@@ -1,10 +1,14 @@
 import type { NotificationType } from '@prisma/client';
 import type { Request, Response } from 'express';
 
+import { I18nService } from '@/services/I18nService';
 import logger from '@/services/logging/logger';
 import { NotificationService } from '@/services/notification/NotificationService';
 import { oneSignalService } from '@/services/notification/OneSignalService';
 import type { AuthenticatedRequest } from '@/types/express';
+
+// Instance du service i18n
+const i18n = new I18nService();
 
 /**
  * Contrôleur de notification
@@ -23,6 +27,7 @@ export class NotificationController {
    * S'abonner aux notifications push
    */
   subscribe = async (req: Request, res: Response): Promise<void> => {
+    const lang = i18n.detectLanguage(req.headers['accept-language']);
     try {
       const { playerId } = req.body;
       const userId = (req as AuthenticatedRequest).user?.user_id;
@@ -30,7 +35,7 @@ export class NotificationController {
       if (!playerId || !userId) {
         res.status(400).json({
           success: false,
-          message: 'playerId et authentification requis',
+          message: i18n.translate('notifications.playerid_required', lang),
         });
         return;
       }
@@ -56,13 +61,13 @@ export class NotificationController {
 
       res.status(200).json({
         success: true,
-        message: 'Abonnement enregistré avec succès',
+        message: i18n.translate('notifications.subscription_saved', lang),
       });
     } catch (error) {
       logger.error("Erreur lors de l'enregistrement de l'abonnement:", error);
       res.status(500).json({
         success: false,
-        message: "Erreur lors de l'enregistrement de l'abonnement",
+        message: i18n.translate('notifications.subscription_error', lang),
       });
     }
   };
@@ -71,13 +76,14 @@ export class NotificationController {
    * Se désabonner des notifications push
    */
   unsubscribe = async (req: Request, res: Response): Promise<void> => {
+    const lang = i18n.detectLanguage(req.headers['accept-language']);
     try {
       const userId = (req as AuthenticatedRequest).user?.user_id;
 
       if (!userId) {
         res.status(401).json({
           success: false,
-          message: 'Utilisateur non authentifié',
+          message: i18n.translate('auth.user_not_authenticated', lang),
         });
         return;
       }
@@ -87,7 +93,7 @@ export class NotificationController {
       if (!playerId) {
         res.status(404).json({
           success: false,
-          message: 'Aucun abonnement trouvé',
+          message: i18n.translate('notifications.subscription_not_found', lang),
         });
         return;
       }
@@ -98,13 +104,13 @@ export class NotificationController {
 
       res.status(200).json({
         success: true,
-        message: 'Abonnement supprimé avec succès',
+        message: i18n.translate('notifications.subscription_removed', lang),
       });
     } catch (error) {
       logger.error("Erreur lors de la suppression de l'abonnement:", error);
       res.status(500).json({
         success: false,
-        message: "Erreur lors de la suppression de l'abonnement",
+        message: i18n.translate('notifications.unsubscription_error', lang),
       });
     }
   };
@@ -113,13 +119,14 @@ export class NotificationController {
    * Récupérer les notifications de l'utilisateur connecté
    */
   getMyNotifications = async (req: Request, res: Response): Promise<void> => {
+    const lang = i18n.detectLanguage(req.headers['accept-language']);
     try {
       const userId = (req as AuthenticatedRequest).user?.user_id;
 
       if (!userId) {
         res.status(401).json({
           success: false,
-          message: 'Utilisateur non authentifié',
+          message: i18n.translate('auth.user_not_authenticated', lang),
         });
         return;
       }
@@ -149,7 +156,7 @@ export class NotificationController {
       logger.error('Erreur lors de la récupération des notifications:', error);
       res.status(500).json({
         success: false,
-        message: 'Erreur lors de la récupération des notifications',
+        message: i18n.translate('notifications.retrieve_error', lang),
       });
     }
   };
@@ -158,6 +165,7 @@ export class NotificationController {
    * Marquer une notification comme lue
    */
   markAsRead = async (req: Request, res: Response): Promise<void> => {
+    const lang = i18n.detectLanguage(req.headers['accept-language']);
     try {
       const { notificationId } = req.params;
       const userId = (req as AuthenticatedRequest).user?.user_id;
@@ -165,7 +173,7 @@ export class NotificationController {
       if (!userId) {
         res.status(401).json({
           success: false,
-          message: 'Utilisateur non authentifié',
+          message: i18n.translate('auth.user_not_authenticated', lang),
         });
         return;
       }
@@ -175,19 +183,19 @@ export class NotificationController {
       if (success) {
         res.status(200).json({
           success: true,
-          message: 'Notification marquée comme lue',
+          message: i18n.translate('notifications.marked_read', lang),
         });
       } else {
         res.status(404).json({
           success: false,
-          message: 'Notification non trouvée',
+          message: i18n.translate('notifications.not_found', lang),
         });
       }
     } catch (error) {
       logger.error('Erreur lors du marquage de la notification:', error);
       res.status(500).json({
         success: false,
-        message: 'Erreur lors du marquage de la notification',
+        message: i18n.translate('notifications.mark_error', lang),
       });
     }
   };
@@ -196,13 +204,14 @@ export class NotificationController {
    * Marquer toutes les notifications comme lues
    */
   markAllAsRead = async (req: Request, res: Response): Promise<void> => {
+    const lang = i18n.detectLanguage(req.headers['accept-language']);
     try {
       const userId = (req as AuthenticatedRequest).user?.user_id;
 
       if (!userId) {
         res.status(401).json({
           success: false,
-          message: 'Utilisateur non authentifié',
+          message: i18n.translate('auth.user_not_authenticated', lang),
         });
         return;
       }
@@ -212,19 +221,19 @@ export class NotificationController {
       if (success) {
         res.status(200).json({
           success: true,
-          message: 'Toutes les notifications marquées comme lues',
+          message: i18n.translate('notifications.marked_all_read', lang),
         });
       } else {
         res.status(500).json({
           success: false,
-          message: 'Erreur lors du marquage des notifications',
+          message: i18n.translate('notifications.mark_all_error', lang),
         });
       }
     } catch (error) {
       logger.error('Erreur lors du marquage des notifications:', error);
       res.status(500).json({
         success: false,
-        message: 'Erreur lors du marquage des notifications',
+        message: i18n.translate('notifications.mark_all_error', lang),
       });
     }
   };
@@ -233,6 +242,7 @@ export class NotificationController {
    * Supprimer une notification
    */
   deleteNotification = async (req: Request, res: Response): Promise<void> => {
+    const lang = i18n.detectLanguage(req.headers['accept-language']);
     try {
       const { notificationId } = req.params;
       const userId = (req as AuthenticatedRequest).user?.user_id;
@@ -240,7 +250,7 @@ export class NotificationController {
       if (!userId) {
         res.status(401).json({
           success: false,
-          message: 'Utilisateur non authentifié',
+          message: i18n.translate('auth.user_not_authenticated', lang),
         });
         return;
       }
@@ -250,19 +260,19 @@ export class NotificationController {
       if (success) {
         res.status(200).json({
           success: true,
-          message: 'Notification supprimée',
+          message: i18n.translate('notifications.deleted', lang),
         });
       } else {
         res.status(404).json({
           success: false,
-          message: 'Notification non trouvée',
+          message: i18n.translate('notifications.not_found', lang),
         });
       }
     } catch (error) {
       logger.error('Erreur lors de la suppression de la notification:', error);
       res.status(500).json({
         success: false,
-        message: 'Erreur lors de la suppression de la notification',
+        message: i18n.translate('notifications.delete_error', lang),
       });
     }
   };
@@ -271,6 +281,7 @@ export class NotificationController {
    * Envoyer une notification à un utilisateur spécifique (admin seulement)
    */
   sendNotification = async (req: Request, res: Response): Promise<void> => {
+    const lang = i18n.detectLanguage(req.headers['accept-language']);
     try {
       const { userId, title, message, type } = req.body;
       const playerId = this.subscriptions.get(userId);
@@ -286,19 +297,19 @@ export class NotificationController {
       if (success) {
         res.status(200).json({
           success: true,
-          message: 'Notification envoyée avec succès',
+          message: i18n.translate('notifications.sent', lang),
         });
       } else {
         res.status(500).json({
           success: false,
-          message: "Erreur lors de l'envoi de la notification",
+          message: i18n.translate('notifications.send_error', lang),
         });
       }
     } catch (error) {
       logger.error("Erreur lors de l'envoi de la notification:", error);
       res.status(500).json({
         success: false,
-        message: "Erreur lors de l'envoi de la notification",
+        message: i18n.translate('notifications.send_error', lang),
       });
     }
   };
@@ -307,6 +318,7 @@ export class NotificationController {
    * Envoyer une notification promotionnelle à tous les utilisateurs (admin seulement)
    */
   sendBroadcast = async (req: Request, res: Response): Promise<void> => {
+    const lang = i18n.detectLanguage(req.headers['accept-language']);
     try {
       const { title, message } = req.body;
 
@@ -315,19 +327,19 @@ export class NotificationController {
       if (success) {
         res.status(200).json({
           success: true,
-          message: 'Notification promotionnelle envoyée avec succès',
+          message: i18n.translate('notifications.broadcast_sent', lang),
         });
       } else {
         res.status(500).json({
           success: false,
-          message: "Erreur lors de l'envoi de la notification",
+          message: i18n.translate('notifications.broadcast_error', lang),
         });
       }
     } catch (error) {
       logger.error("Erreur lors de l'envoi de la notification broadcast:", error);
       res.status(500).json({
         success: false,
-        message: "Erreur lors de l'envoi de la notification",
+        message: i18n.translate('notifications.broadcast_error', lang),
       });
     }
   };

@@ -137,20 +137,20 @@ export const en = {
   },
 
   // Notification messages
-  notifications: {
-    sent: 'Notification sent successfully',
-    send_error: 'Error sending notification',
-    push_enabled: 'Push notifications enabled',
-    push_disabled: 'Push notifications disabled',
-    subscription_registered: 'Notification subscription registered',
-    subscription_removed: 'Notification subscription removed',
-    notification_sent: 'Notification sent',
-    notification_deleted: 'Notification deleted',
-    marked_as_read: 'Notification marked as read',
-    all_marked_as_read: 'All notifications marked as read',
-    subscription_not_found: 'Subscription not found',
-    onesignal_not_configured: 'OneSignal service not configured',
-  },
+  // notifications: {
+  //   sent: 'Notification sent successfully',
+  //   send_error: 'Error sending notification',
+  //   push_enabled: 'Push notifications enabled',
+  //   push_disabled: 'Push notifications disabled',
+  //   subscription_registered: 'Notification subscription registered',
+  //   subscription_removed: 'Notification subscription removed',
+  //   notification_sent: 'Notification sent',
+  //   notification_deleted: 'Notification deleted',
+  //   marked_as_read: 'Notification marked as read',
+  //   all_marked_as_read: 'All notifications marked as read',
+  //   subscription_not_found: 'Subscription not found',
+  //   onesignal_not_configured: 'OneSignal service not configured',
+  // },
 
   // Cache messages
   cache: {
@@ -311,5 +311,38 @@ export const en = {
     user_rating_error: 'Error retrieving user rating',
     stats_error: 'Error retrieving statistics',
     check_error: 'Error during verification',
+  },
+
+  // Items messages
+  items: {
+    created: 'Item created successfully',
+    retrieved: 'Items retrieved successfully',
+    retrieved_single: 'Item retrieved successfully',
+    updated: 'Item updated successfully',
+    deleted: 'Item deleted successfully',
+    deleted_all: 'All items deleted successfully',
+  },
+
+  // Notification messages
+  notifications: {
+    subscription_saved: 'Subscription saved successfully',
+    subscription_removed: 'Subscription removed successfully',
+    subscription_not_found: 'No subscription found',
+    subscription_error: 'Error during subscription registration',
+    unsubscription_error: 'Error during subscription removal',
+    retrieved: 'Notifications retrieved successfully',
+    retrieve_error: 'Error retrieving notifications',
+    marked_read: 'Notification marked as read',
+    marked_all_read: 'All notifications marked as read',
+    mark_error: 'Error marking notification',
+    mark_all_error: 'Error marking notifications',
+    deleted: 'Notification deleted',
+    delete_error: 'Error deleting notification',
+    sent: 'Notification sent successfully',
+    send_error: 'Error sending notification',
+    broadcast_sent: 'Promotional notification sent successfully',
+    broadcast_error: 'Error sending notification',
+    not_found: 'Notification not found',
+    playerid_required: 'playerId and authentication required',
   },
 };

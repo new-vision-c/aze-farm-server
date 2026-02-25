@@ -1,18 +1,24 @@
 import type { Request, Response } from 'express';
 
+import { I18nService } from '@/services/I18nService';
 import { asyncHandler, response } from '@/utils/responses/helpers';
+
+// Instance du service i18n
+const i18n = new I18nService();
 
 //& Create one item
 const createItem = asyncHandler(
   async (req: Request, res: Response): Promise<void | Response<any>> => {
-    return response.created(req, res, {}, 'Item created successfully');
+    const lang = i18n.detectLanguage(req.headers['accept-language']);
+    return response.created(req, res, {}, i18n.translate('items.created', lang));
   },
 );
 
 //& Get All Items
 const getAllItems = asyncHandler(
   async (req: Request, res: Response): Promise<void | Response<any>> => {
-    return response.success(req, res, [], 'Items retrieved successfully');
+    const lang = i18n.detectLanguage(req.headers['accept-language']);
+    return response.success(req, res, [], i18n.translate('items.retrieved', lang));
   },
 );
 
@@ -20,7 +26,8 @@ const getAllItems = asyncHandler(
 const getOneItem = asyncHandler(
   async (req: Request, res: Response): Promise<void | Response<any>> => {
     const { id } = req.params;
-    return response.success(req, res, { id }, 'Item retrieved successfully');
+    const lang = i18n.detectLanguage(req.headers['accept-language']);
+    return response.success(req, res, { id }, i18n.translate('items.retrieved_single', lang));
   },
 );
 
@@ -28,7 +35,8 @@ const getOneItem = asyncHandler(
 const updateItem = asyncHandler(
   async (req: Request, res: Response): Promise<void | Response<any>> => {
     const { id } = req.params;
-    return response.success(req, res, { id, ...req.body }, 'Item updated successfully');
+    const lang = i18n.detectLanguage(req.headers['accept-language']);
+    return response.success(req, res, { id, ...req.body }, i18n.translate('items.updated', lang));
   },
 );
 
@@ -36,14 +44,16 @@ const updateItem = asyncHandler(
 const deleteItem = asyncHandler(
   async (req: Request, res: Response): Promise<void | Response<any>> => {
     const { id } = req.params;
-    return response.success(req, res, { id }, 'Item deleted successfully');
+    const lang = i18n.detectLanguage(req.headers['accept-language']);
+    return response.success(req, res, { id }, i18n.translate('items.deleted', lang));
   },
 );
 
 //& Delete all Items
 const deleteAllItems = asyncHandler(
   async (req: Request, res: Response): Promise<void | Response<any>> => {
-    return response.success(req, res, {}, 'All items deleted successfully');
+    const lang = i18n.detectLanguage(req.headers['accept-language']);
+    return response.success(req, res, {}, i18n.translate('items.deleted_all', lang));
   },
 );
 

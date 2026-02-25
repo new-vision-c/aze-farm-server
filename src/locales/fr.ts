@@ -315,4 +315,37 @@ export const fr = {
     stats_error: 'Erreur lors de la récupération des statistiques',
     check_error: 'Erreur lors de la vérification',
   },
+
+  // Messages pour les items
+  items: {
+    created: 'Item créé avec succès',
+    retrieved: 'Items récupérés avec succès',
+    retrieved_single: 'Item récupéré avec succès',
+    updated: 'Item mis à jour avec succès',
+    deleted: 'Item supprimé avec succès',
+    deleted_all: 'Tous les items supprimés avec succès',
+  },
+
+  // Messages pour les notifications
+  notifications: {
+    subscription_saved: 'Abonnement enregistré avec succès',
+    subscription_removed: 'Abonnement supprimé avec succès',
+    subscription_not_found: 'Aucun abonnement trouvé',
+    subscription_error: "Erreur lors de l'enregistrement de l'abonnement",
+    unsubscription_error: "Erreur lors de la suppression de l'abonnement",
+    retrieved: 'Notifications récupérées avec succès',
+    retrieve_error: 'Erreur lors de la récupération des notifications',
+    marked_read: 'Notification marquée comme lue',
+    marked_all_read: 'Toutes les notifications marquées comme lues',
+    mark_error: 'Erreur lors du marquage de la notification',
+    mark_all_error: 'Erreur lors du marquage des notifications',
+    deleted: 'Notification supprimée',
+    delete_error: 'Erreur lors de la suppression de la notification',
+    sent: 'Notification envoyée avec succès',
+    send_error: "Erreur lors de l'envoi de la notification",
+    broadcast_sent: 'Notification promotionnelle envoyée avec succès',
+    broadcast_error: "Erreur lors de l'envoi de la notification",
+    not_found: 'Notification non trouvée',
+    playerid_required: 'playerId et authentification requis',
+  },
 };
