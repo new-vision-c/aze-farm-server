@@ -140,20 +140,20 @@ export const fr = {
   },
 
   // Messages pour les notifications
-  notifications: {
-    sent: 'Notification envoyée avec succès',
-    send_error: "Erreur lors de l'envoi de la notification",
-    push_enabled: 'Notifications push activées',
-    push_disabled: 'Notifications push désactivées',
-    subscription_registered: 'Abonnement aux notifications enregistré',
-    subscription_removed: 'Abonnement aux notifications supprimé',
-    notification_sent: 'Notification envoyée',
-    notification_deleted: 'Notification supprimée',
-    marked_as_read: 'Notification marquée comme lue',
-    all_marked_as_read: 'Toutes les notifications marquées comme lues',
-    subscription_not_found: 'Abonnement non trouvé',
-    onesignal_not_configured: 'Service OneSignal non configuré',
-  },
+  // notifications: {
+  //   sent: 'Notification envoyée avec succès',
+  //   send_error: "Erreur lors de l'envoi de la notification",
+  //   push_enabled: 'Notifications push activées',
+  //   push_disabled: 'Notifications push désactivées',
+  //   subscription_registered: 'Abonnement aux notifications enregistré',
+  //   subscription_removed: 'Abonnement aux notifications supprimé',
+  //   notification_sent: 'Notification envoyée',
+  //   notification_deleted: 'Notification supprimée',
+  //   marked_as_read: 'Notification marquée comme lue',
+  //   all_marked_as_read: 'Toutes les notifications marquées comme lues',
+  //   subscription_not_found: 'Abonnement non trouvé',
+  //   onesignal_not_configured: 'Service OneSignal non configuré',
+  // },
 
   // Messages pour le système de cache
   cache: {
@@ -346,6 +346,6 @@ export const fr = {
     broadcast_sent: 'Notification promotionnelle envoyée avec succès',
     broadcast_error: "Erreur lors de l'envoi de la notification",
     not_found: 'Notification non trouvée',
-    playerid_required: 'playerId et authentification requis',
+    playerid_required: 'userId et authentification requis',
   },
 };
