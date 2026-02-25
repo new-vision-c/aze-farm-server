@@ -216,6 +216,9 @@ export class MobilePaymentService {
         return cleanNumber.startsWith('69') || cleanNumber.startsWith('65');
       case MobilePaymentProvider.MTN_MONEY:
         return cleanNumber.startsWith('67') || cleanNumber.startsWith('68');
+      case MobilePaymentProvider.WAVE:
+        // Wave accepte tous les numéros camerounais (Orange et MTN)
+        return true;
       default:
         return false;
     }
