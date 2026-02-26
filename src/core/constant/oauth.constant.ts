@@ -1,11 +1,16 @@
 /**
- * OAuth2.0 Constants
- * Contains all OAuth provider URLs and configuration constants
+ * Constantes OAuth 2.0
+ * Contient toutes les URLs des fournisseurs OAuth et les constantes de configuration
+ *
+ * Configuration pour :
+ * - Google OAuth 2.0
+ * - Apple Sign In (préparé mais non implémenté)
  */
 import { OAuthProvider } from '../interface/oauth.interface';
 
 /**
- * OAuth Provider URLs
+ * URLs des fournisseurs OAuth
+ * Endpoints pour l'autorisation, l'échange de tokens et les informations utilisateur
  */
 export const OAUTH_URLS = {
   [OAuthProvider.GOOGLE]: {
@@ -23,7 +28,13 @@ export const OAUTH_URLS = {
 } as const;
 
 /**
- * Default OAuth Scopes per Provider
+ * Scopes OAuth par défaut par fournisseur
+ * Permissions demandées lors de l'autorisation
+ *
+ * Google :
+ * - openid : authentification OpenID Connect
+ * - profile : accès aux informations de profil de base
+ * - email : accès à l'adresse email
  */
 export const OAUTH_SCOPES = {
   [OAuthProvider.GOOGLE]: [
@@ -37,7 +48,8 @@ export const OAUTH_SCOPES = {
 } as const;
 
 /**
- * OAuth Error Messages
+ * Messages d'erreur OAuth
+ * Utilisés pour la gestion des erreurs dans les contrôleurs
  */
 export const OAUTH_ERRORS = {
   INVALID_STATE: 'Invalid OAuth state parameter',
@@ -52,12 +64,14 @@ export const OAUTH_ERRORS = {
 } as const;
 
 /**
- * OAuth State TTL (15 minutes)
+ * Durée de vie de l'état OAuth (15 minutes)
+ * L'état expire après ce délai pour des raisons de sécurité
  */
 export const OAUTH_STATE_TTL = 15 * 60 * 1000;
 
 /**
- * OAuth Cookie Names
+ * Noms des cookies OAuth
+ * Utilisés pour stocker l'état et l'URL de redirection
  */
 export const OAUTH_COOKIES = {
   STATE: 'oauth_state',

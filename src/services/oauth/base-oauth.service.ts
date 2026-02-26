@@ -1,9 +1,17 @@
 /**
- * Base OAuth Service
- * Abstract class that provides common OAuth2.0 functionality
+ * Service OAuth de Base
+ * Classe abstraite qui fournit les fonctionnalités OAuth 2.0 communes
+ *
+ * Cette classe implémente le flux Authorization Code Grant de OAuth 2.0 :
+ * - Génération de l'URL d'autorisation
+ * - Échange du code contre un token d'accès
+ * - Rafraîchissement du token d'accès
+ * - Révocation du token
+ *
+ * Chaque fournisseur (Google, Apple, etc.) doit implémenter getUserProfile()
  */
-import axios from 'axios';
 import type { AxiosInstance } from 'axios';
+import axios from 'axios';
 
 import type {
   IOAuthProviderConfig,
@@ -29,9 +37,16 @@ export abstract class BaseOAuthService implements IOAuthService {
   }
 
   /**
-   * Generate OAuth authorization URL
+   * Génère l'URL d'autorisation OAuth
+   * Redirige l'utilisateur vers la page de consentement du fournisseur
+   *
+   * @param state - Paramètre d'état pour la protection CSRF
+   * @returns URL d'autorisation complète
    */
   getAuthorizationUrl(state: string): string {
+    // Construire les paramètres de la requête d'autorisation
+    // access_type=offline : permet d'obtenir un refresh token
+    // prompt=consent : force l'affichage de l'écran de consentement
     const params = new URLSearchParams({
       client_id: this.config.clientId,
       redirect_uri: this.config.redirectUri,
@@ -46,7 +61,12 @@ export abstract class BaseOAuthService implements IOAuthService {
   }
 
   /**
-   * Exchange authorization code for access token
+   * Échange le code d'autorisation contre un token d'accès
+   * Appelé après que l'utilisateur a autorisé l'application
+   *
+   * @param code - Code d'autorisation retourné par le fournisseur
+   * @returns Tokens d'accès et de rafraîchissement
+   * @throws Erreur si l'échange échoue
    */
   async exchangeCodeForToken(code: string): Promise<IOAuthTokenResponse> {
     try {
@@ -77,13 +97,21 @@ export abstract class BaseOAuthService implements IOAuthService {
   }
 
   /**
-   * Get user profile from OAuth provider
-   * Must be implemented by each provider
+   * Récupère le profil utilisateur depuis le fournisseur OAuth
+   * Doit être implémenté par chaque fournisseur spécifique
+   *
+   * @param accessToken - Token d'accès OAuth
+   * @returns Profil utilisateur normalisé
    */
   abstract getUserProfile(accessToken: string): Promise<IOAuthUserProfile>;
 
   /**
-   * Refresh access token using refresh token
+   * Rafraîchit le token d'accès en utilisant le refresh token
+   * Permet de maintenir la session sans redemander l'autorisation
+   *
+   * @param refreshToken - Token de rafraîchissement
+   * @returns Nouveaux tokens d'accès et de rafraîchissement
+   * @throws Erreur si le rafraîchissement échoue
    */
   async refreshAccessToken(refreshToken: string): Promise<IOAuthTokenResponse> {
     try {
@@ -112,10 +140,13 @@ export abstract class BaseOAuthService implements IOAuthService {
   }
 
   /**
-   * Revoke OAuth token
+   * Révoque un token OAuth
+   * À surcharger dans les fournisseurs qui supportent la révocation
+   *
+   * @param _token - Token à révoquer (accès ou rafraîchissement)
    */
   async revokeToken(_token: string): Promise<void> {
-    // Override in specific providers if they support revocation
-    log.warn('Token revocation not implemented for this provider');
+    // À surcharger dans les fournisseurs spécifiques si supporté
+    log.warn('Révocation de token non implémentée pour ce fournisseur');
   }
 }

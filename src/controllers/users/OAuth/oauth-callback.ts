@@ -1,6 +1,13 @@
 /**
- * OAuth Callback Controller
- * Handles OAuth provider callback after user authorization
+ * Contrôleur de Callback OAuth
+ * Gère le retour du fournisseur OAuth après autorisation utilisateur
+ *
+ * Flux de callback :
+ * 1. Vérification de l'état CSRF (protection contre les attaques)
+ * 2. Échange du code d'autorisation contre un token d'accès
+ * 3. Récupération du profil utilisateur depuis Google
+ * 4. Création ou mise à jour de l'utilisateur en base de données
+ * 5. Génération des tokens JWT et envoi des emails de bienvenue/alerte
  */
 import type { Request, Response } from 'express';
 
@@ -17,8 +24,13 @@ import { asyncHandler, response } from '@/utils/responses/helpers';
 import setSafeCookie from '@/utils/setSafeCookie';
 
 /**
- * Handle OAuth callback from provider
+ * Gère le callback OAuth depuis le fournisseur
  * GET /auth/oauth/:provider/callback
+ *
+ * @param provider - Nom du fournisseur OAuth (google)
+ * @param code - Code d'autorisation retourné par Google
+ * @param state - Paramètre d'état pour vérification CSRF
+ * @returns Redirection vers l'application cliente avec tokens ou réponse JSON
  */
 const oauth_callback = asyncHandler(
   async (req: Request, res: Response): Promise<void | Response<any>> => {
@@ -31,7 +43,8 @@ const oauth_callback = asyncHandler(
       return response.badRequest(req, res, OAUTH_ERRORS.INVALID_PROVIDER);
     }
 
-    // Check for OAuth errors
+    // Vérifier la présence d'erreurs retournées par Google
+    // (ex: accès_refusé, erreur_serveur)
     if (error) {
       log.error('OAuth provider returned error', {
         provider: providerUpper,
@@ -42,13 +55,14 @@ const oauth_callback = asyncHandler(
       return response.badRequest(req, res, error_description || 'OAuth authorization failed');
     }
 
-    // Validate authorization code
+    // Valider le code d'autorisation (requis pour l'échange de token)
     if (!code) {
       return response.badRequest(req, res, OAUTH_ERRORS.MISSING_CODE);
     }
 
     try {
-      // Verify state parameter (CSRF protection)
+      // Vérifier le paramètre d'état pour la protection CSRF
+      // L'état doit correspondre à celui stocké dans le cookie
       const stateCookie = req.cookies[OAUTH_COOKIES.STATE];
       if (!stateCookie || !state) {
         return response.badRequest(req, res, OAUTH_ERRORS.INVALID_STATE);
@@ -60,23 +74,24 @@ const oauth_callback = asyncHandler(
         return response.badRequest(req, res, OAUTH_ERRORS.INVALID_STATE);
       }
 
-      // Clear state cookie
+      // Effacer le cookie d'état (usage unique)
       res.clearCookie(OAUTH_COOKIES.STATE);
 
-      // Exchange authorization code for access token
+      // Échanger le code d'autorisation contre un token d'accès
       const tokenData = await oauthManager.exchangeCodeForToken(providerUpper, code);
 
-      // Get user profile from provider
+      // Récupérer le profil utilisateur depuis Google
       const userProfile = await oauthManager.getUserProfile(providerUpper, tokenData.access_token);
 
-      // Find or create user
+      // Trouver ou créer l'utilisateur en base de données
       const { user, isNewUser } = await oauthManager.findOrCreateUser(userProfile, tokenData);
 
-      // Generate JWT tokens
+      // Générer les tokens JWT pour l'application
       const accessToken = userToken.accessToken(user);
       const refreshToken = userToken.refreshToken(user);
 
-      // Set cookies
+      // Définir les cookies d'authentification
+      // Le refresh token est stocké dans un cookie sécurisé httpOnly
       res.setHeader('authorization', `Bearer ${accessToken}`);
       setSafeCookie(res, envs.JWT_SECRET, refreshToken, {
         secure: envs.COOKIE_SECURE as boolean,
@@ -90,11 +105,10 @@ const oauth_callback = asyncHandler(
         isNewUser,
       });
 
-      // Send welcome email for new users (non-blocking)
+      // Envoyer un email de bienvenue pour les nouveaux utilisateurs (non-bloquant)
       if (isNewUser) {
-        const user_full_name = `${user.last_name} ${user.first_name}`;
         send_mail(user.email, MAIL.WELCOME_SUBJECT, 'welcome', {
-          name: user_full_name,
+          name: user.fullname,
         }).catch((error) => {
           log.warn('Failed to send welcome email', {
             email: user.email,
@@ -102,10 +116,9 @@ const oauth_callback = asyncHandler(
           });
         });
       } else {
-        // Send login alert for existing users
-        const user_full_name = `${user.last_name} ${user.first_name}`;
+        // Envoyer une alerte de connexion pour les utilisateurs existants
         send_mail(user.email, MAIL.LOGIN_ALERT_SUBJECT, 'alert_login', {
-          name: user_full_name,
+          name: user.fullname,
           date: new Date(),
         }).catch((error) => {
           log.warn('Failed to send login alert email', {
@@ -115,7 +128,9 @@ const oauth_callback = asyncHandler(
         });
       }
 
-      // Redirect to client application or return JSON
+      // Rediriger vers l'application cliente ou retourner une réponse JSON
+      // Pour les applications web: redirection avec tokens dans l'URL
+      // Pour les API: réponse JSON directe
       const redirectUrl = stateData.redirect_url || envs.CLIENT_URL;
 
       if (redirectUrl) {
@@ -131,13 +146,11 @@ const oauth_callback = asyncHandler(
         {
           id: user.user_id,
           email: user.email,
-          first_name: user.first_name,
-          last_name: user.last_name,
-          phone: user.phone,
+          fullname: user.fullname,
           profile_url: user.avatar_url,
           is_new_user: isNewUser,
         },
-        `OAuth login successful via ${providerUpper}`,
+        `Connexion OAuth réussie via ${providerUpper}`,
       );
     } catch (error: any) {
       log.error('OAuth callback failed', {

@@ -1,6 +1,12 @@
 /**
- * OAuth Authorization Controller
- * Initiates OAuth flow by redirecting to provider
+ * Contrôleur d'Autorisation OAuth
+ * Initialise le flux OAuth en redirigeant vers le fournisseur
+ *
+ * Flux d'autorisation :
+ * 1. L'utilisateur clique sur 'Se connecter avec Google'
+ * 2. Ce contrôleur génère un état CSRF et redirige vers Google
+ * 3. Google demande l'autorisation à l'utilisateur
+ * 4. Google redirige vers oauth_callback avec un code d'autorisation
  */
 import type { Request, Response } from 'express';
 
@@ -12,8 +18,12 @@ import { oauthManager } from '@/services/oauth/oauth-manager.service';
 import { asyncHandler, response } from '@/utils/responses/helpers';
 
 /**
- * Initiate OAuth authorization flow
+ * Initialise le flux d'autorisation OAuth
  * GET /auth/oauth/:provider
+ *
+ * @param provider - Nom du fournisseur OAuth (google)
+ * @param redirect_url - URL de redirection après connexion (optionnel)
+ * @returns Redirection vers la page d'autorisation Google
  */
 const oauth_authorize = asyncHandler(
   async (req: Request, res: Response): Promise<void | Response<any>> => {
@@ -27,11 +37,12 @@ const oauth_authorize = asyncHandler(
     }
 
     try {
-      // Generate state for CSRF protection
+      // Générer un état pour la protection CSRF
+      // L'état est stocké dans un cookie sécurisé pour vérification ultérieure
       const stateData = oauthManager.generateState(redirect_url as string);
       const stateString = Buffer.from(JSON.stringify(stateData)).toString('base64');
 
-      // Store state in secure cookie
+      // Stocker l'état dans un cookie sécurisé (httpOnly, secure, sameSite)
       res.cookie(OAUTH_COOKIES.STATE, stateString, {
         httpOnly: true,
         secure: envs.COOKIE_SECURE as boolean,

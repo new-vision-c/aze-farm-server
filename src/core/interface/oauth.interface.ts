@@ -34,15 +34,16 @@ export interface IOAuthTokenResponse {
 }
 
 /**
- * Normalized OAuth User Profile
+ * Profil utilisateur OAuth normalisé
+ * first_name et last_name sont optionnels car le modèle users utilise fullname
  */
 export interface IOAuthUserProfile {
   provider: OAuthProvider;
   provider_user_id: string;
   email: string;
   email_verified?: boolean;
-  first_name: string;
-  last_name: string;
+  first_name?: string;
+  last_name?: string;
   full_name?: string;
   avatar_url?: string;
   locale?: string;

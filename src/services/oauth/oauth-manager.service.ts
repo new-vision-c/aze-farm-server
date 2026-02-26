@@ -1,6 +1,13 @@
 /**
- * OAuth Manager Service
- * Central service to manage Google OAuth provider only
+ * Service Gestionnaire OAuth
+ * Service central pour gérer l'authentification OAuth 2.0 avec Google
+ *
+ * Responsabilités :
+ * - Initialiser les fournisseurs OAuth (Google)
+ * - Générer et vérifier les paramètres d'état (protection CSRF)
+ * - Échanger les codes d'autorisation contre des tokens
+ * - Créer/lire les comptes utilisateurs OAuth
+ * - Gérer le lien entre comptes OAuth et utilisateurs locaux
  */
 import crypto from 'crypto';
 
@@ -27,13 +34,14 @@ export class OAuthManager {
   }
 
   /**
-   * Initialize Google OAuth provider only
+   * Initialise uniquement le fournisseur Google OAuth
+   * Configuration chargée depuis les variables d'environnement
    */
   private initializeProviders(): void {
     try {
       this.providers.set(OAuthProvider.GOOGLE, new GoogleOAuthService());
 
-      log.info('Google OAuth provider initialized successfully');
+      log.info('Fournisseur Google OAuth initialisé avec succès');
     } catch (error: any) {
       log.error('Failed to initialize OAuth providers', {
         error: error.message,
@@ -53,7 +61,10 @@ export class OAuthManager {
   }
 
   /**
-   * Generate OAuth state parameter for CSRF protection
+   * Génère un paramètre d'état OAuth pour la protection CSRF
+   * L'état est valide pendant 15 minutes (OAUTH_STATE_TTL)
+   * @param redirectUrl - URL de redirection optionnelle après authentification
+   * @returns Objet d'état avec timestamp et token aléatoire
    */
   generateState(redirectUrl?: string): IOAuthState {
     const state: IOAuthState = {
@@ -65,7 +76,9 @@ export class OAuthManager {
   }
 
   /**
-   * Verify OAuth state parameter
+   * Vérifie la validité du paramètre d'état OAuth
+   * @param stateData - Données d'état à vérifier
+   * @returns true si l'état est valide et non expiré
    */
   verifyState(stateData: IOAuthState): boolean {
     const age = Date.now() - stateData.timestamp;
@@ -97,7 +110,16 @@ export class OAuthManager {
   }
 
   /**
-   * Find or create user from OAuth profile
+   * Trouve ou crée un utilisateur à partir du profil OAuth
+   *
+   * Flux :
+   * 1. Vérifie si un compte OAuth existe déjà -> retourne l'utilisateur existant
+   * 2. Vérifie si un utilisateur avec cet email existe -> lie le compte OAuth
+   * 3. Sinon, crée un nouvel utilisateur avec le compte OAuth
+   *
+   * @param profile - Profil utilisateur du fournisseur OAuth
+   * @param tokenData - Tokens d'accès et de rafraîchissement
+   * @returns Utilisateur et indicateur de nouvel utilisateur
    */
   async findOrCreateUser(
     profile: IOAuthUserProfile,
@@ -141,13 +163,17 @@ export class OAuthManager {
       }
 
       // Create new user with OAuth account
+      // Utiliser full_name si disponible, sinon combiner first_name et last_name
+      const userFullname =
+        profile.full_name ||
+        (profile.first_name && profile.last_name
+          ? `${profile.first_name} ${profile.last_name}`
+          : profile.first_name || profile.last_name || 'Utilisateur');
+
       user = await prisma.users.create({
         data: {
           email: profile.email,
-          fullname:
-            profile.first_name && profile.last_name
-              ? `${profile.first_name} ${profile.last_name}`
-              : profile.first_name || profile.last_name || '',
+          fullname: userFullname,
           avatar_url: profile.avatar_url,
           is_verified: profile.email_verified || false,
           is_active: true,
