@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 
+import { envs } from '@/config/env/env';
 import prisma from '@/config/prisma/prisma';
 import { MAIL } from '@/core/constant/global';
 import { I18nService } from '@/services/I18nService';
@@ -8,6 +9,7 @@ import send_mail from '@/services/Mail/send-mail';
 import userToken from '@/services/jwt/functions-jwt';
 import log from '@/services/logging/logger';
 import { asyncHandler, response } from '@/utils/responses/helpers';
+import setSafeCookie from '@/utils/setSafeCookie';
 
 //& Étape 1: Récupérer l'email et le vérifier, générer un session token
 const forgotPasswordStep1 = asyncHandler(
@@ -62,18 +64,31 @@ const forgotPasswordStep1 = asyncHandler(
       const sessionToken = userToken.generatePasswordResetToken(user.user_id);
 
       // Envoyer l'email avec l'OTP
-      await send_mail(email, MAIL.RESET_PWD_SUBJECT, 'otp', {
-        name: user.fullname,
-        otp,
-        language,
-        otp_email_subject: i18nService.translate('auth.otp_email_subject', language),
-        otp_platform_description: i18nService.translate('auth.otp_platform_description', language),
-        otp_welcome_message: i18nService.translate('auth.otp_welcome_message', language),
-        otp_validity_message: i18nService.translate('auth.otp_validity_message', language),
-        otp_thank_you: i18nService.translate('auth.otp_thank_you', language),
-      });
-
-      log.info('OTP de réinitialisation envoyé', { email, language });
+      try {
+        await send_mail(email, MAIL.RESET_PWD_SUBJECT, 'otp', {
+          name: user.fullname,
+          otp,
+          language,
+          otp_email_subject: i18nService.translate('auth.otp_email_subject', language),
+          otp_platform_description: i18nService.translate(
+            'auth.otp_platform_description',
+            language,
+          ),
+          otp_welcome_message: i18nService.translate('auth.otp_welcome_message', language),
+          otp_validity_message: i18nService.translate('auth.otp_validity_message', language),
+          otp_thank_you: i18nService.translate('auth.otp_thank_you', language),
+        });
+        log.info('OTP de réinitialisation envoyé', { email, language });
+      } catch (emailError: any) {
+        log.error('Erreur envoi email OTP de réinitialisation', {
+          email,
+          error: emailError.message,
+          stack: emailError.stack,
+          language,
+        });
+        console.error(`❌ Erreur envoi email OTP: ${emailError}`);
+        // Ne pas bloquer le processus même si l'email échoue
+      }
 
       return response.ok(
         req,
@@ -273,7 +288,7 @@ const forgotPasswordStep3 = asyncHandler(
       });
 
       // Générer le JWT de login définitif (7 jours)
-      const loginToken = jwt.sign(
+      const accessToken = jwt.sign(
         {
           userId: user.user_id,
           email: user.email,
@@ -286,18 +301,35 @@ const forgotPasswordStep3 = asyncHandler(
         { expiresIn: '7d' },
       );
 
+      // Générer le refresh token
+      const refreshToken = userToken.refreshToken(user);
+
       log.info('Mot de passe réinitialisé avec succès', {
         userId: user.user_id,
         email: user.email,
         language,
       });
 
+      // Définir les headers et cookies d'authentification
+      res.setHeader('authorization', `Bearer ${accessToken}`);
+      setSafeCookie(res, 'refresh_token', refreshToken, {
+        secure: envs.COOKIE_SECURE as boolean,
+        httpOnly: envs.JWT_COOKIE_SECURITY as boolean,
+        sameSite: envs.COOKIE_SAME_SITE as 'strict' | 'lax' | 'none',
+      });
+      log.info(
+        "Headers d'autorisation et cookie refresh token définis pour la réinitialisation de mot de passe",
+        {
+          email: user.email,
+        },
+      );
+
       return response.ok(
         req,
         res,
         {
           password_updated: true,
-          token: loginToken,
+          token: accessToken,
           user: {
             user_id: user.user_id,
             email: user.email,
