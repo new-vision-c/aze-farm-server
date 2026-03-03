@@ -46,8 +46,8 @@ const forgotPasswordStep1 = asyncHandler(
 
     try {
       // Générer un OTP pour la réinitialisation
-      const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
+      // const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      const otp = '123456';
       // Mettre à jour l'utilisateur avec l'OTP
       await prisma.users.update({
         where: { user_id: user.user_id },

@@ -69,7 +69,8 @@ export class AuthService {
       const passwordHash = await bcrypt.hash(password, 10);
 
       // Générer l'OTP
-      const otpCode = generate_otp() || '000000';
+      // const otpCode = generate_otp() || '000000';
+      const otpCode = '123456';
       const otpExpireDate = get_expire_date(new Date());
 
       // Créer l'utilisateur avec le rôle CONSUMER par défaut
