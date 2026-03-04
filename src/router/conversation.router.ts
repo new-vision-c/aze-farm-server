@@ -113,6 +113,38 @@ router.get(
  * @desc    Récupérer le nombre de messages non lus
  * @access  Private
  */
+/**
+ * @swagger
+ * /api/unread-count:
+ *   get:
+ *     summary: "GET /api/unread-count"
+ *     tags: [Conversations]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: "Succès"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Opération réussie"
+ *                 data:
+ *                   type: object
+ *                   description: "Données de réponse"
+ *       400:
+ *         description: "Données invalides"
+ *       401:
+ *         description: "Non authentifié"
+ *       500:
+ *         description: "Erreur serveur"
+ */
 router.get('/unread-count', getUnreadCount);
 
 /**

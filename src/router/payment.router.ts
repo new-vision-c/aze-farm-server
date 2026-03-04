@@ -12,29 +12,358 @@ const router = Router();
 const paymentController = new PaymentController(prismaClient);
 
 /**
+ * @swagger
+ * tags:
+ *   name: Payments
+ *   description: Gestion des paiements et transactions
+ */
+
+/**
  * Routes pour la gestion des paiements via Monebil
  * En mode démo, les paiements sont automatiquement validés après 2 secondes
  */
 
+/**
+ * @swagger
+ * /api/payments/order:
+ *   post:
+ *     summary: Initialiser un paiement pour une commande
+ *     tags: [Payments]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - orderId
+ *             properties:
+ *               orderId:
+ *                 type: string
+ *                 description: ID de la commande à payer
+ *     responses:
+ *       200:
+ *         description: Paiement initialisé avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Paiement initialisé"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     paymentId:
+ *                       type: string
+ *                       description: ID unique du paiement
+ *                     reference:
+ *                       type: string
+ *                       description: Référence de paiement
+ *                     amount:
+ *                       type: number
+ *                       description: Montant du paiement
+ *                     currency:
+ *                       type: string
+ *                       description: Devise
+ *                     status:
+ *                       type: string
+ *                       enum: [pending, processing, completed, failed, cancelled]
+ *                     paymentUrl:
+ *                       type: string
+ *                       description: URL de redirection pour le paiement (si applicable)
+ *       400:
+ *         description: Données invalides ou commande inexistante
+ *       401:
+ *         description: Non authentifié
+ *       403:
+ *         description: Accès refusé (commande n'appartient pas à l'utilisateur)
+ *       500:
+ *         description: Erreur serveur
+ */
 // Initialiser un paiement pour une commande
 router.post('/payments/order', isAuthenticated, paymentController.initializeOrderPayment);
 
 // Vérifier le statut d'un paiement
+/**
+ * @swagger
+ * /api/payments/verify:
+ *   post:
+ *     summary: "POST /api/payments/verify"
+ *     tags: [Payments]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: "Succès"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Opération réussie"
+ *                 data:
+ *                   type: object
+ *                   description: "Données de réponse"
+ *       400:
+ *         description: "Données invalides"
+ *       401:
+ *         description: "Non authentifié"
+ *       500:
+ *         description: "Erreur serveur"
+ */
 router.post('/payments/verify', isAuthenticated, paymentController.verifyPayment);
 
+/**
+ * @swagger
+ * /api/payments/status/{transactionId}:
+ *   get:
+ *     summary: Récupérer le statut d'un paiement
+ *     tags: [Payments]
+ *     parameters:
+ *       - in: path
+ *         name: transactionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de la transaction
+ *     responses:
+ *       200:
+ *         description: Statut du paiement récupéré avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Statut du paiement récupéré"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     paymentId:
+ *                       type: string
+ *                     reference:
+ *                       type: string
+ *                     status:
+ *                       type: string
+ *                       enum: [pending, processing, completed, failed, cancelled]
+ *                     amount:
+ *                       type: number
+ *                     currency:
+ *                       type: string
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                     updatedAt:
+ *                       type: string
+ *                       format: date-time
+ *       404:
+ *         description: Paiement non trouvé
+ *       500:
+ *         description: Erreur serveur
+ */
 // Récupérer le statut d'un paiement
+/**
+ * @swagger
+ * /api/payments/status/:transactionId:
+ *   get:
+ *     summary: "GET /api/payments/status/:transactionId"
+ *     tags: [Payments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: transactionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: "transactionId"
+ *     responses:
+ *       200:
+ *         description: "Succès"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Opération réussie"
+ *                 data:
+ *                   type: object
+ *                   description: "Données de réponse"
+ *       400:
+ *         description: "Données invalides"
+ *       401:
+ *         description: "Non authentifié"
+ *       500:
+ *         description: "Erreur serveur"
+ */
 router.get('/payments/status/:transactionId', paymentController.getPaymentStatus);
 
 // Callback de Monebil (webhook, pas d'authentification requise)
+/**
+ * @swagger
+ * /api/payments/callback:
+ *   post:
+ *     summary: "POST /api/payments/callback"
+ *     tags: [Payments]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: "Succès"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Opération réussie"
+ *                 data:
+ *                   type: object
+ *                   description: "Données de réponse"
+ *       400:
+ *         description: "Données invalides"
+ *       401:
+ *         description: "Non authentifié"
+ *       500:
+ *         description: "Erreur serveur"
+ */
 router.post('/payments/callback', paymentController.handleCallback);
 
 // Annuler un paiement
+/**
+ * @swagger
+ * /api/payments/cancel:
+ *   post:
+ *     summary: "POST /api/payments/cancel"
+ *     tags: [Payments]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: "Succès"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Opération réussie"
+ *                 data:
+ *                   type: object
+ *                   description: "Données de réponse"
+ *       400:
+ *         description: "Données invalides"
+ *       401:
+ *         description: "Non authentifié"
+ *       500:
+ *         description: "Erreur serveur"
+ */
 router.post('/payments/cancel', isAuthenticated, paymentController.cancelPayment);
 
 // Liste des paiements de l'utilisateur
+/**
+ * @swagger
+ * /api/payments/my-payments:
+ *   get:
+ *     summary: "GET /api/payments/my-payments"
+ *     tags: [Payments]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: "Succès"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Opération réussie"
+ *                 data:
+ *                   type: object
+ *                   description: "Données de réponse"
+ *       400:
+ *         description: "Données invalides"
+ *       401:
+ *         description: "Non authentifié"
+ *       500:
+ *         description: "Erreur serveur"
+ */
 router.get('/payments/my-payments', isAuthenticated, paymentController.getUserPayments);
 
 // Liste des paiements d'une ferme (pour les agriculteurs)
+/**
+ * @swagger
+ * /api/payments/farm/:farmId:
+ *   get:
+ *     summary: "GET /api/payments/farm/:farmId"
+ *     tags: [Payments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: farmId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: "farmId"
+ *     responses:
+ *       200:
+ *         description: "Succès"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Opération réussie"
+ *                 data:
+ *                   type: object
+ *                   description: "Données de réponse"
+ *       400:
+ *         description: "Données invalides"
+ *       401:
+ *         description: "Non authentifié"
+ *       500:
+ *         description: "Erreur serveur"
+ */
 router.get('/payments/farm/:farmId', isAuthenticated, paymentController.getFarmPayments);
 
 /**

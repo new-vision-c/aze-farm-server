@@ -595,7 +595,7 @@ export class ProductController {
    *   get:
    *     tags:
    *       - Products
-   *     summary: [OBSOLÈTE] Obtenir des suggestions de produits
+   *     summary: "[OBSOLÈTE] Obtenir des suggestions de produits"
    *     deprecated: true
    *     description: |
    *       **CET ENDPOINT EST OBSOLÈTE**

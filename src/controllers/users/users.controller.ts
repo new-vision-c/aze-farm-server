@@ -23,6 +23,7 @@ import get_user_by_id from './users/get_user_by_id';
 import list_users from './users/list_users';
 import restore_deleted_user from './users/restore_deleted_user';
 import search_user from './users/search_user';
+import update_user_avatar from './users/update_user_avatar';
 import update_user_info from './users/update_user_info';
 import update_user_role from './users/update_user_role';
 
@@ -58,6 +59,7 @@ const users_controller = {
   search_user,
   get_user_by_id,
   update_user_info,
+  update_user_avatar,
   update_user_role,
   export_users,
   clear_all_users,

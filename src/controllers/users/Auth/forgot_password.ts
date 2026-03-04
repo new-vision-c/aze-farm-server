@@ -138,18 +138,50 @@ const forgotPasswordStep2 = asyncHandler(
 
     const sessionToken = authHeader.substring(7); // Remove "Bearer " prefix
 
+    let decoded: any;
     try {
       // Vérifier et décoder le session token
-      const decoded = userToken.verifyPasswordResetToken(sessionToken);
-
-      if (!decoded.userId) {
+      decoded = userToken.verifyPasswordResetToken(sessionToken);
+    } catch (tokenError: any) {
+      // Gestion spécifique des erreurs de token
+      if (tokenError.name === 'TokenExpiredError' || tokenError.message?.includes('expired')) {
+        return response.unauthorized(
+          req,
+          res,
+          i18nService.translate('auth.session_token_expired', language),
+        );
+      } else if (
+        tokenError.name === 'JsonWebTokenError' ||
+        tokenError.message?.includes('invalid')
+      ) {
+        return response.unauthorized(
+          req,
+          res,
+          i18nService.translate('auth.invalid_session_token', language),
+        );
+      } else {
+        log.error('Erreur lors de la vérification du token de session', {
+          error: tokenError.message,
+          stack: tokenError.stack,
+          language,
+        });
         return response.unauthorized(
           req,
           res,
           i18nService.translate('auth.invalid_session_token', language),
         );
       }
+    }
 
+    if (!decoded.userId) {
+      return response.unauthorized(
+        req,
+        res,
+        i18nService.translate('auth.invalid_session_token', language),
+      );
+    }
+
+    try {
       // Vérifier l'utilisateur
       const user = await prisma.users.findFirst({
         where: {
@@ -228,6 +260,49 @@ const forgotPasswordStep3 = asyncHandler(
 
     const sessionToken = authHeader.substring(7); // Remove "Bearer " prefix
 
+    let decoded: any;
+    try {
+      // Vérifier et décoder le session token
+      decoded = userToken.verifyPasswordResetToken(sessionToken);
+    } catch (tokenError: any) {
+      // Gestion spécifique des erreurs de token
+      if (tokenError.name === 'TokenExpiredError' || tokenError.message?.includes('expired')) {
+        return response.unauthorized(
+          req,
+          res,
+          i18nService.translate('auth.session_token_expired', language),
+        );
+      } else if (
+        tokenError.name === 'JsonWebTokenError' ||
+        tokenError.message?.includes('invalid')
+      ) {
+        return response.unauthorized(
+          req,
+          res,
+          i18nService.translate('auth.invalid_session_token', language),
+        );
+      } else {
+        log.error('Erreur lors de la vérification du token de session', {
+          error: tokenError.message,
+          stack: tokenError.stack,
+          language,
+        });
+        return response.unauthorized(
+          req,
+          res,
+          i18nService.translate('auth.invalid_session_token', language),
+        );
+      }
+    }
+
+    if (!decoded.userId) {
+      return response.unauthorized(
+        req,
+        res,
+        i18nService.translate('auth.invalid_session_token', language),
+      );
+    }
+
     if (password !== passwordConfirm) {
       return response.badRequest(
         req,
@@ -245,17 +320,6 @@ const forgotPasswordStep3 = asyncHandler(
     }
 
     try {
-      // Vérifier et décoder le session token
-      const decoded = userToken.verifyPasswordResetToken(sessionToken);
-
-      if (!decoded.userId) {
-        return response.unauthorized(
-          req,
-          res,
-          i18nService.translate('auth.invalid_session_token', language),
-        );
-      }
-
       // Vérifier que l'utilisateur existe
       const user = await prisma.users.findFirst({
         where: {

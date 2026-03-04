@@ -82,6 +82,10 @@ const swaggerDefinition = {
 module.exports = {
   definition: swaggerDefinition,
   apis: [
+    // Fichiers de routes TypeScript (documentation JSDoc)
+    './src/router/**/*.ts',
+    './src/router/users/*.ts',
+    './src/controllers/**/*.ts',
     // Fichiers de documentation YAML/JSON
     './docs/paths/*.yaml',
     './docs/components/parameters/*.yaml',
